@@ -97,8 +97,10 @@ export function initNav() {
   if (badge && cartBtn) {
     subscribe(() => {
       const { units } = totals();
-      badge.textContent = String(units);
+      const shown = units > 99 ? '99' : String(units);
+      badge.textContent = shown;
       badge.classList.toggle('is-empty', units === 0);
+      badge.classList.toggle('is-wide', shown.length > 1);
       cartBtn.setAttribute(
         'aria-label',
         units === 0 ? 'Abrir el carrito, vacío' : `Abrir el carrito, ${units} ${units === 1 ? 'artículo' : 'artículos'}`,
