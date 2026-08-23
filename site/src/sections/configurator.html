@@ -5,359 +5,364 @@
     <p class="lede cfg__lede">Eliges la hoja y su montura; el taller reserva el acero y empieza a contar el plazo. El precio se recalcula delante de ti, con el envío y los aranceles ya dentro.</p>
   </div>
 
-  <div class="wrap cfg__grid">
+  <!-- el banco de trabajo: rejilla de decisiones + barra de precio. La barra es
+       pegajosa dentro de ESTE bloque, no de la sección entera, para que no se
+       pinte nunca encima del titular mientras la sección entra en pantalla. -->
+  <div class="cfg__work">
+    <div class="wrap cfg__grid">
 
-    <!-- ---------------------------------------------------------------- escenario -->
-    <div class="cfg__stage">
-      <figure class="cfg__hero">
-        <div class="cfg__hero-frame">
-          <picture>
-            <source data-config-src="avif" type="image/avif"
-              sizes="(min-width: 1000px) 44vw, (min-width: 700px) 60vw, 92vw"
-              srcset="/assets/img/prod-mumei-480.avif 480w, /assets/img/prod-mumei-800.avif 800w, /assets/img/prod-mumei-1200.avif 1200w">
-            <source data-config-src="webp" type="image/webp"
-              sizes="(min-width: 1000px) 44vw, (min-width: 700px) 60vw, 92vw"
-              srcset="/assets/img/prod-mumei-480.webp 480w, /assets/img/prod-mumei-800.webp 800w, /assets/img/prod-mumei-1200.webp 1200w">
-            <img data-config-img src="/assets/img/prod-mumei-1200.jpg" width="1200" height="1500"
-              alt="Katana Mumei con su montura sobre fondo claro."
-              loading="lazy" decoding="async">
-          </picture>
+      <!-- ---------------------------------------------------------------- escenario -->
+      <div class="cfg__stage">
+        <figure class="cfg__hero">
+          <div class="cfg__hero-frame">
+            <picture>
+              <source data-config-src="avif" type="image/avif"
+                sizes="(min-width: 1000px) 44vw, (min-width: 700px) 60vw, 92vw"
+                srcset="/assets/img/prod-mumei-480.avif 480w, /assets/img/prod-mumei-800.avif 800w, /assets/img/prod-mumei-1200.avif 1200w">
+              <source data-config-src="webp" type="image/webp"
+                sizes="(min-width: 1000px) 44vw, (min-width: 700px) 60vw, 92vw"
+                srcset="/assets/img/prod-mumei-480.webp 480w, /assets/img/prod-mumei-800.webp 800w, /assets/img/prod-mumei-1200.webp 1200w">
+              <img data-config-img src="/assets/img/prod-mumei-1200.jpg" width="1200" height="1500"
+                alt="Katana Mumei con su montura sobre fondo claro."
+                loading="lazy" decoding="async">
+            </picture>
+          </div>
+
+          <figcaption class="cfg__hero-cap">
+            <span class="cfg__hero-kanji" data-config-kanji aria-hidden="true">無銘</span>
+            <span class="cfg__hero-text">
+              <span class="cfg__hero-name" data-config-name>Mumei</span>
+              <span class="cfg__hero-claim" data-config-claim>Tamahagane plegado 12 veces. Nada sobra.</span>
+            </span>
+          </figcaption>
+        </figure>
+
+        <dl class="cfg__facts">
+          <div class="cfg__fact">
+            <dt>Acero</dt>
+            <dd data-config-steel>Tamahagane · 12 pliegues</dd>
+          </div>
+          <div class="cfg__fact">
+            <dt>Hamon</dt>
+            <dd data-config-hamon>Suguha (recto)</dd>
+          </div>
+          <div class="cfg__fact">
+            <dt>Nagasa</dt>
+            <dd data-config-nagasa>71 cm</dd>
+          </div>
+          <div class="cfg__fact">
+            <dt>Forja</dt>
+            <dd data-config-lead>6 semanas</dd>
+          </div>
+        </dl>
+
+        <ul class="cfg__mounts">
+          <li class="cfg__mount">
+            <picture>
+              <source type="image/avif" sizes="(min-width: 1000px) 14vw, 29vw"
+                srcset="/assets/img/polish-800.avif 800w, /assets/img/polish-1400.avif 1400w">
+              <source type="image/webp" sizes="(min-width: 1000px) 14vw, 29vw"
+                srcset="/assets/img/polish-800.webp 800w, /assets/img/polish-1400.webp 1400w">
+              <img src="/assets/img/polish-1400.jpg" width="1400" height="788"
+                alt="Hoja recién pulida sobre fondo gris, con el reflejo limpio del acero."
+                loading="lazy" decoding="async">
+            </picture>
+            <span class="cfg__mount-sw" data-mount-swatch="edge" style="--sw: #3b3f45" aria-hidden="true"></span>
+            <p class="cfg__mount-txt">
+              <span class="cfg__mount-k">Acabado</span>
+              <span class="cfg__mount-v" data-mount="edge">Kurogane</span>
+            </p>
+          </li>
+          <li class="cfg__mount">
+            <picture>
+              <source type="image/avif" sizes="(min-width: 1000px) 14vw, 29vw"
+                srcset="/assets/img/tsuba-600.avif 600w, /assets/img/tsuba-1000.avif 1000w">
+              <source type="image/webp" sizes="(min-width: 1000px) 14vw, 29vw"
+                srcset="/assets/img/tsuba-600.webp 600w, /assets/img/tsuba-1000.webp 1000w">
+              <img src="/assets/img/tsuba-1000.jpg" width="1000" height="1000"
+                alt="Tsuba de hierro forjado con incrustaciones de oro sobre fondo neutro."
+                loading="lazy" decoding="async">
+            </picture>
+            <span class="cfg__mount-sw" data-mount-swatch="tsuba" style="--sw: #4a4a4c" aria-hidden="true"></span>
+            <p class="cfg__mount-txt">
+              <span class="cfg__mount-k">Tsuba</span>
+              <span class="cfg__mount-v" data-mount="tsuba">Aoi</span>
+            </p>
+          </li>
+          <li class="cfg__mount">
+            <picture>
+              <source type="image/avif" sizes="(min-width: 1000px) 14vw, 29vw"
+                srcset="/assets/img/saya-800.avif 800w, /assets/img/saya-1400.avif 1400w">
+              <source type="image/webp" sizes="(min-width: 1000px) 14vw, 29vw"
+                srcset="/assets/img/saya-800.webp 800w, /assets/img/saya-1400.webp 1400w">
+              <img src="/assets/img/saya-1400.jpg" width="1400" height="788"
+                alt="Dos katanas envainadas en sus sayas lacadas, apoyadas sobre fondo claro."
+                loading="lazy" decoding="async">
+            </picture>
+            <span class="cfg__mount-sw" data-mount-swatch="saya" style="--sw: #0d0d0f" aria-hidden="true"></span>
+            <p class="cfg__mount-txt">
+              <span class="cfg__mount-k">Saya</span>
+              <span class="cfg__mount-v" data-mount="saya">Negro urushi</span>
+            </p>
+          </li>
+        </ul>
+      </div>
+
+      <!-- ------------------------------------------------------------------- panel -->
+      <div class="cfg__panel">
+
+        <!-- modelo -->
+        <div class="cfg__group cfg__group--models" role="group" aria-labelledby="cfg-g-model" aria-describedby="cfg-h-model">
+          <div class="cfg__group-head">
+            <h3 class="cfg__group-t" id="cfg-g-model">Modelo</h3>
+            <p class="cfg__group-help" id="cfg-h-model">Seis hojas salidas del mismo taller. Cambian el acero, el temple y el plazo.</p>
+          </div>
+          <ul class="cfg__models">
+            <li>
+              <button class="cfg__model" type="button" data-model="mumei" aria-pressed="true" tabindex="0">
+                <span class="cfg__model-kanji" aria-hidden="true">無銘</span>
+                <span class="cfg__model-name">Mumei</span>
+                <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">1890 €</span></span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__model" type="button" data-model="kurogane" aria-pressed="false" tabindex="-1">
+                <span class="cfg__model-kanji" aria-hidden="true">黒鉄</span>
+                <span class="cfg__model-name">Kurogane</span>
+                <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">2340 €</span></span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__model" type="button" data-model="hanabira" aria-pressed="false" tabindex="-1">
+                <span class="cfg__model-kanji" aria-hidden="true">花びら</span>
+                <span class="cfg__model-name">Hanabira</span>
+                <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">2780 €</span></span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__model" type="button" data-model="tsuki" aria-pressed="false" tabindex="-1">
+                <span class="cfg__model-kanji" aria-hidden="true">月</span>
+                <span class="cfg__model-name">Tsuki</span>
+                <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">2460 €</span></span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__model" type="button" data-model="arashi" aria-pressed="false" tabindex="-1">
+                <span class="cfg__model-kanji" aria-hidden="true">嵐</span>
+                <span class="cfg__model-name">Arashi</span>
+                <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">3120 €</span></span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__model" type="button" data-model="ryujin" aria-pressed="false" tabindex="-1">
+                <span class="cfg__model-kanji" aria-hidden="true">龍神</span>
+                <span class="cfg__model-name">Ryūjin</span>
+                <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">4900 €</span></span>
+                <span class="cfg__model-tag">Nueve piezas</span>
+              </button>
+            </li>
+          </ul>
         </div>
 
-        <figcaption class="cfg__hero-cap">
-          <span class="cfg__hero-kanji" data-config-kanji aria-hidden="true">無銘</span>
-          <span class="cfg__hero-text">
-            <span class="cfg__hero-name" data-config-name>Mumei</span>
-            <span class="cfg__hero-claim" data-config-claim>Tamahagane plegado 12 veces. Nada sobra.</span>
-          </span>
-        </figcaption>
-      </figure>
+        <!-- longitud de hoja -->
+        <div class="cfg__group" role="group" aria-labelledby="cfg-g-blade" aria-describedby="cfg-h-blade">
+          <div class="cfg__group-head">
+            <h3 class="cfg__group-t" id="cfg-g-blade">Longitud de hoja</h3>
+            <p class="cfg__group-help" id="cfg-h-blade">Medida nagasa, del habaki a la punta. Se ajusta al alcance de tu brazo.</p>
+          </div>
+          <ul class="cfg__opts">
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="blade" data-value="68" aria-pressed="false" tabindex="-1">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__len" style="--l: 92%"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">68 cm</span>
+                  <span class="cfg__opt-n">Ágil · 1,68–1,75 m de estatura</span>
+                </span>
+                <span class="cfg__opt-d">−80 €</span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="blade" data-value="71" aria-pressed="true" tabindex="0">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__len" style="--l: 96%"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">71 cm</span>
+                  <span class="cfg__opt-n">Equilibrada · 1,75–1,85 m</span>
+                </span>
+                <span class="cfg__opt-d">Incluido</span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="blade" data-value="74" aria-pressed="false" tabindex="-1">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__len" style="--l: 100%"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">74 cm</span>
+                  <span class="cfg__opt-n">Larga · más de 1,85 m</span>
+                </span>
+                <span class="cfg__opt-d">+120 €</span>
+              </button>
+            </li>
+          </ul>
+        </div>
 
-      <dl class="cfg__facts">
-        <div class="cfg__fact">
-          <dt>Acero</dt>
-          <dd data-config-steel>Tamahagane · 12 pliegues</dd>
+        <!-- acabado del acero -->
+        <div class="cfg__group" role="group" aria-labelledby="cfg-g-edge" aria-describedby="cfg-h-edge">
+          <div class="cfg__group-head">
+            <h3 class="cfg__group-t" id="cfg-g-edge">Acabado del acero</h3>
+            <p class="cfg__group-help" id="cfg-h-edge">Cómo se pule la hoja tras el templado. Cambia el brillo, no el filo.</p>
+          </div>
+          <ul class="cfg__opts">
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="edge" data-value="kurogane" aria-pressed="true" tabindex="0">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #3b3f45"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Kurogane</span>
+                  <span class="cfg__opt-n">Pulido satinado, hamon mate</span>
+                </span>
+                <span class="cfg__opt-d">Incluido</span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="edge" data-value="mirror" aria-pressed="false" tabindex="-1">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #d8dde3"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Espejo</span>
+                  <span class="cfg__opt-n">Pulido hadori a espejo</span>
+                </span>
+                <span class="cfg__opt-d">+260 €</span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="edge" data-value="damascus" aria-pressed="false" tabindex="-1">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #8a8f96"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Damasco</span>
+                  <span class="cfg__opt-n">Acero plegado 13 veces, veta visible</span>
+                </span>
+                <span class="cfg__opt-d">+480 €</span>
+              </button>
+            </li>
+          </ul>
         </div>
-        <div class="cfg__fact">
-          <dt>Hamon</dt>
-          <dd data-config-hamon>Suguha (recto)</dd>
-        </div>
-        <div class="cfg__fact">
-          <dt>Nagasa</dt>
-          <dd data-config-nagasa>71 cm</dd>
-        </div>
-        <div class="cfg__fact">
-          <dt>Forja</dt>
-          <dd data-config-lead>6 semanas</dd>
-        </div>
-      </dl>
 
-      <ul class="cfg__mounts">
-        <li class="cfg__mount">
-          <picture>
-            <source type="image/avif" sizes="(min-width: 1000px) 14vw, 29vw"
-              srcset="/assets/img/polish-800.avif 800w, /assets/img/polish-1400.avif 1400w">
-            <source type="image/webp" sizes="(min-width: 1000px) 14vw, 29vw"
-              srcset="/assets/img/polish-800.webp 800w, /assets/img/polish-1400.webp 1400w">
-            <img src="/assets/img/polish-1400.jpg" width="1400" height="788"
-              alt="Hoja recién pulida sobre fondo gris, con el reflejo limpio del acero."
-              loading="lazy" decoding="async">
-          </picture>
-          <span class="cfg__mount-sw" data-mount-swatch="edge" style="--sw: #3b3f45" aria-hidden="true"></span>
-          <p class="cfg__mount-txt">
-            <span class="cfg__mount-k">Acabado</span>
-            <span class="cfg__mount-v" data-mount="edge">Kurogane</span>
-          </p>
-        </li>
-        <li class="cfg__mount">
-          <picture>
-            <source type="image/avif" sizes="(min-width: 1000px) 14vw, 29vw"
-              srcset="/assets/img/tsuba-600.avif 600w, /assets/img/tsuba-1000.avif 1000w">
-            <source type="image/webp" sizes="(min-width: 1000px) 14vw, 29vw"
-              srcset="/assets/img/tsuba-600.webp 600w, /assets/img/tsuba-1000.webp 1000w">
-            <img src="/assets/img/tsuba-1000.jpg" width="1000" height="1000"
-              alt="Tsuba de hierro forjado con incrustaciones de oro sobre fondo neutro."
-              loading="lazy" decoding="async">
-          </picture>
-          <span class="cfg__mount-sw" data-mount-swatch="tsuba" style="--sw: #4a4a4c" aria-hidden="true"></span>
-          <p class="cfg__mount-txt">
-            <span class="cfg__mount-k">Tsuba</span>
-            <span class="cfg__mount-v" data-mount="tsuba">Aoi</span>
-          </p>
-        </li>
-        <li class="cfg__mount">
-          <picture>
-            <source type="image/avif" sizes="(min-width: 1000px) 14vw, 29vw"
-              srcset="/assets/img/saya-800.avif 800w, /assets/img/saya-1400.avif 1400w">
-            <source type="image/webp" sizes="(min-width: 1000px) 14vw, 29vw"
-              srcset="/assets/img/saya-800.webp 800w, /assets/img/saya-1400.webp 1400w">
-            <img src="/assets/img/saya-1400.jpg" width="1400" height="788"
-              alt="Dos katanas envainadas en sus sayas lacadas, apoyadas sobre fondo claro."
-              loading="lazy" decoding="async">
-          </picture>
-          <span class="cfg__mount-sw" data-mount-swatch="saya" style="--sw: #0d0d0f" aria-hidden="true"></span>
-          <p class="cfg__mount-txt">
-            <span class="cfg__mount-k">Saya</span>
-            <span class="cfg__mount-v" data-mount="saya">Negro urushi</span>
-          </p>
-        </li>
-      </ul>
+        <!-- tsuba -->
+        <div class="cfg__group" role="group" aria-labelledby="cfg-g-tsuba" aria-describedby="cfg-h-tsuba">
+          <div class="cfg__group-head">
+            <h3 class="cfg__group-t" id="cfg-g-tsuba">Tsuba</h3>
+            <p class="cfg__group-help" id="cfg-h-tsuba">La guarda de hierro forjado, hecha a mano por un maestro tsubashi.</p>
+          </div>
+          <ul class="cfg__opts">
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="tsuba" data-value="aoi" aria-pressed="true" tabindex="0">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #4a4a4c"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Aoi</span>
+                  <span class="cfg__opt-n">Hoja de malva, hierro oxidado</span>
+                </span>
+                <span class="cfg__opt-d">Incluido</span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="tsuba" data-value="namiji" aria-pressed="false" tabindex="-1">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #5c5346"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Namiji</span>
+                  <span class="cfg__opt-n">Olas caladas, hierro y oro nunome</span>
+                </span>
+                <span class="cfg__opt-d">+180 €</span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="tsuba" data-value="kiku" aria-pressed="false" tabindex="-1">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #2f2a26"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Kiku</span>
+                  <span class="cfg__opt-n">Crisantemo de 16 pétalos, shakudō</span>
+                </span>
+                <span class="cfg__opt-d">+320 €</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- saya -->
+        <div class="cfg__group" role="group" aria-labelledby="cfg-g-saya" aria-describedby="cfg-h-saya">
+          <div class="cfg__group-head">
+            <h3 class="cfg__group-t" id="cfg-g-saya">Saya</h3>
+            <p class="cfg__group-help" id="cfg-h-saya">Vaina de magnolia lacada a mano con urushi, entre 12 y 30 capas.</p>
+          </div>
+          <ul class="cfg__opts">
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="saya" data-value="kuro" aria-pressed="true" tabindex="0">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #0d0d0f"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Negro urushi</span>
+                  <span class="cfg__opt-n">18 capas, acabado espejo</span>
+                </span>
+                <span class="cfg__opt-d">Incluido</span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="saya" data-value="ai" aria-pressed="false" tabindex="-1">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #1e3050"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Índigo</span>
+                  <span class="cfg__opt-n">Laca ai teñida en frío</span>
+                </span>
+                <span class="cfg__opt-d">+140 €</span>
+              </button>
+            </li>
+            <li>
+              <button class="cfg__opt" type="button" data-option data-group="saya" data-value="shu" aria-pressed="false" tabindex="-1">
+                <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #a8322a"></span></span>
+                <span class="cfg__opt-txt">
+                  <span class="cfg__opt-l">Bermellón</span>
+                  <span class="cfg__opt-n">Shu-urushi con polvo de piedra</span>
+                </span>
+                <span class="cfg__opt-d">+190 €</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- grabado -->
+        <div class="cfg__group cfg__group--engraving">
+          <div class="cfg__group-head">
+            <h3 class="cfg__group-t"><label for="cfg-engraving">Grabado en la espiga</label></h3>
+            <p class="cfg__group-help" id="cfg-h-engraving">Opcional. Hasta 12 caracteres cortados a buril en el nakago, la parte de la hoja que queda oculta bajo la empuñadura. No se puede deshacer.</p>
+          </div>
+          <div class="cfg__eng">
+            <input class="cfg__eng-input" id="cfg-engraving" type="text" data-engraving
+              maxlength="12" autocomplete="off" spellcheck="false" enterkeyhint="done"
+              placeholder="Sin grabado" aria-describedby="cfg-h-engraving cfg-eng-state">
+            <p class="cfg__eng-state" id="cfg-eng-state">
+              <span class="cfg__eng-count" data-engraving-count>0/12</span>
+              <span class="cfg__eng-price" data-engraving-price>+90 € al grabar</span>
+            </p>
+          </div>
+        </div>
+
+      </div>
     </div>
 
-    <!-- ------------------------------------------------------------------- panel -->
-    <div class="cfg__panel">
-
-      <!-- modelo -->
-      <div class="cfg__group cfg__group--models" role="group" aria-labelledby="cfg-g-model" aria-describedby="cfg-h-model">
-        <div class="cfg__group-head">
-          <h3 class="cfg__group-t" id="cfg-g-model">Modelo</h3>
-          <p class="cfg__group-help" id="cfg-h-model">Seis hojas salidas del mismo taller. Cambian el acero, el temple y el plazo.</p>
-        </div>
-        <ul class="cfg__models">
-          <li>
-            <button class="cfg__model" type="button" data-model="mumei" aria-pressed="true" tabindex="0">
-              <span class="cfg__model-kanji" aria-hidden="true">無銘</span>
-              <span class="cfg__model-name">Mumei</span>
-              <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">1890 €</span></span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__model" type="button" data-model="kurogane" aria-pressed="false" tabindex="-1">
-              <span class="cfg__model-kanji" aria-hidden="true">黒鉄</span>
-              <span class="cfg__model-name">Kurogane</span>
-              <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">2340 €</span></span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__model" type="button" data-model="hanabira" aria-pressed="false" tabindex="-1">
-              <span class="cfg__model-kanji" aria-hidden="true">花びら</span>
-              <span class="cfg__model-name">Hanabira</span>
-              <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">2780 €</span></span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__model" type="button" data-model="tsuki" aria-pressed="false" tabindex="-1">
-              <span class="cfg__model-kanji" aria-hidden="true">月</span>
-              <span class="cfg__model-name">Tsuki</span>
-              <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">2460 €</span></span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__model" type="button" data-model="arashi" aria-pressed="false" tabindex="-1">
-              <span class="cfg__model-kanji" aria-hidden="true">嵐</span>
-              <span class="cfg__model-name">Arashi</span>
-              <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">3120 €</span></span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__model" type="button" data-model="ryujin" aria-pressed="false" tabindex="-1">
-              <span class="cfg__model-kanji" aria-hidden="true">龍神</span>
-              <span class="cfg__model-name">Ryūjin</span>
-              <span class="cfg__model-price"><span class="cfg__model-from">desde</span><span class="cfg__model-eur">4900 €</span></span>
-              <span class="cfg__model-tag">Nueve piezas</span>
-            </button>
-          </li>
-        </ul>
+    <!-- ------------------------------------------------------------------ el precio -->
+    <div class="cfg__buy">
+      <div class="wrap cfg__buy-inner">
+        <p class="cfg__buy-sum">
+          <span class="cfg__buy-model" data-config-model-name>Mumei</span>
+          <span class="cfg__buy-variants" data-config-summary>71 cm · Kurogane · Aoi · Negro urushi</span>
+        </p>
+        <p class="cfg__buy-total">
+          <span class="cfg__buy-k">Total</span>
+          <span class="cfg__buy-v" data-config-total>1890 €</span>
+        </p>
+        <button class="btn btn--lg cfg__buy-cta" type="button" data-add-to-cart data-product="mumei">
+          Añadir al carrito
+        </button>
+        <p class="cfg__buy-fine">
+          Envío asegurado y aranceles incluidos. Forja: <span data-config-lead-short>6 semanas</span>.
+        </p>
       </div>
-
-      <!-- longitud de hoja -->
-      <div class="cfg__group" role="group" aria-labelledby="cfg-g-blade" aria-describedby="cfg-h-blade">
-        <div class="cfg__group-head">
-          <h3 class="cfg__group-t" id="cfg-g-blade">Longitud de hoja</h3>
-          <p class="cfg__group-help" id="cfg-h-blade">Medida nagasa, del habaki a la punta. Se ajusta al alcance de tu brazo.</p>
-        </div>
-        <ul class="cfg__opts">
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="blade" data-value="68" aria-pressed="false" tabindex="-1">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__len" style="--l: 92%"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">68 cm</span>
-                <span class="cfg__opt-n">Ágil · 1,68–1,75 m de estatura</span>
-              </span>
-              <span class="cfg__opt-d">−80 €</span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="blade" data-value="71" aria-pressed="true" tabindex="0">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__len" style="--l: 96%"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">71 cm</span>
-                <span class="cfg__opt-n">Equilibrada · 1,75–1,85 m</span>
-              </span>
-              <span class="cfg__opt-d">Incluido</span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="blade" data-value="74" aria-pressed="false" tabindex="-1">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__len" style="--l: 100%"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">74 cm</span>
-                <span class="cfg__opt-n">Larga · más de 1,85 m</span>
-              </span>
-              <span class="cfg__opt-d">+120 €</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <!-- acabado del acero -->
-      <div class="cfg__group" role="group" aria-labelledby="cfg-g-edge" aria-describedby="cfg-h-edge">
-        <div class="cfg__group-head">
-          <h3 class="cfg__group-t" id="cfg-g-edge">Acabado del acero</h3>
-          <p class="cfg__group-help" id="cfg-h-edge">Cómo se pule la hoja tras el templado. Cambia el brillo, no el filo.</p>
-        </div>
-        <ul class="cfg__opts">
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="edge" data-value="kurogane" aria-pressed="true" tabindex="0">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #3b3f45"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Kurogane</span>
-                <span class="cfg__opt-n">Pulido satinado, hamon mate</span>
-              </span>
-              <span class="cfg__opt-d">Incluido</span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="edge" data-value="mirror" aria-pressed="false" tabindex="-1">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #d8dde3"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Espejo</span>
-                <span class="cfg__opt-n">Pulido hadori a espejo</span>
-              </span>
-              <span class="cfg__opt-d">+260 €</span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="edge" data-value="damascus" aria-pressed="false" tabindex="-1">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #8a8f96"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Damasco</span>
-                <span class="cfg__opt-n">Acero plegado 13 veces, veta visible</span>
-              </span>
-              <span class="cfg__opt-d">+480 €</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <!-- tsuba -->
-      <div class="cfg__group" role="group" aria-labelledby="cfg-g-tsuba" aria-describedby="cfg-h-tsuba">
-        <div class="cfg__group-head">
-          <h3 class="cfg__group-t" id="cfg-g-tsuba">Tsuba</h3>
-          <p class="cfg__group-help" id="cfg-h-tsuba">La guarda de hierro forjado, hecha a mano por un maestro tsubashi.</p>
-        </div>
-        <ul class="cfg__opts">
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="tsuba" data-value="aoi" aria-pressed="true" tabindex="0">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #4a4a4c"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Aoi</span>
-                <span class="cfg__opt-n">Hoja de malva, hierro oxidado</span>
-              </span>
-              <span class="cfg__opt-d">Incluido</span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="tsuba" data-value="namiji" aria-pressed="false" tabindex="-1">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #5c5346"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Namiji</span>
-                <span class="cfg__opt-n">Olas caladas, hierro y oro nunome</span>
-              </span>
-              <span class="cfg__opt-d">+180 €</span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="tsuba" data-value="kiku" aria-pressed="false" tabindex="-1">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #2f2a26"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Kiku</span>
-                <span class="cfg__opt-n">Crisantemo de 16 pétalos, shakudō</span>
-              </span>
-              <span class="cfg__opt-d">+320 €</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <!-- saya -->
-      <div class="cfg__group" role="group" aria-labelledby="cfg-g-saya" aria-describedby="cfg-h-saya">
-        <div class="cfg__group-head">
-          <h3 class="cfg__group-t" id="cfg-g-saya">Saya</h3>
-          <p class="cfg__group-help" id="cfg-h-saya">Vaina de magnolia lacada a mano con urushi, entre 12 y 30 capas.</p>
-        </div>
-        <ul class="cfg__opts">
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="saya" data-value="kuro" aria-pressed="true" tabindex="0">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #0d0d0f"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Negro urushi</span>
-                <span class="cfg__opt-n">18 capas, acabado espejo</span>
-              </span>
-              <span class="cfg__opt-d">Incluido</span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="saya" data-value="ai" aria-pressed="false" tabindex="-1">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #1e3050"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Índigo</span>
-                <span class="cfg__opt-n">Laca ai teñida en frío</span>
-              </span>
-              <span class="cfg__opt-d">+140 €</span>
-            </button>
-          </li>
-          <li>
-            <button class="cfg__opt" type="button" data-option data-group="saya" data-value="shu" aria-pressed="false" tabindex="-1">
-              <span class="cfg__opt-mark" aria-hidden="true"><span class="cfg__sw" style="--sw: #a8322a"></span></span>
-              <span class="cfg__opt-txt">
-                <span class="cfg__opt-l">Bermellón</span>
-                <span class="cfg__opt-n">Shu-urushi con polvo de piedra</span>
-              </span>
-              <span class="cfg__opt-d">+190 €</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <!-- grabado -->
-      <div class="cfg__group cfg__group--engraving">
-        <div class="cfg__group-head">
-          <h3 class="cfg__group-t"><label for="cfg-engraving">Grabado en la espiga</label></h3>
-          <p class="cfg__group-help" id="cfg-h-engraving">Opcional. Hasta 12 caracteres cortados a buril en el nakago, la parte de la hoja que queda oculta bajo la empuñadura. No se puede deshacer.</p>
-        </div>
-        <div class="cfg__eng">
-          <input class="cfg__eng-input" id="cfg-engraving" type="text" data-engraving
-            maxlength="12" autocomplete="off" spellcheck="false" enterkeyhint="done"
-            placeholder="Sin grabado" aria-describedby="cfg-h-engraving cfg-eng-state">
-          <p class="cfg__eng-state" id="cfg-eng-state">
-            <span class="cfg__eng-count" data-engraving-count>0/12</span>
-            <span class="cfg__eng-price" data-engraving-price>+90 € al grabar</span>
-          </p>
-        </div>
-      </div>
-
+      <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" data-config-live></p>
     </div>
-  </div>
-
-  <!-- ------------------------------------------------------------------ el precio -->
-  <div class="cfg__buy">
-    <div class="wrap cfg__buy-inner">
-      <p class="cfg__buy-sum">
-        <span class="cfg__buy-model" data-config-model-name>Mumei</span>
-        <span class="cfg__buy-variants" data-config-summary>71 cm · Kurogane · Aoi · Negro urushi</span>
-      </p>
-      <p class="cfg__buy-total">
-        <span class="cfg__buy-k">Total</span>
-        <span class="cfg__buy-v" data-config-total>1890 €</span>
-      </p>
-      <button class="btn btn--lg cfg__buy-cta" type="button" data-add-to-cart data-product="mumei">
-        Añadir al carrito
-      </button>
-      <p class="cfg__buy-fine">
-        Envío asegurado y aranceles incluidos. Forja: <span data-config-lead-short>6 semanas</span>.
-      </p>
-    </div>
-    <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" data-config-live></p>
   </div>
 </section>

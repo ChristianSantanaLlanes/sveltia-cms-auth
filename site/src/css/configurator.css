@@ -1,6 +1,8 @@
-/* configurator — el banco de trabajo: escenario pegajoso a la izquierda,
-   decisiones a la derecha y el coste real siempre a la vista abajo.
-   Todo vive bajo #configurador para no pisar a nadie. */
+/* configurator — el banco de trabajo: la hoja elegida y las seis decisiones
+   repartidas en una sola rejilla, con el coste real siempre a la vista en la
+   barra de abajo. Todo vive bajo #configurador para no pisar a nadie.
+   El orden cambia por ancho: en móvil manda la decisión (el selector de modelo
+   abre el bloque), en escritorio la foto y el selector van lado a lado. */
 
 #configurador {
   --cfg-panel: #131317;          /* superficie sobre sumi, un punto por encima */
@@ -128,22 +130,6 @@
   color: var(--washi);
   font-variant-numeric: tabular-nums;
 }
-/* con el escenario ancho, los cuatro datos caben en una sola tira */
-@media (min-width: 1000px) {
-  .cfg__facts {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-top: clamp(1.25rem, 2.2vw, 1.75rem);
-  }
-  .cfg__fact:nth-child(odd),
-  .cfg__fact:nth-child(even) {
-    padding-inline: clamp(0.75rem, 1.4vw, 1.125rem) 0.75rem;
-    border-inline-start: 1px solid var(--cfg-line);
-  }
-  .cfg__fact:first-child {
-    padding-inline-start: 0;
-    border-inline-start: 0;
-  }
-}
 
 /* --- las tres monturas elegidas, con material real ------------------------ */
 .cfg__mounts {
@@ -197,40 +183,6 @@
   line-height: 1.25;
   letter-spacing: -0.01em;
   color: var(--washi);
-}
-
-@media (min-width: 1000px) {
-  .cfg__grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr);
-  }
-  /* La rejilla tiene UNA fila, así que el área de la columna izquierda mide lo
-     que mide el panel: ahí está el recorrido del sticky. Para que el escenario
-     quepa entero en pantalla, las tres monturas se van a un raíl vertical
-     junto a la hoja y la foto se limita en alto. */
-  .cfg__stage {
-    position: sticky;
-    top: calc(var(--nav-h) + var(--nav-sub-h) + 12px);
-    display: grid;
-    grid-template-columns: clamp(5.25rem, 8vw, 6.5rem) minmax(0, 1fr);
-    grid-template-areas:
-      "mounts hero"
-      "facts  facts";
-    column-gap: clamp(0.75rem, 1.4vw, 1.125rem);
-    align-items: start;
-  }
-  .cfg__hero { grid-area: hero; }
-  .cfg__mounts {
-    grid-area: mounts;
-    grid-template-columns: minmax(0, 1fr);
-    gap: clamp(0.6rem, 1.2vw, 0.9rem);
-    margin: 0;
-  }
-  .cfg__facts { grid-area: facts; }
-  /* techo de altura: el escenario nunca puede pasar del alto de la ventana o
-     el sticky deja de tener sentido. La foto recorta, no se deforma. */
-  .cfg__hero-frame {
-    max-height: calc(100vh - 24rem);
-  }
 }
 
 /* -------------------------------------------------------------------- panel */
@@ -805,5 +757,76 @@
   .cfg__mounts {
     order: 5;
     margin: 0;
+  }
+}
+
+/* --- escritorio (≥1000 px): una sola rejilla, sin columna muerta ----------
+   Antes el escenario iba pegajoso en una columna y el panel de decisiones en
+   la otra: como el panel medía tres veces más, la mitad izquierda de la
+   sección quedaba en negro durante ~1600 px. Ya no hay dos columnas de página
+   sino una rejilla única en la que escenario y panel se disuelven
+   (display: contents) y cada bloque ocupa su celda:
+
+     hoja  │ Modelo          ← la foto solo depende del modelo: van juntos
+     hoja  │ datos de la hoja
+     hoja  │ monturas elegidas
+     ──────┴──────────────
+     Longitud  │ Acabado
+     Tsuba     │ Saya
+     Grabado (a lo ancho)
+
+   El precio vivo sigue en la barra pegajosa de abajo, que es lo que hay que
+   tener siempre delante mientras se decide. ------------------------------- */
+@media (min-width: 1000px) {
+  .cfg__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "hero  models"
+      "hero  facts"
+      "hero  mounts"
+      "blade edge"
+      "tsuba saya"
+      "eng   eng";
+    grid-template-rows: auto auto 1fr auto auto auto;
+    align-items: start;
+    column-gap: clamp(2rem, 3.6vw, 3.25rem);
+    row-gap: clamp(2rem, 3.2vw, 2.75rem);
+    /* la barra de precio flota encima del final del bloque */
+    padding-bottom: calc(var(--cfg-bar-h) + 1rem);
+  }
+  .cfg__stage,
+  .cfg__panel {
+    display: contents;
+  }
+
+  .cfg__hero { grid-area: hero; }
+  .cfg__facts {
+    grid-area: facts;
+    margin: 0;
+  }
+  /* las monturas se apoyan en el borde inferior de la foto: el sobrante de la
+     columna se reparte como aire entre datos y monturas, no como hueco */
+  .cfg__mounts {
+    grid-area: mounts;
+    align-self: end;
+    margin: 0;
+  }
+  .cfg__group--models { grid-area: models; }
+  .cfg__panel > .cfg__group:nth-child(2) { grid-area: blade; }
+  .cfg__panel > .cfg__group:nth-child(3) { grid-area: edge; }
+  .cfg__panel > .cfg__group:nth-child(4) { grid-area: tsuba; }
+  .cfg__panel > .cfg__group:nth-child(5) { grid-area: saya; }
+  .cfg__group--engraving { grid-area: eng; }
+
+  /* el grabado ocupa el ancho entero: enunciado a la izquierda, campo a la
+     derecha, para que la caja no se estire doce caracteres a 1100 px */
+  .cfg__group--engraving {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(2rem, 3.6vw, 3.25rem);
+    align-items: center;
+  }
+  .cfg__group--engraving .cfg__group-head {
+    margin-bottom: 0;
   }
 }

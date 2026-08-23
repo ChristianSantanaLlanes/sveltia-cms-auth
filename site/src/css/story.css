@@ -759,10 +759,11 @@
    Fondo sumi otra vez (rompe el washi de #forge) con tres piezas de montura.
 
    REGLA DE LA VITRINA — es lo que sostiene toda la composición:
-   las tres fotos vienen de tres archivos distintos (dos cuadradas y una 16:9,
-   con el fondo de estudio a 216, 145 y 105 de luminancia). Para que el tríptico
-   se lea como UNA sesión de fotos y no como tres recortes de catálogo, las tres
-   pasan por el mismo tratamiento:
+   las tres fotos vienen de tres archivos distintos (dos cuadradas y una 16:9),
+   con el fondo de estudio a 205, 129 y 107 de luminancia, las dos primeras con
+   dominante azul y la segunda además sobre tela. Para que el tríptico se lea
+   como UNA sesión de fotos y no como tres recortes de catálogo, las tres pasan
+   por el mismo tratamiento:
 
      1. MISMO MARCO — 5:4 en las tres columnas, mismo ancho, misma altura.
         Con columnas iguales la medida de línea también es igual (~48 caracteres
@@ -771,11 +772,15 @@
      2. MISMO REENCUADRE — cada foto declara en su style la ventana que enseña:
         --fw = fracción del ancho original visible, --cx/--cy = el punto de la
         foto que cae en el centro del marco. El <img> se escala a 100%/--fw y se
-        traslada por ese punto: geometría exacta, sin object-position a ojo, y
-        el sujeto queda al mismo tamaño relativo en las tres.
-     3. MISMA LUZ — brillo/contraste/saturación por foto para llevar los tres
-        fondos al mismo gris (~150 de luminancia) y quitar el tinte azulado de
-        las dos primeras. Es el revelado que no se pudo hacer en la toma.
+        traslada por ese punto: geometría exacta, sin object-position a ojo.
+        Las ventanas están elegidas con dos condiciones: que la pieza que nombra
+        el pie sea la que se ve (la 03 enseña la vaina lacada, no la empuñadura)
+        y que las tres ocupen la misma franja del marco. Medido sobre la captura:
+        el sujeto va de 6 % a 94 % de alto en la 01, de 6 % a 91 % en la 02 y
+        cruza de lado a lado en la 03.
+     3. MISMA LUZ — revelado medido, no a ojo (ver el bloque de filtros): los
+        tres fondos acaban en la misma luminancia, el mismo gris neutro y la
+        misma textura. Es el revelado que no se pudo hacer en la toma.
 
    La regla de 1px que abre cada pie sigue siendo la prueba visible: cruza las
    tres columnas a la misma altura, igual que las bases de las fotos.
@@ -859,15 +864,46 @@
   transform: translate(calc(var(--cx, 50%) * -1), calc(var(--cy, 50%) * -1));
 }
 
-/* --- revelado: los tres fondos al mismo gris ------------------------------ */
+/* --- revelado: los tres fondos al mismo gris ------------------------------
+   Medido sobre la ventana que enseña cada foto, no a ojo. De partida el fondo
+   está en 205, 129 y 107 de luminancia, y los dos primeros tiran a azul (+20 y
+   +14 de B sobre R). La cadena es la misma en las tres —brillo, contraste,
+   sepia, saturación— y solo cambian los números:
+
+     brillo    lleva la mediana de cada ventana a 147
+     contraste iguala el rango tonal (la de la vaina venía muy plana)
+     sepia     mata la dominante azul de las dos primeras: calienta justo lo que
+               el fondo tenía de frío, y la tercera ya era neutra
+     saturar   compensa el sepia para que las tres queden en el mismo ~0,55 de
+               saturación neta: el oro sigue siendo oro en las tres
+
+   Comprobado en la captura de 1440: mediana 147,1 / 147,4 / 147,4 y fondo
+   (151,152,150), (149,148,147) y (151,148,148). Antes eran tres platós.
+   -------------------------------------------------------------------------- */
 #tsuba-p1 .tsuba__frame img {
-  filter: brightness(0.7) contrast(1.08) saturate(0.6);
+  filter: brightness(0.695) contrast(1) sepia(0.2) saturate(0.69);
 }
 #tsuba-p2 .tsuba__frame img {
-  filter: brightness(0.94) contrast(1.1) saturate(0.6);
+  /* la única con fondo de tela: el desenfoque borra la trama del lino —que
+     delataba un plató distinto— y casi no le cuesta nada a la figura, que ya
+     venía blanda de origen. Medido con el laplaciano del fondo: la trama baja
+     de 18 a 3,9, contra 1,9 y 1,7 de las otras dos; sin él se queda en 31 y
+     canta. El brillo compensa lo que sube la mediana al promediar la trama. */
+  filter: blur(1.6px) brightness(1.05) contrast(1.05) sepia(0.24) saturate(0.72);
 }
 #tsuba-p3 .tsuba__frame img {
-  filter: brightness(1.45) contrast(0.94) saturate(0.9);
+  filter: brightness(1.354) contrast(1.15) sepia(0.03) saturate(0.57);
+}
+
+/* misma caída de luz en las tres: los fondos originales se apagan cada uno
+   hacia un lado, así que un velo de esquinas idéntico —y muy flojo— impone una
+   sola dirección de luz sobre las tres y remata la ilusión de una sola sesión */
+.tsuba__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(115% 130% at 50% 42%, transparent 45%, rgba(11, 11, 12, 0.16) 100%);
 }
 
 /* --- el pie: la regla que demuestra la alineación ------------------------ */

@@ -41,7 +41,15 @@ if (fs.existsSync(entry)) {
 fs.writeFileSync(path.join(DIST, 'assets/app.js'), js);
 
 // ---- HTML -----------------------------------------------------------------
-const sections = manifest.sections.map((n) => read(path.join(SRC, 'sections', `${n}.html`), `<!-- ${n} pending -->`)).join('\n');
+const sectionHtml = (n) => read(path.join(SRC, 'sections', `${n}.html`), `<!-- ${n} pending -->`);
+// El nav y el pie son landmarks propios; todo lo demás vive dentro de <main>.
+const outsideMain = new Set(['nav', 'footer']);
+const inMain = manifest.sections.filter((n) => !outsideMain.has(n)).map(sectionHtml).join('\n');
+const sections = [
+  manifest.sections.includes('nav') ? sectionHtml('nav') : '',
+  `<main id="main">\n${inMain}\n</main>`,
+  manifest.sections.includes('footer') ? sectionHtml('footer') : '',
+].join('\n');
 const overlays = manifest.overlays.map((n) => read(path.join(SRC, 'sections', `${n}.html`), `<!-- ${n} pending -->`)).join('\n');
 const preload = read(path.join(SRC, 'preload.html'));
 const jsonld = read(path.join(SRC, 'jsonld.html'));

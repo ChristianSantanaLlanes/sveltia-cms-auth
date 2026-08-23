@@ -170,6 +170,25 @@
             <td class="specs__n specs__cost"><span class="specs__num">4900</span> <span class="specs__u">€</span></td>
           </tr>
         </tbody>
+
+        <!-- Cierre de tabla: los mismos rótulos al pie. En pantalla estrecha la
+             tabla se desliza dentro de su carril, así que la fila de cabeceras no
+             puede anclarse al viewport; con los rótulos también abajo, ninguna
+             columna queda a más de tres filas de su nombre y, al deslizar en
+             horizontal, el pie confirma en qué columna se está. Oculto en
+             escritorio, donde la cabecera ya se ancla. Es repetición visual, no
+             semántica: la tabla ya tiene sus <th scope="col"> en el thead. -->
+        <tfoot class="specs__foot" aria-hidden="true">
+          <tr>
+            <td class="specs__fth specs__fth--model">Modelo</td>
+            <td class="specs__fth">Acero</td>
+            <td class="specs__fth">Hamon</td>
+            <td class="specs__fth specs__fth--n">Peso</td>
+            <td class="specs__fth specs__fth--n">Nagasa</td>
+            <td class="specs__fth specs__fth--n">Forja</td>
+            <td class="specs__fth specs__fth--n">Desde</td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 

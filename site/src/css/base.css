@@ -73,3 +73,15 @@ a { color: inherit; }
     contain-intrinsic-size: auto 1200px;
   }
 }
+
+/* El enlace de salto aparece al recibir el foco: si no, no sirve para nada. */
+.skip-link {
+  position: absolute; top: 0; left: 50%; z-index: 100;
+  transform: translate(-50%, -120%);
+  padding: .7rem 1.25rem;
+  background: var(--sumi); color: var(--washi);
+  border-radius: 0 0 var(--radius-s) var(--radius-s);
+  font-size: .9375rem; font-weight: 560; text-decoration: none;
+  transition: transform 180ms var(--ease-out);
+}
+.skip-link:focus-visible { transform: translate(-50%, 0); outline-offset: -4px; }

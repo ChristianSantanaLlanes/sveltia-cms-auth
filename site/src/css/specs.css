@@ -241,6 +241,46 @@
   color: color-mix(in srgb, var(--steel) 90%, var(--sumi));
 }
 
+/* --- pie de tabla: los rótulos repetidos ----------------------------------
+   Cierre de la ficha con los mismos siete rótulos. Es la respuesta al problema
+   de fondo: la barra de navegación y la de producto son fijas, así que la fila
+   de cabeceras puede quedarse detrás de ellas en cualquier ancho, y en pantalla
+   estrecha ni siquiera puede anclarse (la tabla vive dentro de un carril con
+   deslizado horizontal, y un carril de scroll no permite anclar en vertical).
+   Con los rótulos también al pie, ninguna fila queda a más de tres de un
+   nombre de columna, se vea el chrome o no; y al deslizar en horizontal el pie
+   confirma en qué columna se está. */
+#specs .specs__table tfoot .specs__fth {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  /* la regla de cierre de la tabla pasa por debajo de los rótulos: el pie queda
+     dentro del marco, no flotando bajo él */
+  border-bottom: 1px solid color-mix(in srgb, var(--steel) 34%, transparent);
+  vertical-align: top;
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: color-mix(in srgb, var(--steel) 76%, var(--sumi));
+  white-space: nowrap;
+}
+#specs .specs__table tfoot .specs__fth--n {
+  text-align: end;
+}
+#specs .specs__table tfoot .specs__fth--model {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  background-color: var(--sumi);
+  border-inline-end: 1px solid var(--line-dark);
+  padding-inline-start: 0;
+}
+/* la última fila de datos recupera el filete normal: quien cierra es el pie */
+#specs .specs__table tbody tr:last-child > * {
+  border-bottom-color: var(--line-dark);
+}
+
 /* --- notas al pie: texto de sala ------------------------------------------ */
 #specs .specs__notes {
   margin: clamp(2.5rem, 5vw, 4rem) 0 0;
@@ -302,7 +342,8 @@
     overflow: visible;
   }
   /* sin deslizado horizontal, la cartela no necesita quedarse anclada */
-  #specs .specs__model {
+  #specs .specs__model,
+  #specs .specs__table tfoot .specs__fth--model {
     position: static;
     box-shadow: none;
   }
@@ -340,16 +381,17 @@
   }
 }
 
-/* --- la fila de rótulos se ancla siempre, por debajo del chrome fijo -------
-   Aquí estaba la brecha: la barra de navegación y la de producto son fijas y
-   suman ~100 px, así que en cuanto la tabla sube un poco los rótulos se metían
-   detrás de ellas y las seis columnas quedaban sin nombre. La fila de
-   cabeceras se detiene ahora en `--specs-dock`, es decir a ras del borde
-   inferior de las dos barras: mientras haya una sola fila de datos en pantalla,
-   sus rótulos están encima de ella, no debajo del chrome.
-   Sin condición de altura de ventana: la que rompía era justo la ventana alta
-   (900 px), donde la regla anterior no llegaba a activarse. */
-@media (min-width: 900px) {
+/* --- la fila de rótulos, anclada bajo el chrome fijo ----------------------
+   La barra de navegación y la de producto son fijas y suman `--specs-dock`
+   (~100 px). La tabla entera —rótulos y seis filas— mide unos 720 px: en una
+   ventana de 820 px o más cabe completa por debajo de las dos barras, así que
+   nunca se puede estar leyendo una cifra sin su rótulo en la misma pantalla y
+   una fila pegajosa solo taparía la primera hoja. Por debajo de eso la tabla ya
+   no cabe de una vez, y entonces sí: la fila de cabeceras se detiene a ras del
+   borde inferior del chrome en lugar de meterse detrás.
+   El resto del trabajo lo hace el pie de tabla, que repite los siete rótulos en
+   todos los anchos y alturas. */
+@media (min-width: 900px) and (max-height: 849px) {
   #specs .specs__th,
   #specs .specs__th--model {
     position: sticky;
@@ -363,8 +405,6 @@
     /* sombra corta hacia abajo: solo se ve con filas pasando por debajo */
     box-shadow: 0 10px 12px -12px rgba(0, 0, 0, 0.95);
   }
-  /* la sección recorta con `overflow: clip`, así que la fila anclada se va con
-     la tabla y nunca sobrevuela las notas al pie */
 }
 
 /* --- estrecho: la tabla se desliza y la cartela se queda ------------------ */
@@ -383,7 +423,8 @@
   }
   /* sombra corta a la derecha de la columna anclada: se ve que hay más tabla */
   #specs .specs__th--model,
-  #specs .specs__model {
+  #specs .specs__model,
+  #specs .specs__table tfoot .specs__fth--model {
     box-shadow: 8px 0 12px -10px rgba(0, 0, 0, 0.9);
   }
 }
@@ -405,11 +446,12 @@
 @supports not (color: color-mix(in srgb, red, blue)) {
   #specs .specs__caption,
   #specs .specs__sub,
+  #specs .specs__table tfoot .specs__fth,
   #specs .specs__u { color: #9aa0a6; }
   #specs .specs__kanji { color: #b0b4ba; }
   #specs .specs__v { color: #e2e1dd; }
   #specs .specs__note-v { color: #b7b6b2; }
-  #specs .specs__table tbody tr:last-child > * { border-bottom-color: rgba(184, 188, 194, 0.34); }
+  #specs .specs__table tfoot .specs__fth { border-bottom-color: rgba(184, 188, 194, 0.34); }
   @media (hover: hover) {
     #specs .specs__table tbody tr:hover > * { background-color: rgba(246, 245, 242, 0.05); }
   }
