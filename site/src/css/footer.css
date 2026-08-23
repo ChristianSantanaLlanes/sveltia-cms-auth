@@ -1,0 +1,485 @@
+/* footer — cierre en sumi.
+   Un solo mecanismo para todo el pie: <details> sin JS.
+   En ancho estrecho es un registro de filas plegadas de una línea —mapa del
+   sitio, avisos y créditos— con filete a ancho completo y chevron a la derecha:
+   todo el pie cabe en poco más de una pantalla. A partir de 760 px las mismas
+   filas se despliegan por CSS y se reparten en rejilla, y el encabezado deja de
+   ser un control para volver a ser un titular.
+   Disciplina tipográfica: dos tamaños (13 px de navegación, 12 px de letra
+   pequeña), dos colores (washi para titulares, un único gris para todo lo
+   demás) y el peso como única diferencia. */
+
+#footer {
+  /* un solo gris para enlaces, datos y letra pequeña: 8,9:1 sobre sumi */
+  --f-ink: rgba(255, 255, 255, 0.72);
+  --f-line: var(--line-dark);
+  --f-row: 52px;
+  background: var(--sumi);
+  color: var(--washi);
+  padding-block: clamp(2.75rem, 6vw, 5rem) clamp(2rem, 3.5vw, 2.75rem);
+  padding-bottom: calc(clamp(2rem, 3.5vw, 2.75rem) + env(safe-area-inset-bottom));
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+/* el foco rojo del sistema no se ve sobre sumi: aquí manda el acero */
+#footer :where(a, button, summary):focus-visible {
+  outline-color: var(--steel-hi);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   PLEGABLE — el mismo gesto para el mapa del sitio y para los avisos
+   ========================================================================== */
+#footer .fold {
+  border-bottom: 1px solid var(--f-line);
+  scroll-margin-top: calc(var(--nav-h) + var(--nav-sub-h, 0px) + 12px);
+}
+
+#footer .fold__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: var(--f-row);
+  padding-block: 0.5rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+#footer .fold__row::-webkit-details-marker { display: none; }
+
+#footer .fold__h {
+  font-size: 0.8125rem;
+  font-weight: 640;
+  letter-spacing: -0.006em;
+  line-height: 1.25;
+  color: var(--washi);
+}
+
+/* chevron: dos filetes, el mismo gris que el texto */
+#footer .fold__row::after {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-inline-end: 3px;
+  border-right: 1.5px solid var(--f-ink);
+  border-bottom: 1.5px solid var(--f-ink);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 260ms var(--ease-out);
+}
+
+#footer .fold[open] > .fold__row::after,
+#footer .fold:target > .fold__row::after {
+  transform: translateY(1px) rotate(225deg);
+}
+
+#footer .fold__body { padding-bottom: 0.85rem; }
+
+/* un aviso al que se salta desde un enlace se abre solo, sin JS */
+#footer .fold:target > *:not(summary) { display: block; }
+
+@supports selector(::details-content) {
+  #footer .fold:target::details-content { content-visibility: visible; }
+}
+
+/* ==========================================================================
+   MAPA DEL SITIO
+   ========================================================================== */
+#footer .footer__map { border-top: 1px solid var(--f-line); }
+
+#footer .footer__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#footer .footer__list a {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 40px;
+  padding-block: 0.1rem;
+  color: var(--f-ink);
+  text-decoration: none;
+  transition: color 180ms var(--ease-out);
+}
+
+#footer .footer__list a:hover { color: var(--washi); }
+
+#footer .footer__nm { font-weight: 460; }
+
+/* la cifra viaja pegada al nombre, no en una columna a 150 px */
+#footer .footer__meta { font-weight: 400; }
+#footer .footer__meta::before { content: "·"; margin-inline-end: 0.45em; }
+
+/* ==========================================================================
+   DATOS DUROS — teléfono con horario, plazos y condiciones, no sustantivos
+   ========================================================================== */
+#footer .footer__facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#footer .footer__facts li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.15rem 0.75rem;
+  align-items: baseline;
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--f-line);
+}
+
+#footer .facts__k {
+  font-weight: 640;
+  letter-spacing: -0.006em;
+  color: var(--washi);
+}
+
+#footer .facts__v {
+  color: var(--f-ink);
+  text-wrap: pretty;
+}
+
+#footer .facts__v a {
+  color: var(--washi);
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+  text-underline-offset: 3px;
+}
+
+#footer .facts__v a:hover { text-decoration-color: currentColor; }
+
+/* ==========================================================================
+   AVISOS LEGALES
+   ========================================================================== */
+#footer .footer__age-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  padding-block: 1.1rem;
+  color: var(--f-ink);
+  max-width: 68ch;
+  text-wrap: pretty;
+}
+
+/* marca de edad: señalética, no adorno */
+#footer .footer__age {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 1.25rem;
+  border: 1px solid rgba(200, 164, 92, 0.55);
+  border-radius: var(--radius-pill);
+  font-size: 0.625rem;
+  font-weight: 660;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  transform: translateY(-1px);
+}
+
+#footer .fold--note .fold__body p {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--f-ink);
+  max-width: 56ch;
+  text-wrap: pretty;
+}
+
+#footer .fold--note .fold__body p + p { margin-top: 0.6rem; }
+
+/* ==========================================================================
+   TIENDA DE DEMOSTRACIÓN — la advertencia que nadie debe perderse
+   ========================================================================== */
+#footer .footer__demo {
+  margin-block: 1.25rem;
+  padding: clamp(0.9rem, 2vw, 1.25rem) clamp(1rem, 2.2vw, 1.5rem);
+  background: var(--sumi-soft);
+  border-inline-start: 2px solid var(--shu);
+  border-radius: 0 var(--radius-s) var(--radius-s) 0;
+  scroll-margin-top: calc(var(--nav-h) + var(--nav-sub-h, 0px) + 12px);
+}
+
+#footer .footer__demo-h {
+  font-size: 0.8125rem;
+  font-weight: 640;
+  letter-spacing: -0.006em;
+  line-height: 1.25;
+  color: var(--washi);
+}
+
+#footer .footer__demo p {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--f-ink);
+  max-width: 92ch;
+  text-wrap: pretty;
+}
+
+/* ==========================================================================
+   CRÉDITOS DE FOTOGRAFÍA (la lista la escribe el build desde inventory.json)
+   ========================================================================== */
+#footer .credits__list {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--f-ink);
+}
+
+#footer .credits__list li {
+  margin-bottom: 0.5rem;
+  break-inside: avoid;
+  /* algún título de museo es kilométrico: que parta antes que desbordar */
+  overflow-wrap: anywhere;
+}
+
+#footer .credits__list a {
+  color: var(--f-ink);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.24);
+  text-underline-offset: 2px;
+}
+
+#footer .credits__list a:hover {
+  color: var(--washi);
+  text-decoration-color: currentColor;
+}
+
+/* ==========================================================================
+   REMATE — marca, enlaces legales, copyright y país
+   ========================================================================== */
+#footer .footer__end {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+  padding-top: clamp(1.25rem, 2.5vw, 1.75rem);
+  border-top: 1px solid var(--f-line);
+}
+
+#footer .footer__brand {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: start;
+}
+
+#footer .footer__brand-kanji {
+  font-family: var(--font-serif);
+  font-size: clamp(1.875rem, 5vw, 2.5rem);
+  line-height: 0.9;
+  letter-spacing: 0.1em;
+  color: var(--washi);
+  /* el kanji arranca del washi y se apaga hacia el acero: temple, no adorno */
+  background: linear-gradient(105deg, var(--washi) 12%, var(--steel) 56%, #6d7178 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  #footer .footer__brand-kanji { color: transparent; }
+}
+
+#footer .footer__brand-word {
+  font-size: 0.6875rem;
+  font-weight: 660;
+  letter-spacing: 0.34em;
+  line-height: 1;
+  color: var(--washi);
+}
+
+#footer .footer__brand-sub {
+  font-size: 0.75rem;
+  color: var(--f-ink);
+}
+
+/* enlaces legales: en móvil, rejilla de dos columnas sin separadores —ninguna
+   barra colgando al final de línea, ningún enlace huérfano */
+#footer .footer__mini {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.25rem;
+}
+
+#footer .footer__mini a {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--f-ink);
+  text-decoration: none;
+  transition: color 180ms var(--ease-out);
+}
+
+#footer .footer__mini a:hover { color: var(--washi); }
+
+#footer .footer__copy,
+#footer .footer__place {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--f-ink);
+  text-wrap: pretty;
+}
+
+#footer .footer__top-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  color: var(--f-ink);
+  text-decoration: none;
+  transition: color 180ms var(--ease-out);
+}
+
+#footer .footer__top-link::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-top: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  transform: rotate(-45deg) translate(1px, 1px);
+  transition: transform 220ms var(--ease-out);
+}
+
+#footer .footer__top-link:hover { color: var(--washi); }
+#footer .footer__top-link:hover::after { transform: rotate(-45deg) translate(3px, 3px); }
+
+/* dedos gordos: el objetivo táctil manda sobre la densidad */
+@media (pointer: coarse) {
+  #footer .footer__list a,
+  #footer .footer__mini a { min-height: 44px; }
+}
+
+/* ==========================================================================
+   ANCHO MEDIO Y ESCRITORIO — los mismos bloques, desplegados y en rejilla
+   ========================================================================== */
+@media (min-width: 760px) {
+  /* el plegable se abre por CSS: el encabezado vuelve a ser titular */
+  #footer .fold > *:not(summary) { display: block; }
+
+  @supports selector(::details-content) {
+    #footer .fold::details-content { content-visibility: visible; }
+  }
+
+  #footer .fold,
+  #footer .footer__map { border: 0; }
+
+  #footer .fold__row {
+    min-height: 0;
+    padding-block: 0;
+    cursor: default;
+  }
+
+  #footer .fold__row::after { display: none; }
+  #footer .fold__body { padding-bottom: 0; padding-top: 0.5rem; }
+
+  #footer .footer__map {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: clamp(1.5rem, 3.2vw, 3rem);
+    row-gap: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  #footer .footer__list a { min-height: 30px; padding-block: 0.2rem; }
+
+  #footer .footer__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+    column-gap: clamp(1.5rem, 3.2vw, 3rem);
+    margin-top: clamp(2rem, 4vw, 3rem);
+    padding-top: clamp(1.25rem, 2.4vw, 1.75rem);
+    border-top: 1px solid var(--f-line);
+  }
+
+  #footer .footer__facts li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+    padding-block: 0;
+    border: 0;
+  }
+
+  #footer .footer__legal {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: clamp(1.5rem, 3.2vw, 3rem);
+    row-gap: clamp(1.5rem, 3vw, 2.25rem);
+    margin-top: clamp(1.75rem, 3.5vw, 2.75rem);
+    padding-top: clamp(1.5rem, 2.8vw, 2.25rem);
+    border-top: 1px solid var(--f-line);
+  }
+
+  #footer .footer__age-line,
+  #footer .footer__demo,
+  #footer #creditos {
+    grid-column: 1 / -1;
+    padding-block: 0;
+  }
+
+  #footer .footer__demo { margin-block: 0; }
+  #footer .credits__list { columns: 2; column-gap: clamp(1.5rem, 4vw, 3rem); }
+
+  /* remate: marca a la izquierda, legales y copyright al centro, país a la
+     derecha; el filete superior acaba justo donde acaba la rejilla */
+  #footer .footer__end {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: clamp(2rem, 5vw, 4.5rem);
+    row-gap: 1rem;
+  }
+
+  #footer .footer__brand {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  #footer .footer__mini {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0;
+  }
+
+  /* el separador viaja con el enlace que le sigue: si la fila parte, nunca
+     queda una barra colgada al final de la línea */
+  #footer .footer__mini li + li::before {
+    content: "|";
+    margin-inline: 0.85rem;
+    color: rgba(255, 255, 255, 0.32);
+  }
+
+  #footer .footer__mini a { min-height: 0; display: inline; }
+
+  #footer .footer__copy {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  #footer .footer__place {
+    grid-column: 3;
+    grid-row: 1;
+    text-align: end;
+  }
+
+  #footer .footer__top-link {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1000px) {
+  #footer { padding-block: clamp(4rem, 7vw, 6.5rem) clamp(2.25rem, 3.5vw, 3rem); }
+  #footer .footer__map { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #footer .footer__facts { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #footer .credits__list { columns: 3; }
+}

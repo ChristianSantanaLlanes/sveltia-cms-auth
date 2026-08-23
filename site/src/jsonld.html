@@ -1,0 +1,111 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://kurogane.example/#organizacion",
+      "name": "KUROGANE",
+      "alternateName": "黒鉄",
+      "url": "https://kurogane.example/",
+      "image": "https://kurogane.example/assets/img/hero-wide-2560.jpg",
+      "description": "Taller de katanas forjadas a mano en acero tamahagane: plegado, temple en arcilla, pulido a piedra y montura a medida. Venta directa a España y a la Unión Europea.",
+      "slogan": "Acero negro, filo blanco.",
+      "knowsLanguage": [
+        "es-ES",
+        "ja-JP"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Seki",
+        "addressRegion": "Gifu",
+        "addressCountry": "JP"
+      },
+      "areaServed": [
+        {
+          "@type": "Country",
+          "name": "España"
+        },
+        {
+          "@type": "AdministrativeArea",
+          "name": "Unión Europea"
+        }
+      ],
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "contactType": "atención al cliente",
+          "email": "taller@kurogane.example",
+          "availableLanguage": [
+            "es",
+            "ja"
+          ],
+          "areaServed": "ES"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://kurogane.example/#preguntas",
+      "url": "https://kurogane.example/#faq",
+      "inLanguage": "es-ES",
+      "isPartOf": {
+        "@id": "https://kurogane.example/#organizacion"
+      },
+      "publisher": {
+        "@id": "https://kurogane.example/#organizacion"
+      },
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Puedo comprar una katana en España? ¿Hay edad mínima?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí. El Reglamento de Armas (Real Decreto 137/1993) trata la katana como arma blanca de libre adquisición: no hace falta licencia, permiso ni inscripción para tenerla en casa o exponerla. La venta a menores de dieciocho años está prohibida, así que la entrega se hace bajo firma y con el DNI o el pasaporte a la vista. Si no hay un adulto que firme, el paquete vuelve al almacén y se reintenta al día siguiente. Lo que sí regula la ley es sacarla a la calle. Fuera del domicilio solo puede transportarse por causa justificada —ir al dōjō, una exhibición, el taller de un pulidor—, siempre envainada, embalada y fuera del alcance inmediato del conductor. Llevarla encima sin ese motivo es una infracción grave de la Ley de Seguridad Ciudadana."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Llega afilada? ¿Qué diferencia hay entre filo de corte y filo romo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Las dos hojas salen del mismo acero y del mismo temple. Lo único que cambia es el último gesto del togishi: cerrar el filo a cero o pararlo antes. El filo de corte, shinken, se afila a navaja y sirve para tameshigiri sobre tatami enrollado. Es una herramienta de corte real: pide práctica previa, un sitio donde cortar y un armario que se cierre con llave. El filo romo, mogito, deja el canto en ocho décimas de milímetro. Pesa y equilibra igual que el afilado, y es lo que se usa en iaidō, en kata con compañero y en vitrina. El configurador elige el pulido, no el filo. Al aceptar el pedido te escribimos para confirmarlo por escrito antes de encender la fragua, y ninguna de las dos opciones cuesta más. Sin respuesta, la hoja se monta con filo romo."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo se cuida? ¿Cada cuánto toca aceite chōji y uchiko?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "El acero de una hoja templada no lleva cromo, ni barniz, ni nada que lo defienda: entre el pulido y el óxido solo hay una película de aceite del grosor de un aliento. Mantenerla es un gesto de dos minutos con su calendario. Después de cada uso: Seca la hoja con papel nuguigami, del habaki a la punta y siempre del lomo hacia el filo, y da una capa nueva de aceite chōji. Nunca la guardes con huellas: la sal de los dedos pica el acero en un par de días. Cada tres meses en vitrina: Golpea la hoja con la bola de uchiko —polvo de piedra de pulir— para arrastrar el aceite viejo, retíralo con papel limpio y vuelve a aceitar. Dos toques por cara bastan; el uchiko en exceso raya el pulido. Cada mes junto al mar: En la costa el aire salino adelanta el óxido. Abre la vitrina, mira el acero al trasluz buscando puntos mate y, si aparecen, aceita ese mismo día. Guárdala tumbada con el filo hacia arriba, nunca de pie sobre la punta durante meses, y lejos de un radiador: la saya de magnolia trabaja con la humedad y aprieta o suelta según la estación. Cada pedido sale con aceite chōji de 30 ml, uchiko, papel nuguigami y un mekugi-nuki de latón."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cuánto tarda y cómo sigo mi pedido?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No hay nada hecho de antemano: la forja empieza cuando entra el pedido. El plazo va de seis semanas para una Mumei a catorce para la Ryūjin, que además se graba a buril; cada ficha de producto indica el suyo. Al confirmar recibes una referencia con el formato KG-20260823-001 y una fecha estimada de entrega, siete semanas para una hoja base. Esa referencia es la que hay que citar en cualquier correo. A partir de ahí te escribimos cuatro veces, una por hito —plegado, temple, pulido y montura—, con fotografías de tu hoja concreta y no de catálogo. El transporte desde Seki añade cinco días laborables, con seguimiento y entrega bajo firma."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Enviáis fuera de España? ¿Quién paga la aduana?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "El precio que ves lleva incluido el IVA español del 21 %. El envío es gratuito a partir de 2.000 € y cuesta 39 € por debajo de esa cifra. A la Península, Baleares y el resto de la Unión Europea la hoja viaja con aranceles, IVA de importación y despacho pagados en origen: no hay nada que abonar al repartidor ni tasa que aparezca después. Canarias, Ceuta y Melilla quedan fuera del territorio del IVA. Ahí descontamos el 21 % del pedido y son el IGIC o el IPSI, más los gastos del agente, los que se liquidan en destino. Fuera de la Unión cotizamos el despacho antes de cerrar la venta y comprobamos la ley del país. En Reino Unido, una espada curva de más de 50 cm solo puede venderse si está forjada a mano con técnica tradicional: la nuestra lo está y viaja con la declaración firmada del forjador. A Australia y Canadá enviamos únicamente con el permiso previo del estado o la provincia de destino."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Qué garantía tiene y puedo devolver una pieza hecha a medida?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "La ley deja fuera del derecho de desistimiento los bienes confeccionados conforme a las especificaciones del comprador, que es exactamente lo que es tu hoja (artículo 103.c del texto refundido de la Ley General para la Defensa de los Consumidores y Usuarios). Nosotros lo damos igual. Treinta días desde la entrega para decir que no. Recogemos la pieza en el mismo domicilio en el que se entregó y devolvemos el importe íntegro, transporte y grabado incluidos. La única condición es que la hoja vuelva sin marcas de corte. La garantía legal de conformidad es de tres años y aquí cubre forja, temple, montura y laca: si una hoja se tuerce, si el temple revela una grieta o si la laca se levanta, se rehace desde el acero sin coste. No cubre el óxido por falta de mantenimiento ni el filo mellado por cortar lo que no se debe. El reapriete del mekugi y el repaso del filo son gratuitos de por vida en el taller: solo pagas el transporte de ida."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>

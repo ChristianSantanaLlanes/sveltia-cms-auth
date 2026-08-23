@@ -1,0 +1,89 @@
+<header id="top-nav" class="nav" data-nav>
+  <div class="nav__bar">
+    <div class="nav__inner">
+      <a class="nav__logo" href="#hero" aria-label="KUROGANE, ir al inicio">
+        <span class="nav__kanji" aria-hidden="true">黒鉄</span>
+        <span class="nav__rule" aria-hidden="true"></span>
+        <span class="nav__word">KUROGANE</span>
+      </a>
+
+      <nav class="nav__links" aria-label="Secciones del sitio">
+        <ul>
+          <li><a href="#catalogo" data-nav-link>Catálogo</a></li>
+          <li><a href="#configurador" data-nav-link>Configurador</a></li>
+          <li><a href="#hamon" data-nav-link>Hamon</a></li>
+          <li><a href="#forge" data-nav-link>Forja</a></li>
+          <li><a href="#faq" data-nav-link>Preguntas</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav__actions">
+        <span class="nav__actions-rule" aria-hidden="true"></span>
+
+        <button class="nav__icon nav__search" type="button" data-nav-search aria-expanded="false" aria-controls="nav-menu" aria-label="Buscar modelos y secciones">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false">
+            <circle cx="10.6" cy="10.6" r="6.1"></circle>
+            <path d="M15.2 15.2 20 20"></path>
+          </svg>
+        </button>
+
+        <button class="nav__icon nav__cart" type="button" data-cart-open aria-label="Abrir el carrito, vacío">
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M9 9.5V7.2a3 3 0 0 1 6 0v2.3"></path>
+            <path d="M4.9 9.5h14.2l-1 10.1a1.9 1.9 0 0 1-1.9 1.7H7.8a1.9 1.9 0 0 1-1.9-1.7L4.9 9.5Z"></path>
+          </svg>
+          <span class="nav__count is-empty" data-cart-count aria-hidden="true">0</span>
+        </button>
+
+        <button class="nav__icon nav__burger" type="button" data-nav-toggle aria-expanded="false" aria-controls="nav-menu" aria-label="Abrir el menú">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false">
+            <line class="nav__burger-a" x1="3.4" y1="9.25" x2="20.6" y2="9.25"></line>
+            <line class="nav__burger-b" x1="3.4" y1="14.75" x2="20.6" y2="14.75"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav__sub" data-nav-sub aria-hidden="true">
+    <div class="nav__sub-inner">
+      <p class="nav__sub-model">
+        <span class="nav__sub-kanji" data-nav-model-kanji aria-hidden="true">無銘</span>
+        <span class="nav__sub-name" data-nav-model-name>Mumei</span>
+        <span class="nav__sub-note" data-nav-model-note>Tamahagane · 12 pliegues</span>
+      </p>
+      <p class="nav__sub-price">Desde <strong data-nav-model-price>1.890 €</strong></p>
+      <a class="btn nav__sub-cta" href="#configurador" tabindex="-1">Configurar</a>
+    </div>
+  </div>
+
+  <div class="nav__menu" id="nav-menu" data-nav-menu hidden>
+    <nav class="nav__menu-inner" aria-label="Menú principal">
+      <form class="nav__find" role="search" data-nav-find>
+        <svg class="nav__find-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <circle cx="10.6" cy="10.6" r="6.1"></circle>
+          <path d="M15.2 15.2 20 20"></path>
+        </svg>
+        <label class="visually-hidden" for="nav-find-input">Buscar en la tienda</label>
+        <input class="nav__find-input" id="nav-find-input" type="search" name="q" placeholder="Modelo, acero o sección" autocomplete="off" spellcheck="false" data-nav-find-input>
+      </form>
+
+      <p class="nav__find-status visually-hidden" role="status" aria-live="polite" data-nav-find-status></p>
+
+      <ul class="nav__menu-list" data-nav-menu-list>
+        <li><a href="#catalogo" data-nav-menu-link><span>Catálogo</span><i aria-hidden="true">品</i></a></li>
+        <li><a href="#configurador" data-nav-menu-link><span>Configurador</span><i aria-hidden="true">誂</i></a></li>
+        <li><a href="#hamon" data-nav-menu-link><span>Hamon</span><i aria-hidden="true">刃文</i></a></li>
+        <li><a href="#forge" data-nav-menu-link><span>Forja</span><i aria-hidden="true">鍛</i></a></li>
+        <li><a href="#faq" data-nav-menu-link><span>Preguntas</span><i aria-hidden="true">問</i></a></li>
+      </ul>
+
+      <ul class="nav__menu-list nav__menu-list--find" data-nav-find-list hidden></ul>
+
+      <div class="nav__menu-foot">
+        <a class="btn btn--lg nav__menu-cta" href="#configurador" data-nav-menu-link>Configurar tu katana</a>
+        <p class="nav__menu-note">Forja a mano en Seki. Cada hoja lleva certificado del maestro que la templó.</p>
+      </div>
+    </nav>
+  </div>
+</header>

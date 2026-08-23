@@ -1,0 +1,208 @@
+/* hero — primera pantalla, imagen LCP a sangre y velo de tinta sobre la foto */
+
+#hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: end;
+  /* la barra es sticky y ocupa flujo: el hero llena exactamente lo que queda */
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  padding-block:
+    clamp(2rem, 6vh, 4rem)
+    calc(clamp(1.75rem, 4.5vh, 3.25rem) + env(safe-area-inset-bottom, 0px));
+  overflow: clip;
+  background-color: var(--sumi);
+  color: var(--washi);
+}
+
+/* --- foto ---------------------------------------------------------------- */
+#hero .hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+#hero .hero__media picture,
+#hero .hero__media img {
+  width: 100%;
+  height: 100%;
+}
+#hero .hero__media img {
+  object-fit: cover;
+  object-position: 62% 46%;
+}
+
+/* --- velo: tres capas de tinta, ninguna opaca ----------------------------- */
+#hero .hero__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    /* halo suave anclado al bloque de texto */
+    radial-gradient(128% 92% at 8% 96%,
+      color-mix(in srgb, var(--sumi) 62%, transparent) 0%,
+      color-mix(in srgb, var(--sumi) 34%, transparent) 40%,
+      transparent 72%),
+    /* lateral: deja respirar la hoja a la derecha */
+    linear-gradient(to right,
+      color-mix(in srgb, var(--sumi) 58%, transparent) 0%,
+      color-mix(in srgb, var(--sumi) 26%, transparent) 44%,
+      transparent 74%),
+    /* base: asienta la foto sobre el fondo sumi */
+    linear-gradient(to top,
+      color-mix(in srgb, var(--sumi) 96%, transparent) 0%,
+      color-mix(in srgb, var(--sumi) 90%, transparent) 34%,
+      color-mix(in srgb, var(--sumi) 74%, transparent) 52%,
+      color-mix(in srgb, var(--sumi) 46%, transparent) 66%,
+      color-mix(in srgb, var(--sumi) 12%, transparent) 82%,
+      transparent 100%);
+}
+
+/* --- contenido ------------------------------------------------------------ */
+#hero .hero__inner {
+  position: relative;
+  z-index: 2;
+}
+
+#hero .hero__eyebrow {
+  color: var(--steel-hi);
+  margin-bottom: clamp(0.75rem, 1.6vh, 1.25rem);
+}
+
+#hero .hero__title {
+  font-size: var(--t-hero);
+  font-weight: 660;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  max-width: 13ch;
+  text-wrap: balance;
+  color: var(--washi);
+  text-shadow: 0 1px 26px color-mix(in srgb, var(--sumi) 45%, transparent);
+}
+
+#hero .hero__lede {
+  margin-top: clamp(1rem, 2.2vh, 1.5rem);
+  max-width: 44ch;
+  color: color-mix(in srgb, var(--washi) 88%, var(--steel));
+  text-wrap: pretty;
+}
+
+#hero .hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(1.5rem, 3.4vh, 2.25rem);
+}
+#hero .btn--glass {
+  --btn-bg: color-mix(in srgb, var(--washi) 14%, transparent);
+  --btn-fg: var(--washi);
+  border: 1px solid color-mix(in srgb, var(--washi) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+#hero .btn--glass:hover {
+  background: color-mix(in srgb, var(--washi) 24%, transparent);
+  border-color: color-mix(in srgb, var(--washi) 68%, transparent);
+}
+
+/* --- tira de datos duros -------------------------------------------------- */
+#hero .hero__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.875rem, 2.5vw, 2.75rem);
+  margin: clamp(2rem, 5vh, 3.25rem) 0 0;
+  padding-top: clamp(0.875rem, 1.8vh, 1.25rem);
+  border-top: 1px solid color-mix(in srgb, var(--hamon) 26%, transparent);
+  max-width: 46rem;
+}
+#hero .hero__fact dt {
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--steel-hi) 72%, var(--sumi));
+}
+#hero .hero__fact dd {
+  margin: 0.3rem 0 0;
+  font-size: clamp(0.875rem, 1.05vw, 1rem);
+  font-weight: 520;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  color: var(--washi);
+}
+
+/* --- desktop: la tira se separa con filos finos --------------------------- */
+@media (min-width: 720px) {
+  #hero .hero__facts {
+    gap: 0;
+  }
+  #hero .hero__fact {
+    padding-inline: clamp(1.25rem, 2.4vw, 2.25rem);
+  }
+  #hero .hero__fact:first-child {
+    padding-inline-start: 0;
+  }
+  #hero .hero__fact + .hero__fact {
+    border-inline-start: 1px solid color-mix(in srgb, var(--hamon) 22%, transparent);
+  }
+}
+
+/* --- móvil ---------------------------------------------------------------- */
+@media (max-width: 719px) {
+  #hero .hero__media img {
+    object-position: 52% 38%;
+  }
+  #hero .hero__veil {
+    background:
+      radial-gradient(140% 62% at 50% 100%,
+        color-mix(in srgb, var(--sumi) 58%, transparent) 0%,
+        color-mix(in srgb, var(--sumi) 26%, transparent) 46%,
+        transparent 78%),
+      linear-gradient(to top,
+        color-mix(in srgb, var(--sumi) 97%, transparent) 0%,
+        color-mix(in srgb, var(--sumi) 93%, transparent) 40%,
+        color-mix(in srgb, var(--sumi) 82%, transparent) 58%,
+        color-mix(in srgb, var(--sumi) 52%, transparent) 72%,
+        color-mix(in srgb, var(--sumi) 14%, transparent) 88%,
+        transparent 100%);
+  }
+  #hero .hero__title {
+    max-width: 11ch;
+    letter-spacing: -0.028em;
+  }
+  #hero .hero__lede {
+    max-width: 34ch;
+    font-size: 1.0625rem;
+  }
+  #hero .hero__facts {
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 460px) {
+  #hero .hero__actions .btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* --- pantallas bajas (móvil apaisado): que no se corte nada --------------- */
+@media (max-height: 560px) and (min-width: 720px) {
+  #hero {
+    min-height: 32rem;
+  }
+  #hero .hero__facts {
+    margin-top: 1.5rem;
+  }
+}
+
+/* --- sin dependencia de color-mix: reserva sólida por si acaso ------------ */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  #hero .hero__veil {
+    background: linear-gradient(to top, rgba(11, 11, 12, 0.96) 0%, rgba(11, 11, 12, 0.86) 40%, rgba(11, 11, 12, 0.5) 66%, rgba(11, 11, 12, 0.1) 86%, rgba(11, 11, 12, 0) 100%);
+  }
+  #hero .btn--glass {
+    --btn-bg: rgba(246, 245, 242, 0.14);
+    border-color: rgba(246, 245, 242, 0.42);
+  }
+}

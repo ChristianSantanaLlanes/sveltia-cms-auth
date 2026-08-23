@@ -1,0 +1,243 @@
+{
+  "updated": "17:22",
+  "phase": "Fase 3 · ronda 2, cerrando brechas",
+  "headline": "Construyendo KUROGANE contra apple.com/airpods-pro",
+  "metrics": {
+    "apple": {
+      "perf": 41,
+      "lcp": 17776,
+      "cls": 0,
+      "tbt": 558,
+      "bytes": 4790486,
+      "a11y": 91
+    },
+    "ours": {
+      "perf": 96,
+      "lcp": 1311,
+      "cls": 0,
+      "tbt": 239,
+      "bytes": 127929,
+      "a11y": 96
+    }
+  },
+  "pieces": [
+    {
+      "name": "Barra de navegación y carrito",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "apple",
+          "gap": "El grupo de enlaces no esta anclado a ninguna retitula. Decide una sola regla y aplicala: o lo centras en el eje real de la barra, o lo alineas a la derecha contra la bolsa con el mismo gutter que hay entre enlaces (23-24 px), y iguala los insets izquierdo y derecho de pagina (hoy 104 contra 81 en escritorio). Sin eso, los dos vacios de 236 y 245 px leen como error de maquetacion, no como aire."
+        }
+      ],
+      "note": "Gana A por disciplina metrica pura: B tiene menos ruido y etiquetas mas propias, pero coloca su navegacion flotando entre dos vacios de 240 px y con los margenes descuadrados en ambos anchos."
+    },
+    {
+      "name": "Hero y elemento LCP",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "La imagen no informa: en escritorio es una masa oscura desenfocada de la que solo se lee el filo, y en móvil el recorte vertical deja 500 px de gris ambiguo arriba en los que no se reconoce ni que es un cuchillo. Reencuadrar para que la silueta completa de la hoja y el hamon se lean como objeto en ambos anchos, y subir el punto de luz para que la foto aporte prueba de producto en vez de textura de fondo."
+        }
+      ],
+      "note": "Gana A porque construye una sola jerarquía limpia con acciones reales en ambos anchos, mientras B se cae por acabado: texto duplicado en móvil, recortado en escritorio y una compra escondida en una píldora suelta."
+    },
+    {
+      "name": "Franja de pruebas",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "Los cuatro modulos son tipograficamente identicos (mismo cuerpo de cifra, mismo peso de subtitulo, mismo gris de cuerpo), asi que la fila se lee como una lista plana y ninguna prueba lidera; hay que jerarquizar dentro de la fila destacando la que cierra la compra ('0 € en aduanas') con cifra mayor o fondo tenue, y subir el cuerpo de escritorio de los ~13px actuales a ~15px para que la evidencia deje de ser lo mas pequeno de la pantalla y para reparar el desfase de la columna 3, cuyo subtitulo de dos lineas rompe el ritmo vertical que las otras tres comparten."
+        }
+      ],
+      "note": "Gana B porque estructura la franja como cuatro pruebas comprobables con jerarquia y retícula, mientras A ofrece un muro de negrita gris, media pantalla vacia y unas llamadas de nota que corrompen las propias cifras que pretende hacer creibles."
+    },
+    {
+      "name": "El temple (hamon)",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "La barra de navegación y la barra de producto caen dentro de la sección y parten la foto en dos, dejando arriba una tira huérfana de imagen de ~70 px que parece un error de montaje; hay que hacer que la imagen empiece por debajo del chrome fijo (o que el chrome flote sobre ella sin cortarla) y de paso alinear el pie de foto al eje del texto en vez de dejarlo centrado, que es la única alineación que rompe la retícula de toda la sección."
+        }
+      ],
+      "note": "A gana porque su imagen y sus datos demuestran la tecnología mientras B se limita a insinuarla con una silueta bonita, un párrafo en negrita gris centrado y un móvil donde el texto directamente desaparece."
+    },
+    {
+      "name": "La forja",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "En escritorio la mitad derecha esta literalmente vacia y la foto se destierra a una banda inferior a sangre: la seccion promete texto a un lado e imagen al otro y no lo cumple. Subir la imagen a esa columna derecha (o llevar el titular sobre ella) y sustituir la toma actual, movida y llena de flores y paraguas, por un plano del proceso que se este describiendo."
+        }
+      ],
+      "note": "Gana B porque construye una jerarquia que se lee en un segundo y no tiene un solo choque tipografico, mientras A entierra su titular bajo un parrafo en negrita plagado de llamadas rotas; pero B sigue debiendo la mitad derecha de su propia retorica."
+    },
+    {
+      "name": "Guarnición: tsuba, tsuka, saya",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "Unificar la fotografía: las tres tomas vienen de tres sitios distintos —01 estudio limpio sobre gris lavanda, 02 foto de vitrina con reflejo de cristal, banda de brillo horizontal y fondo sucio, 03 degradado azul-blanco— y además 03 ocupa casi el doble de ancho, con lo que su medida de línea salta de ~32 a ~55 caracteres y rompe el ritmo del tríptico. Reencuadrar las tres con la misma luz, el mismo fondo y una relación de medida comparable."
+        }
+      ],
+      "note": "Gana B porque su tríptico tiene índice, pieza real y rejilla, mientras el de A es un muro de gris sobre negro con iconos desiguales y notas al pie pegadas al punto; B ganaría sin discusión el día que sus tres fotos se hagan con la misma luz y su barra fija deje de comerse el titular."
+    },
+    {
+      "name": "Catálogo de 6 modelos",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "Unificar la direccion de imagen de la rejilla: hoy la fila 1 va sobre fondo blanco y la fila 2 sobre negro dentro de la misma cuadricula, y las hojas estan recortadas como astillas verticales cortadas arriba y abajo con vacio a los lados, asi que nunca se ve el objeto entero. Un solo fondo, un solo encuadre y una escala constante del filo entre las seis tarjetas. En el mismo pase, despegar del primer renglon de imagenes las dos barras fijas apiladas (nav + barra de producto negra) que hoy tapan un tercio de esas fotos, y corregir el '1890 €' de esa barra al mismo formato con separador de millar '1.890 €' que usan las tarjetas."
+        }
+      ],
+      "note": "Gana B porque cada tarjeta dice algo distinto y su precio tiene jerarquia propia, mientras A rompe la comparacion con un titulo duplicado pisando la descripcion, columnas de altura desigual y una tabla de ventajas ilegible a 10px."
+    },
+    {
+      "name": "Configurador de katana",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "Arreglar la colisión de la barra fija: nav + barra de precio (unos 90 px de doble franja) se comen el titular 'Longitud de hoja' y tapan su frase de apoyo a media línea; hay que reservar scroll-margin equivalente para que ninguna cabecera de sección quede debajo, y de paso subir el precio por tarjeta ('desde 1890 €', hoy 11-12 px gris) a segundo elemento más fuerte de la tarjeta, porque es el número que decide y ahora es la tipografía más pequeña de la pantalla."
+        }
+      ],
+      "note": "A gana porque su zona hace el trabajo — opciones comparables con cifra y precio vivo — mientras B pone un conmutador editorial sin un solo precio y encima cortado por el borde; el fallo de A es de acabado (la barra fija pisa el titular siguiente), el de B es de fondo."
+    },
+    {
+      "name": "Ficha técnica",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "Arreglar la pila de elementos fijos: la barra de navegacion y la fila de comparacion ancladas se superponen justo sobre la fila de cabeceras de la tabla y cortan por la mitad la linea 'Ficha comparativa de los seis modelos...'. En esa posicion de scroll las seis columnas quedan sin rotular y hay que adivinar si 1.180 son gramos o milimetros. Desplazar el anclaje por debajo de la cabecera de columnas, o replicar los rotulos MODELO / ACERO / HAMON / NAGASA / PESO / SEMANAS / DESDE dentro de la propia barra fija."
+        }
+      ],
+      "note": "A es una ficha tecnica que se puede leer en columna y solo tiene un fallo de capas fijas; B es una lista decorada con iconos repetidos, notas al pie tachadas y filas que no se alinean entre si."
+    },
+    {
+      "name": "Preguntas frecuentes",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "Quitar el solapamiento: la cabecera fija y la barra de precio pisan el titular de la pregunta 01 y las dos primeras líneas de su respuesta. Dar a las anclas un scroll-margin-top igual a la altura de ambas barras y un fondo opaco continuo, y de paso subir el bloque de contacto de la columna izquierda para que no quede flotando sobre un tercio de columna vacía."
+        }
+      ],
+      "note": "A es una zona compuesta con un fallo de montaje corregible; B es un vertido de texto legal sin jerarquía, con la medida desbocada y un ítem duplicado encima de sí mismo."
+    },
+    {
+      "name": "Pie de página",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "apple",
+          "gap": "Liberar el pie de los elementos fijos: la barra de navegacion y la barra de producto deben soltarse (o el pie reservar el espacio equivalente) al entrar en la zona, para que ningun enlace ni ninguna linea de texto quede cortado o tachado. Es el unico defecto que le impide ganar teniendo mejor contenido."
+        }
+      ],
+      "note": "B escribe mejor el pie pero se lo pisa con sus propias barras fijas y lo estira sin pensar en el movil; A gana por remate y por ser el unico que redisena el ancho estrecho, no por tener nada que decir."
+    },
+    {
+      "name": "Carrito lateral",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "El escritorio es el movil ampliado: la misma columna unica con 'Tu carrito' a escala descomunal y cuerpo a 28 px, y un vacio enorme entre el selector de cantidad y 'Quitar' que ninguna otra fila justifica. Reflujar a dos columnas en ancho grande (lineas a la izquierda, resumen y boton de pago fijos a la derecha) y bajar la escala tipografica a proporciones de escritorio; de paso, el elemento de color mas fuerte del panel no puede ser el filete dorado de una linea de tranquilizacion, tiene que ser el boton de pagar."
+        }
+      ],
+      "note": "B convierte el momento de compra en una decision con datos -precio por pieza, plazo de taller y total-, mientras A lo reduce a una pildora de esquina que se disuelve en el fondo y se evapora en movil."
+    },
+    {
+      "name": "Checkout de 5 pasos",
+      "status": "building",
+      "rounds": [
+        {
+          "winner": "ours",
+          "gap": "Matar la banda muerta de unos 200 px entre el campo Teléfono y el filete inferior, y bajar contenido al tercio inferior del raíl negro, que está vacío: hoy el único botón primario ('Continuar') queda partido por el borde del viewport, que es exactamente lo que no puede pasar en el paso previo al pago."
+        }
+      ],
+      "note": "Gana A porque es una pieza construida —escalera de pasos, campos alineados a una sola medida y un desglose con IVA y aduanas—, mientras B se apoya en fotografía buena para tapar un titular con enlace huérfano, tarjetas sin rejilla común y un móvil que es el escritorio encogido."
+    }
+  ],
+  "images": {
+    "raw": 89,
+    "curated": 15,
+    "optimized": 15
+  },
+  "log": [
+    {
+      "t": "16:00",
+      "text": "apple.com/airpods-pro renderizada en Chromium vía mirror local: capturas desktop 1440×900 y móvil 390×844, y 73 tiles de referencia."
+    },
+    {
+      "t": "16:05",
+      "text": "Baseline Lighthouse móvil de Apple: performance 41, LCP 17,8 s, 4,8 MB transferidos."
+    },
+    {
+      "t": "16:20",
+      "text": "Scaffold modular listo: una pieza = un archivo HTML + CSS + módulo JS. Núcleo de catálogo, carrito y validación escrito."
+    },
+    {
+      "t": "16:35",
+      "text": "Arnés de juicio: capturas por pieza, comparación ciega A/B y test funcional end-to-end del recorrido de compra."
+    },
+    {
+      "t": "16:25",
+      "text": "Banco de imágenes: 89 fotos reales descargadas de Openverse, Wikimedia Commons y museos de acceso abierto. 15 seleccionadas a mano tras revisar hojas de contacto."
+    },
+    {
+      "t": "16:30",
+      "text": "Mapa de referencia: los 32 tiles de Apple catalogados y emparejados con cada una de nuestras 13 piezas para poder juzgar manzanas con manzanas."
+    },
+    {
+      "t": "16:32",
+      "text": "13 constructores lanzados en paralelo, cada uno con contexto fresco, dueño de sus propios archivos y con las capturas de Apple delante."
+    },
+    {
+      "t": "16:45",
+      "text": "Imágenes cerradas: 15 juegos AVIF/WebP responsive con créditos y textos alternativos reales. El hero pesa 40 kB a 1920 px; las fichas de producto son planos verticales limpios, no recortes al azar."
+    },
+    {
+      "t": "16:47",
+      "text": "CSS partido en crítico (18 kB inline: nav, hero y franja de datos) y diferido (10 kB), para que el primer pintado no espere a nada."
+    },
+    {
+      "t": "17:05",
+      "text": "Ensamblado. El recorrido de compra pasa 13 de 13 comprobaciones funcionales: catálogo → configurador → carrito → checkout → pedido KG-20260823-001, con validación Luhn y persistencia tras recarga."
+    },
+    {
+      "t": "17:08",
+      "text": "Primera medición Lighthouse móvil: performance 96, LCP 1,31 s, CLS 0 y 128 kB transferidos. Frente a Apple: 41, 17,78 s y 4,79 MB."
+    },
+    {
+      "t": "17:12",
+      "text": "11 críticos ciegos lanzados. Cada uno ve cuatro capturas (A y B, escritorio y móvil), sin saber cuál es cuál, con las marcas tapadas."
+    },
+    {
+      "t": "17:25",
+      "text": "Ronda 1 juzgada: 9 piezas de 11 ganan a ciegas contra la zona equivalente de Apple. Pierden la barra de navegación (retícula descuadrada) y el pie (se pisa con las barras fijas y no rediseña el móvil)."
+    },
+    {
+      "t": "17:30",
+      "text": "Hallazgo sistémico: las barras fijas se comían el titular de casi todas las secciones. Corregido con scroll-margin en todas las anclas, y las capturas por pieza ya no pintan el chrome fijo encima."
+    },
+    {
+      "t": "17:35",
+      "text": "Imágenes rehechas según lo que dijo el crítico: hoja entera en el hero móvil, fragua real en vez de una demostración con flores, tríptico de montura con las tres tomas del mismo estudio y las seis fichas de producto con fondo blanco normalizado y encuadre idéntico."
+    },
+    {
+      "t": "17:38",
+      "text": "11 constructores relanzados, cada uno con la brecha exacta que le nombró su crítico."
+    },
+    {
+      "t": "17:45",
+      "text": "Carrito y checkout también ganan a ciegas. Ronda 1 cerrada: 11 piezas de 13. El crítico del checkout encontró además un fallo funcional real: el botón principal quedaba partido por el borde de la ventana."
+    }
+  ]
+}

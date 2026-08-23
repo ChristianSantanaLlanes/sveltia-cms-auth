@@ -1,0 +1,409 @@
+/* specs — ficha técnica comparativa de los seis modelos.
+   Sala oscura y cartela: una sola tabla real (<table>), sin cajas, sin fondos
+   alternos y sin más tinta que las reglas de 1 px. Toda la jerarquía la ponen
+   el tamaño y el color: cifra clara (--hamon) + unidad apagada (--steel).
+   En pantallas estrechas la tabla —y solo ella— hace scroll horizontal dentro
+   de su contenedor, con la columna de modelos anclada para no perder el hilo.
+   No usa JS propio: únicamente la clase .reveal compartida. */
+
+#specs {
+  /* ancho mínimo de la tabla: por debajo de esto se desliza dentro del carril */
+  --specs-table-w: 45rem;
+  /* 21,5 % de la tabla = columna de modelo; ancla el deslizado por columnas */
+  --specs-model-w: calc(var(--specs-table-w) * 0.215);
+  /* altura del chrome fijo (barra global + barra de producto): la fila de
+     rótulos se ancla justo por debajo, nunca detrás. */
+  --specs-dock: calc(var(--nav-h) + var(--nav-sub-h));
+  /* clip, no hidden: recorta la fila anclada al salir la sección sin crear
+     un contenedor de scroll que rompería el anclaje. */
+  overflow: clip;
+}
+
+/* --- cabecera ------------------------------------------------------------- */
+#specs .specs__title {
+  margin-top: clamp(0.75rem, 1.6vw, 1.125rem);
+  font-size: clamp(2rem, 4.4vw, 3.25rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  max-width: 15ch;
+  text-wrap: balance;
+}
+#specs .specs__intro {
+  margin-top: clamp(0.9rem, 1.8vw, 1.25rem);
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+
+@media (min-width: 960px) {
+  #specs .specs__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    column-gap: clamp(2rem, 5vw, 5.5rem);
+    align-items: end;
+  }
+  #specs .specs__head .eyebrow { grid-column: 1 / -1; }
+  #specs .specs__title { grid-column: 1; }
+  #specs .specs__intro { grid-column: 2; margin-top: 0; padding-bottom: 0.3rem; }
+}
+
+/* --- aviso de deslizado: solo donde la tabla se desliza de verdad --------- */
+#specs .specs__hint {
+  display: none;
+  margin-top: clamp(2rem, 4vw, 3rem);
+  font-size: var(--t-small);
+  letter-spacing: 0.04em;
+  color: var(--steel);
+}
+#specs .specs__hint-arrow {
+  display: inline-block;
+  margin-inline-start: 0.5rem;
+  transform: translateY(0.05em);
+}
+
+/* --- carril de deslizado -------------------------------------------------- */
+#specs .specs__scroller {
+  margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--steel) 45%, var(--sumi)) transparent;
+}
+#specs .specs__scroller:focus-visible {
+  outline: 2px solid var(--shu);
+  outline-offset: 4px;
+}
+
+/* --- la tabla ------------------------------------------------------------- */
+#specs .specs__table {
+  width: 100%;
+  min-width: var(--specs-table-w);
+  /* separate, no collapse: con collapse las celdas ancladas pierden su regla */
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Los siete anchos suman exactamente 100: con table-layout:fixed cualquier
+   sobrante desborda el carril y deja la última columna a medio ver.
+   Cada columna numérica mide lo que mide su valor más largo con su unidad
+   («14 semanas», «1.180 g»), medido a 45rem, que es el ancho mínimo. */
+#specs .specs__c-model  { width: 21.5%; }
+#specs .specs__c-text   { width: 15.5%; }
+#specs .specs__c-weight { width: 10.5%; }
+#specs .specs__c-len    { width: 9.5%; }
+#specs .specs__c-lead   { width: 15%; }
+#specs .specs__c-price  { width: 12.5%; }
+
+#specs .specs__caption {
+  caption-side: top;
+  text-align: start;
+  margin-bottom: clamp(1.1rem, 2vw, 1.6rem);
+  font-size: var(--t-small);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--steel) 82%, var(--sumi));
+  text-wrap: pretty;
+}
+/* La caja de la tabla mide 45rem aunque la pantalla mida menos. La cartela se
+   ancla al borde del carril y se recorta al ancho visible: así no se desliza
+   con la tabla ni se corta a mitad de palabra. */
+#specs .specs__caption-t {
+  display: block;
+  position: sticky;
+  inset-inline-start: 0;
+  max-width: min(64ch, calc(100vw - var(--gutter) * 2));
+}
+
+/* --- cabeceras de columna ------------------------------------------------- */
+#specs .specs__th {
+  vertical-align: bottom;
+  text-align: start;
+  padding: 0 clamp(0.5rem, 1.1vw, 1rem) 0.85rem;
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--steel);
+  border-bottom: 1px solid var(--line-dark);
+  white-space: nowrap;
+}
+#specs .specs__th--n { text-align: end; }
+
+/* --- celdas --------------------------------------------------------------- */
+#specs .specs__table td,
+#specs .specs__model {
+  vertical-align: middle;
+  padding: clamp(0.9rem, 1.7vw, 1.3rem) clamp(0.5rem, 1.1vw, 1rem);
+  border-bottom: 1px solid var(--line-dark);
+  text-align: start;
+}
+#specs .specs__table tbody tr:last-child > * {
+  border-bottom-color: color-mix(in srgb, var(--steel) 34%, transparent);
+}
+
+/* la fila entera se ilumina al pasar por encima: leer siete columnas seguidas
+   sin perder el renglón es el único problema real de una comparativa ancha */
+@media (hover: hover) {
+  #specs .specs__table tbody tr:hover > * {
+    background-color: color-mix(in srgb, var(--washi) 5%, transparent);
+  }
+}
+
+/* --- columna de modelo: la cartela ---------------------------------------- */
+#specs .specs__th--model,
+#specs .specs__model {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+  background-color: var(--sumi);
+  border-inline-end: 1px solid var(--line-dark);
+  padding-inline-start: 0;
+  font-weight: 400;
+}
+#specs .specs__model {
+  display: table-cell;
+}
+#specs .specs__model .specs__thumb {
+  display: none;
+}
+#specs .specs__name {
+  display: block;
+  font-size: clamp(1rem, 1.2vw, 1.1875rem);
+  font-weight: 620;
+  letter-spacing: -0.018em;
+  line-height: 1.15;
+  color: var(--washi);
+}
+#specs .specs__kanji {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--steel) 88%, var(--sumi));
+}
+#specs .specs__tag {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.625rem;
+  font-weight: 620;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: var(--gold);
+}
+
+/* --- valores de texto ----------------------------------------------------- */
+#specs .specs__v {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 520;
+  line-height: 1.25;
+  letter-spacing: -0.008em;
+  color: color-mix(in srgb, var(--washi) 90%, var(--sumi));
+}
+#specs .specs__sub {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--steel) 80%, var(--sumi));
+}
+
+/* --- valores numéricos: cifra clara, unidad apagada -----------------------
+   El selector lleva .specs__table dentro para ganarle en especificidad a la
+   regla general de celdas (text-align: start) que está más arriba. */
+#specs .specs__table .specs__n {
+  text-align: end;
+  white-space: nowrap;
+}
+#specs .specs__num {
+  font-size: clamp(1rem, 1.15vw, 1.125rem);
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  color: var(--hamon);
+}
+#specs .specs__u {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: color-mix(in srgb, var(--steel) 78%, var(--sumi));
+}
+#specs .specs__cost .specs__num {
+  font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+}
+#specs .specs__cost .specs__u {
+  font-size: 0.9375rem;
+  color: color-mix(in srgb, var(--steel) 90%, var(--sumi));
+}
+
+/* --- notas al pie: texto de sala ------------------------------------------ */
+#specs .specs__notes {
+  margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+  display: grid;
+  gap: 0;
+}
+#specs .specs__note {
+  padding-block: clamp(0.9rem, 1.6vw, 1.2rem);
+  border-top: 1px solid var(--line-dark);
+}
+#specs .specs__note-k {
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+#specs .specs__note-v {
+  margin: 0.45rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--washi) 72%, var(--sumi));
+  max-width: 52ch;
+  text-wrap: pretty;
+}
+
+#specs .specs__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem clamp(1.5rem, 3vw, 2.75rem);
+  margin-top: clamp(1.75rem, 3.2vw, 2.5rem);
+}
+#specs .specs__actions .link-arrow {
+  color: var(--hamon);
+  min-height: 44px;
+  align-items: center;
+}
+#specs .specs__actions .link-arrow:hover {
+  color: var(--washi);
+}
+
+/* --- dos columnas de notas ------------------------------------------------ */
+@media (min-width: 760px) {
+  #specs .specs__notes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(1.75rem, 4vw, 3.5rem);
+  }
+  #specs .specs__note:nth-last-child(-n + 2) {
+    border-bottom: 1px solid var(--line-dark);
+  }
+}
+
+/* --- desktop: la cartela recupera su objeto ------------------------------- */
+@media (min-width: 900px) {
+  /* Aquí la tabla (45rem mínimos) cabe entera, así que el carril deja de ser
+     contenedor de scroll. Es la condición para que la fila de rótulos pueda
+     anclarse al viewport: dentro de un contenedor con overflow no lo haría. */
+  #specs .specs__scroller {
+    overflow: visible;
+  }
+  /* sin deslizado horizontal, la cartela no necesita quedarse anclada */
+  #specs .specs__model {
+    position: static;
+    box-shadow: none;
+  }
+  /* aquí no hay deslizado: el hamon puede estirarse y el plazo encoger */
+  #specs .specs__c-text { width: 17%; }
+  #specs .specs__c-len { width: 10%; }
+  #specs .specs__c-lead { width: 12%; }
+  #specs .specs__c-price { width: 12%; }
+  #specs .specs__model {
+    padding-inline-end: clamp(1rem, 1.6vw, 1.5rem);
+  }
+  #specs .specs__model .specs__thumb {
+    display: block;
+    float: inline-start;
+    width: clamp(48px, 4vw, 60px);
+    margin-inline-end: clamp(0.75rem, 1.2vw, 1.125rem);
+  }
+  #specs .specs__model .specs__thumb img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    background-color: color-mix(in srgb, var(--washi) 8%, transparent);
+    /* filo de 1 px por dentro: la miniatura se lee como objeto en vitrina */
+    outline: 1px solid var(--line-dark);
+    outline-offset: -1px;
+  }
+  /* la última columna cierra a ras del ancho de página, con las reglas */
+  #specs .specs__table tr > *:last-child {
+    padding-inline-end: 0;
+  }
+  #specs .specs__id {
+    display: block;
+    overflow: hidden; /* el bloque de texto no se mete bajo la miniatura */
+  }
+}
+
+/* --- la fila de rótulos se ancla cuando la tabla no cabe de una vez -------
+   La tabla entera (rótulos + seis filas) mide unos 730 px. Si la ventana da
+   para tanto por debajo del chrome fijo, no hay nada que anclar: se lee de un
+   vistazo y una fila pegajosa solo taparía la primera hoja. En ventanas más
+   bajas —justo el caso en que la barra de navegación y la de producto se
+   comían los rótulos— la fila de cabeceras se detiene por debajo de las dos
+   barras, así que ninguna cifra puede quedarse sin su columna encima. */
+@media (min-width: 900px) and (max-height: 849px) {
+  #specs .specs__th,
+  #specs .specs__th--model {
+    position: sticky;
+    top: var(--specs-dock);
+    inset-inline-start: auto;
+    z-index: 3;
+    padding-top: clamp(0.6rem, 1vw, 0.9rem);
+    padding-bottom: 0.7rem;
+    background-color: var(--sumi);
+    /* sombra corta hacia abajo: solo se ve con filas pasando por debajo */
+    box-shadow: 0 10px 12px -12px rgba(0, 0, 0, 0.95);
+  }
+}
+
+/* --- estrecho: la tabla se desliza y la cartela se queda ------------------ */
+@media (max-width: 899.98px) {
+  /* el aviso aparece exactamente donde la tabla empieza a deslizarse */
+  #specs .specs__hint {
+    display: block;
+  }
+  #specs .specs__scroller {
+    margin-top: clamp(0.9rem, 2.5vw, 1.25rem);
+    scroll-snap-type: x proximity;
+    scroll-padding-inline-start: var(--specs-model-w);
+  }
+  #specs .specs__table td {
+    scroll-snap-align: start;
+  }
+  /* sombra corta a la derecha de la columna anclada: se ve que hay más tabla */
+  #specs .specs__th--model,
+  #specs .specs__model {
+    box-shadow: 8px 0 12px -10px rgba(0, 0, 0, 0.9);
+  }
+}
+
+@media (max-width: 767.98px) {
+  #specs .specs__title {
+    max-width: 12ch;
+    letter-spacing: -0.028em;
+  }
+  #specs .specs__caption {
+    margin-bottom: 1rem;
+  }
+  #specs .specs__note-v {
+    max-width: none;
+  }
+}
+
+/* --- sin color-mix: reserva sólida ---------------------------------------- */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  #specs .specs__caption,
+  #specs .specs__sub,
+  #specs .specs__u { color: #9aa0a6; }
+  #specs .specs__kanji { color: #b0b4ba; }
+  #specs .specs__v { color: #e2e1dd; }
+  #specs .specs__note-v { color: #b7b6b2; }
+  #specs .specs__table tbody tr:last-child > * { border-bottom-color: rgba(184, 188, 194, 0.34); }
+  @media (hover: hover) {
+    #specs .specs__table tbody tr:hover > * { background-color: rgba(246, 245, 242, 0.05); }
+  }
+}

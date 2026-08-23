@@ -1,0 +1,527 @@
+[
+  {
+    "name": "hero-wide",
+    "source": "/tmp/katana-raw/hamon-929.jpg",
+    "srcW": 3840,
+    "srcH": 1948,
+    "ratio": 1.7777777777777777,
+    "widths": [
+      1280,
+      1920,
+      2560
+    ],
+    "sizes": {
+      "1280": {
+        "avif": 16579,
+        "webp": 76274,
+        "h": 720
+      },
+      "1920": {
+        "avif": 40741,
+        "webp": 423364,
+        "h": 1080
+      },
+      "2560": {
+        "avif": 157310,
+        "webp": 955284,
+        "h": 1440
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAACQAwCdASoYAA4APu1krU6ppaSiMAgBMB2JZwAAWdbh+M9k2gYAAP4QIOxN2HW2g6x21l+mSRPisizD5pW8b2y1AAA=",
+    "credit": {
+      "title": "File:Kissaki, hamon, boshi.jpg",
+      "creator": "Géry PARENT",
+      "license": "CC BY-SA 3.0",
+      "page": "https://commons.wikimedia.org/wiki/File:Kissaki,_hamon,_boshi.jpg"
+    },
+    "alt": "Filo de una katana en primer plano: la línea de temple recorre el acero pulido como una nube blanca."
+  },
+  {
+    "name": "hero-tall",
+    "source": "/tmp/katana-raw/display-2013.jpg",
+    "srcW": 2250,
+    "srcH": 4000,
+    "ratio": 0.75,
+    "widths": [
+      640,
+      960,
+      1280
+    ],
+    "sizes": {
+      "640": {
+        "avif": 3429,
+        "webp": 6332,
+        "h": 853
+      },
+      "960": {
+        "avif": 6019,
+        "webp": 13438,
+        "h": 1280
+      },
+      "1280": {
+        "avif": 10017,
+        "webp": 23636,
+        "h": 1707
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAACwAwCdASoYACAAPu1mqk2ppaQiMAgBMB2JaQAAWlaL32dht0ozqAD+9CUt3vsL8u3Z9gCDeODgAA==",
+    "credit": {
+      "title": "Blade and Mounting for a Dagger (Tantō)",
+      "creator": "Hidetsugu",
+      "license": "CC0 1.0 (Met Open Access)",
+      "page": "https://www.metmuseum.org/art/collection/search/21905"
+    },
+    "alt": "Hoja de katana completa sobre fondo negro: la curvatura entera, del habaki a la punta."
+  },
+  {
+    "name": "prod-mumei",
+    "source": "/tmp/katana-raw/hamon-3022.jpg",
+    "srcW": 3543,
+    "srcH": 1269,
+    "ratio": 0.8,
+    "widths": [
+      480,
+      800,
+      1200
+    ],
+    "sizes": {
+      "480": {
+        "avif": 2724,
+        "webp": 4078,
+        "h": 600
+      },
+      "800": {
+        "avif": 4943,
+        "webp": 9306,
+        "h": 1000
+      },
+      "1200": {
+        "avif": 8355,
+        "webp": 18126,
+        "h": 1500
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAACwAwCdASoYAB4APu1kqU2ppaOiMAgBMB2JaQAAWp7rxaVshYjgAAD+7VE8X1k60CRYjK0xMVasgmixCGE0z1EAAAA=",
+    "credit": {
+      "title": "Katana in Koshirae, Daisho, 1970.W.001a-b",
+      "creator": "",
+      "license": "by-4.0",
+      "page": "https://klingenmuseum.de/exhibits/487"
+    },
+    "alt": "Katana Mumei con su montura sobre fondo claro."
+  },
+  {
+    "name": "prod-kurogane",
+    "source": "/tmp/katana-raw/display-2007.jpg",
+    "srcW": 4000,
+    "srcH": 1915,
+    "ratio": 0.8,
+    "widths": [
+      480,
+      800,
+      1200
+    ],
+    "sizes": {
+      "480": {
+        "avif": 2051,
+        "webp": 3498,
+        "h": 600
+      },
+      "800": {
+        "avif": 3910,
+        "webp": 7384,
+        "h": 1000
+      },
+      "1200": {
+        "avif": 6582,
+        "webp": 14492,
+        "h": 1500
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAABwBACdASoYAB4APu1iqE2ppaOiMAgBMB2JaQAAW+s6KDaCYwcbgCquz9BcwAD+3rSw7T5DVuYE1o11CfVKzLcBb0g+RwAA",
+    "credit": {
+      "title": "Blade and Mounting for a Short Sword (Wakizashi)",
+      "creator": "Yokoyama Kōzukedaijō Sukesada",
+      "license": "CC0 1.0 (Met Open Access)",
+      "page": "https://www.metmuseum.org/art/collection/search/24616"
+    },
+    "alt": "Katana Kurogane montada, con empuñadura trenzada y saya oscura."
+  },
+  {
+    "name": "prod-hanabira",
+    "source": "/tmp/katana-raw/hamon-3010.jpg",
+    "srcW": 3543,
+    "srcH": 1698,
+    "ratio": 0.8,
+    "widths": [
+      480,
+      800,
+      1200
+    ],
+    "sizes": {
+      "480": {
+        "avif": 4839,
+        "webp": 8520,
+        "h": 600
+      },
+      "800": {
+        "avif": 10009,
+        "webp": 19960,
+        "h": 1000
+      },
+      "1200": {
+        "avif": 19229,
+        "webp": 41098,
+        "h": 1500
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAABwBACdASoYAB4APt1apE2opSOiN/qoARAbiWkAAFu2nsNdP+ORQgnVjCq2gAD+78oyPDdmKSUbl3YLQxUYY/lNIZOikfZ198oGMYAA",
+    "credit": {
+      "title": "Wakizashi in Koshirae, 1969.W.011a-b",
+      "creator": "",
+      "license": "by-4.0",
+      "page": "https://klingenmuseum.de/exhibits/484"
+    },
+    "alt": "Katana Hanabira con koshirae completo y hoja pulida."
+  },
+  {
+    "name": "prod-arashi",
+    "source": "/tmp/katana-raw/hamon-3011.jpg",
+    "srcW": 3543,
+    "srcH": 1608,
+    "ratio": 0.8,
+    "widths": [
+      480,
+      800,
+      1200
+    ],
+    "sizes": {
+      "480": {
+        "avif": 3525,
+        "webp": 6174,
+        "h": 600
+      },
+      "800": {
+        "avif": 7079,
+        "webp": 13698,
+        "h": 1000
+      },
+      "1200": {
+        "avif": 12153,
+        "webp": 25874,
+        "h": 1500
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAAAwBACdASoYAB4APuFcp02opSOiMAwBEBwJaQAAW+uonPZrA8rLk67H+oAA/u1cENDZ/6Q0heBN3HeItDxbDEedULRYl9T04fWAoBq4T9YWe4m4AAA=",
+    "credit": {
+      "title": "Wakizashi in Koshirae, Daisho, 1970.W.002a-b",
+      "creator": "",
+      "license": "by-4.0",
+      "page": "https://klingenmuseum.de/exhibits/488"
+    },
+    "alt": "Katana Arashi: hoja de acero plegado con su montura."
+  },
+  {
+    "name": "prod-tsuki",
+    "source": "/tmp/katana-raw/hamon-3009.jpg",
+    "srcW": 3543,
+    "srcH": 1530,
+    "ratio": 0.8,
+    "widths": [
+      480,
+      800,
+      1200
+    ],
+    "sizes": {
+      "480": {
+        "avif": 4053,
+        "webp": 6344,
+        "h": 600
+      },
+      "800": {
+        "avif": 8380,
+        "webp": 15164,
+        "h": 1000
+      },
+      "1200": {
+        "avif": 16860,
+        "webp": 34682,
+        "h": 1500
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAAAwBACdASoYAB4APuVio02pJaMiMAwBIByJaQAAfOCJxhXc1nq1IS2vagAA/u+Q0nzLxUrhSXCR5cnFAzMzteZmdhRHM0ECk+iT5byGS0EFEXcSeLAAAA==",
+    "credit": {
+      "title": "Wakizashi in Koshirae, 1969.W.012a-b",
+      "creator": "",
+      "license": "by-4.0",
+      "page": "https://klingenmuseum.de/exhibits/485"
+    },
+    "alt": "Katana Tsuki con su montura completa sobre fondo claro de estudio."
+  },
+  {
+    "name": "prod-ryujin",
+    "source": "/tmp/katana-raw/display-2008.jpg",
+    "srcW": 4000,
+    "srcH": 1565,
+    "ratio": 0.8,
+    "widths": [
+      480,
+      800,
+      1200
+    ],
+    "sizes": {
+      "480": {
+        "avif": 2019,
+        "webp": 3644,
+        "h": 600
+      },
+      "800": {
+        "avif": 3540,
+        "webp": 7240,
+        "h": 1000
+      },
+      "1200": {
+        "avif": 6184,
+        "webp": 13352,
+        "h": 1500
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADQAwCdASoYAB4APu1mqk4ppaQiMAgBMB2JaQDPZCFSygyGyyvDLcAA/t7egOF5zx/p80BqPe8sBapvgroA/9SImYAAAA==",
+    "credit": {
+      "title": "虫尽金具大小拵 Blade and Mounting for a Sword (Katana)",
+      "creator": "Yokoyama Kōzukedaijō Sukesada",
+      "license": "CC0 1.0 (Met Open Access)",
+      "page": "https://www.metmuseum.org/art/collection/search/24617"
+    },
+    "alt": "Katana Ryūjin montada: empuñadura trenzada, tsuba de hierro y saya lacada, sobre fondo claro."
+  },
+  {
+    "name": "hamon",
+    "source": "/tmp/katana-raw/hamon-927.jpg",
+    "srcW": 3840,
+    "srcH": 2550,
+    "ratio": 1.7777777777777777,
+    "widths": [
+      800,
+      1400,
+      2000
+    ],
+    "sizes": {
+      "800": {
+        "avif": 6362,
+        "webp": 14188,
+        "h": 450
+      },
+      "1400": {
+        "avif": 23677,
+        "webp": 59118,
+        "h": 788
+      },
+      "2000": {
+        "avif": 57466,
+        "webp": 144562,
+        "h": 1125
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAACQAwCdASoYAA4ALrV2u12jqampiYC0SzgGWWId8a+hZyw+Ux0gAP6LuqKYbCxMfjHtNf5xzvaW4R96XLCZidivQxKd+AAA",
+    "credit": {
+      "title": "File:Kissaki 1 .JPG",
+      "creator": "Géry PARENT",
+      "license": "CC BY-SA 3.0",
+      "page": "https://commons.wikimedia.org/wiki/File:Kissaki_1_.JPG"
+    },
+    "alt": "Macro del filo templado: la martensita blanca del hamon contra el acero oscuro del lomo."
+  },
+  {
+    "name": "forge",
+    "source": "/tmp/katana-raw/forge-940.jpg",
+    "srcW": 3840,
+    "srcH": 2560,
+    "ratio": 1.7777777777777777,
+    "widths": [
+      800,
+      1400,
+      2000
+    ],
+    "sizes": {
+      "800": {
+        "avif": 20024,
+        "webp": 38080,
+        "h": 450
+      },
+      "1400": {
+        "avif": 47641,
+        "webp": 90656,
+        "h": 788
+      },
+      "2000": {
+        "avif": 81781,
+        "webp": 158866,
+        "h": 1125
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAADwAwCdASoYAA4APu1iqk2ppaQiMAgBMB2JYwCdACHfYsx/VaIoEN8AAP7cyMWDE/UPTcU2fF63+vDwGd7ZgdJiMG51lKqXHQvVhDgbCMG4AAAA",
+    "credit": {
+      "title": "File:Traditional 'bolo' (cutting knife) making (9278015078).jpg",
+      "creator": "shankar s. from Dubai, united arab emirates",
+      "license": "CC BY 2.0",
+      "page": "https://commons.wikimedia.org/wiki/File:Traditional_%27bolo%27_(cutting_knife)_making_(9278015078).jpg"
+    },
+    "alt": "Fragua encendida: el acero al rojo entre las brasas junto a las tenazas del herrero."
+  },
+  {
+    "name": "tsuba",
+    "source": "/tmp/katana-raw/detail-2022.jpg",
+    "srcW": 3194,
+    "srcH": 3194,
+    "ratio": 1,
+    "widths": [
+      600,
+      1000
+    ],
+    "sizes": {
+      "600": {
+        "avif": 6056,
+        "webp": 14020,
+        "h": 600
+      },
+      "1000": {
+        "avif": 22304,
+        "webp": 62330,
+        "h": 1000
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAACwBACdASoYABgAPu1irVAppSQisBgIATAdiWMAuwAQ7+5w/i7afwO/guUleXkAAP7nCdiME8bQWKexOVbwUJpV7L8+tYsncBltJVHbQPAd1lWXgEw4AAAA",
+    "credit": {
+      "title": "木賊兎図大小揃物 Fittings for a Pair of Swords (Daishō Soroi-Mono)",
+      "creator": "石黒政美 Ishiguro Masayoshi",
+      "license": "CC0 1.0 (Met Open Access)",
+      "page": "https://www.metmuseum.org/art/collection/search/24786"
+    },
+    "alt": "Tsuba de hierro forjado con incrustaciones de oro sobre fondo neutro."
+  },
+  {
+    "name": "tsuka",
+    "source": "/tmp/katana-raw/tsuka-1012.jpg",
+    "srcW": 3840,
+    "srcH": 2880,
+    "ratio": 1,
+    "widths": [
+      600,
+      1000
+    ],
+    "sizes": {
+      "600": {
+        "avif": 21271,
+        "webp": 67940,
+        "h": 600
+      },
+      "1000": {
+        "avif": 38192,
+        "webp": 137340,
+        "h": 1000
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAACQBACdASoYABgAPu1qrU8ppiQiMBgIATAdiWcAtDQQ79eyU0sQ+jwVOeCya4AA/lBJiZW/whHfBNzmtJXk3INu1zfEcuj7HVMqBJaG2zgAAA==",
+    "credit": {
+      "title": "File:Menuki of Kusunoki Masashige and Kusunoki Masatsura.jpg",
+      "creator": "Ihimutefu",
+      "license": "CC BY-SA 4.0",
+      "page": "https://commons.wikimedia.org/wiki/File:Menuki_of_Kusunoki_Masashige_and_Kusunoki_Masatsura.jpg"
+    },
+    "alt": "Pareja de menuki de metal labrado, los adornos que van bajo el trenzado de la empuñadura."
+  },
+  {
+    "name": "saya",
+    "source": "/tmp/katana-raw/display-2010.jpg",
+    "srcW": 4000,
+    "srcH": 1733,
+    "ratio": 1.7777777777777777,
+    "widths": [
+      800,
+      1400
+    ],
+    "sizes": {
+      "800": {
+        "avif": 5567,
+        "webp": 10222,
+        "h": 450
+      },
+      "1400": {
+        "avif": 15001,
+        "webp": 31228,
+        "h": 788
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRj4AAABXRUJQVlA4IDIAAADwAgCdASoYAA4APu1iqU2ppaOiMAgBMB2JZwAAetEDAAD+3JDfOeHPRjnz+J/uPEhgAA==",
+    "credit": {
+      "title": "Mounting for a Slung Sword (Itomaki-tachi Koshirae) with Storage Box",
+      "creator": "Unknown (Japanese)",
+      "license": "CC0 1.0 (Met Open Access)",
+      "page": "https://www.metmuseum.org/art/collection/search/894754"
+    },
+    "alt": "Katana montada con su saya lacada y el cordón de seda anudado, sobre fondo gris de estudio."
+  },
+  {
+    "name": "polish",
+    "source": "/tmp/katana-raw/hamon-2024.jpg",
+    "srcW": 4000,
+    "srcH": 2470,
+    "ratio": 1.7777777777777777,
+    "widths": [
+      800,
+      1400
+    ],
+    "sizes": {
+      "800": {
+        "avif": 1128,
+        "webp": 1900,
+        "h": 450
+      },
+      "1400": {
+        "avif": 2135,
+        "webp": 4954,
+        "h": 788
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAADQAgCdASoYAA4APu1kqU2ppaQiMAgBMB2JaQAAfj4AAP7s96GrRVwqnUjg44AA",
+    "credit": {
+      "title": "Blade for a Dagger (Tantō)",
+      "creator": "Rai Kunitoshi",
+      "license": "CC0 1.0 (Met Open Access)",
+      "page": "https://www.metmuseum.org/art/collection/search/24948"
+    },
+    "alt": "Hoja recién pulida sobre fondo gris, con el reflejo limpio del acero."
+  },
+  {
+    "name": "display",
+    "source": "/tmp/katana-raw/display-2005.jpg",
+    "srcW": 4000,
+    "srcH": 1393,
+    "ratio": 1.7777777777777777,
+    "widths": [
+      800,
+      1400
+    ],
+    "sizes": {
+      "800": {
+        "avif": 2129,
+        "webp": 3740,
+        "h": 450
+      },
+      "1400": {
+        "avif": 4496,
+        "webp": 9018,
+        "h": 788
+      }
+    },
+    "lqip": "data:image/webp;base64,UklGRjwAAABXRUJQVlA4IDAAAADQAgCdASoYAA4APu1iqU2ppaOiMAgBMB2JaQAAfj4AAP7tgypu/SWsGD5Lg6joQAA=",
+    "credit": {
+      "title": "Blade and Mounting for a Sword (Katana)",
+      "creator": "Naotane Taikei",
+      "license": "CC0 1.0 (Met Open Access)",
+      "page": "https://www.metmuseum.org/art/collection/search/21889"
+    },
+    "alt": "Katana desnuda mostrando la curvatura completa de la hoja."
+  }
+]
