@@ -1,10 +1,17 @@
-/* nav — barra global pegajosa + barra secundaria de producto + menú móvil */
+/* nav — barra global pegajosa + barra secundaria de producto + menú móvil
+   Métrica única: TODO hueco de la barra mide --nav-step entre tintas (28 px en escritorio).
+   Los iconos llevan aire interno propio, así que se compensa con --nav-ink-* para que
+   el ritmo que se ve sea el mismo que el que se declara. */
 
 :root { --nav-sub-h: 52px; }
 
 #top-nav {
   --nav-bg: rgba(246, 245, 242, 0.66);
   --nav-bg-scrolled: rgba(246, 245, 242, 0.88);
+  /* hueco entre tintas y aire interno de los botones de icono */
+  --nav-step: clamp(0.875rem, 1.7vw, 1.5rem);
+  --nav-ink-start: 10px;   /* retranqueo para que el hueco visible ante el primer icono valga --nav-step */
+  --nav-ink-end: 3px;      /* aire muerto tras la última tinta: se recorta para igualar los insets */
   position: sticky;
   top: 0;
   z-index: 90;
@@ -40,7 +47,6 @@
   height: 1px;
   background: var(--line);
   opacity: 0;
-  transform: scaleY(1);
   transition: opacity 300ms var(--ease-out);
   pointer-events: none;
 }
@@ -48,21 +54,24 @@
 .nav.is-scrolled .nav__bar { background: var(--nav-bg-scrolled); }
 .nav.is-scrolled .nav__bar::after { opacity: 1; }
 
+/* Un solo bloque centrado en el eje real de la barra: los márgenes de página
+   salen idénticos por construcción, sin huecos huérfanos que explicar. */
 .nav__inner {
   width: min(100% - var(--gutter) * 2, var(--wrap));
   margin-inline: auto;
   height: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  gap: var(--nav-step);
 }
 
 /* ---- logotipo ---- */
 .nav__logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  flex: none;
+  gap: 0.4375rem;          /* un cuarto de --nav-step: el lockup respira dentro de la misma métrica */
   height: 44px;
   text-decoration: none;
   color: var(--ink);
@@ -72,8 +81,8 @@
   font-family: var(--font-serif);
   font-size: 0.9375rem;
   line-height: 1;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
+  letter-spacing: 0;
+  color: var(--ink-2);
   transition: color 300ms var(--ease-out);
 }
 
@@ -82,7 +91,7 @@
 .nav__rule {
   width: 1px;
   height: 13px;
-  background: var(--line);
+  background: var(--ink-3);
 }
 
 .nav__word {
@@ -93,12 +102,12 @@
 }
 
 /* ---- enlaces ---- */
-.nav__links { justify-self: center; }
+.nav__links { flex: none; min-width: 0; }
 
 .nav__links ul {
   display: flex;
   align-items: center;
-  gap: clamp(0.75rem, 2.2vw, 1.75rem);
+  gap: var(--nav-step);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -109,9 +118,10 @@
   align-items: center;
   height: 44px;
   padding-inline: 2px;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 520;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.006em;
+  white-space: nowrap;
   color: var(--ink-2);
   text-decoration: none;
   position: relative;
@@ -125,7 +135,7 @@
   position: absolute;
   left: 2px;
   right: 2px;
-  bottom: 11px;
+  bottom: 10px;
   height: 1.5px;
   background: var(--shu);
   transform: scaleX(0);
@@ -136,12 +146,26 @@
 .nav__links a[aria-current="true"] { color: var(--ink); }
 .nav__links a[aria-current="true"]::after { transform: scaleX(1); }
 
+/* ---- filete: separa contenido de utilidades sin romper el ritmo ---- */
+.nav__split {
+  flex: none;
+  width: 1px;
+  height: 16px;
+  margin-left: 2px;
+  background: var(--ink-3);
+}
+
 /* ---- acciones ---- */
 .nav__actions {
-  justify-self: end;
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 0.125rem;
+  gap: 0;
+  /* la tinta del icono empieza --nav-ink-start dentro del botón: se descuenta para
+     que el hueco visible siga siendo --nav-step, y se recorta el sobrante final
+     para que el inset derecho iguale al izquierdo */
+  margin-left: calc(var(--nav-ink-start) * -1);
+  margin-right: calc(var(--nav-ink-end) * -1);
 }
 
 .nav__icon {
@@ -154,37 +178,47 @@
   padding: 0;
   background: none;
   border: 0;
-  border-radius: var(--radius-s);
+  border-radius: var(--radius-pill);
   color: var(--ink);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: color 200ms var(--ease-out), background-color 200ms var(--ease-out);
 }
 
 .nav__icon:hover { color: var(--shu); }
 
-.nav__badge {
+/* La bolsa es la acción comercial: lleva chapa propia y estado siempre visible,
+   para que no pese lo mismo que un enlace de contenido. */
+.nav__cart { background: var(--washi-2); }
+.nav__cart:hover { background: var(--steel-hi); }
+
+.nav__count {
   position: absolute;
-  top: 5px;
-  right: 4px;
-  min-width: 17px;
-  height: 17px;
+  top: 2px;
+  right: 3px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--shu);
   color: #fff;
-  font-size: 0.6875rem;
-  font-weight: 640;
+  font-size: 0.625rem;
+  font-weight: 660;
   line-height: 1;
   letter-spacing: 0;
   border-radius: var(--radius-pill);
-  box-shadow: 0 0 0 2px rgba(246, 245, 242, 0.9);
+  box-shadow: 0 0 0 2px var(--washi);
 }
 
-.nav__badge[hidden] { display: none; }
+.nav__count.is-empty {
+  background: transparent;
+  color: var(--ink-2);
+  box-shadow: 0 0 0 2px var(--washi), inset 0 0 0 1px var(--ink-3);
+}
 
-.nav__badge.is-bump { animation: nav-bump 420ms var(--ease-out); }
+.nav__count.is-bump { animation: nav-bump 420ms var(--ease-out); }
 
 @keyframes nav-bump {
   0% { transform: scale(1); }
@@ -259,7 +293,6 @@
   font-family: var(--font-serif);
   font-size: 0.9375rem;
   color: var(--steel);
-  opacity: 0.75;
 }
 
 .nav__sub-name {
@@ -296,7 +329,7 @@
   font-size: 0.875rem;
 }
 
-/* ---- menú móvil a pantalla completa ---- */
+/* ---- menú / buscador a pantalla completa ---- */
 .nav__menu {
   position: fixed;
   z-index: 1;
@@ -331,12 +364,45 @@
   padding-block: clamp(1.25rem, 4vw, 2.5rem) calc(2rem + env(safe-area-inset-bottom));
 }
 
+/* buscador */
+.nav__find {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 52px;
+  margin-bottom: clamp(1.25rem, 4vw, 2rem);
+  padding-inline: 0.125rem;
+  border-bottom: 1px solid var(--ink-3);
+}
+
+.nav__find-icon { flex: none; color: var(--ink-2); }
+
+.nav__find-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.nav__find-input::placeholder { color: var(--ink-3); }
+.nav__find-input:focus { outline: none; }
+.nav__find:focus-within { border-bottom-color: var(--shu); }
+.nav__find-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
 .nav__menu-list {
   margin: 0;
   padding: 0;
   list-style: none;
   border-top: 1px solid var(--line);
 }
+
+.nav__menu-list[hidden] { display: none; }
 
 .nav__menu-list li { border-bottom: 1px solid var(--line); }
 
@@ -364,7 +430,7 @@
   font-style: normal;
   font-size: 0.9375rem;
   letter-spacing: 0.08em;
-  color: var(--ink-3);
+  color: var(--ink-2);
   flex: none;
 }
 
@@ -374,6 +440,29 @@
 .nav.is-open .nav__menu-list li:nth-child(3) a { transition-delay: 150ms; }
 .nav.is-open .nav__menu-list li:nth-child(4) a { transition-delay: 195ms; }
 .nav.is-open .nav__menu-list li:nth-child(5) a { transition-delay: 240ms; }
+.nav.is-open .nav__menu-list li:nth-child(6) a { transition-delay: 285ms; }
+
+/* resultados: mismo esqueleto, otra escala, sin escalonado */
+.nav__menu-list--find a {
+  font-size: clamp(1.25rem, 5.2vw, 1.75rem);
+  font-weight: 600;
+  transition: color 200ms;
+  opacity: 1;
+  transform: none;
+}
+
+.nav__menu-list--find i {
+  font-family: var(--font-sans);
+  font-size: var(--t-small);
+  letter-spacing: -0.01em;
+  color: var(--ink-2);
+}
+
+.nav__find-none {
+  padding-block: 1rem;
+  color: var(--ink-2);
+  font-size: var(--t-body);
+}
 
 .nav__menu-foot {
   margin-top: auto;
@@ -391,19 +480,37 @@
 
 .nav__menu-cta { align-self: stretch; }
 
+@media (min-width: 900px) {
+  .nav__menu-cta { align-self: flex-start; }
+}
+
 .nav__menu-note {
   font-size: var(--t-small);
-  color: var(--ink-3);
+  color: var(--ink-2);
   max-width: 34ch;
   line-height: 1.45;
 }
 
-/* ---- móvil / tablet ---- */
+/* ---- móvil / tablet: marca al tamaño de un icono y tres objetivos a ritmo par ---- */
 @media (max-width: 899px) {
   :root { --nav-sub-h: 58px; }
-  .nav__links { display: none; }
+
+  /* en móvil la última tinta es la hamburguesa, y el contador de la bolsa
+     se descuenta del hueco siguiente para que el ritmo siga siendo el mismo */
+  #top-nav { --nav-ink-end: 13px; }
+  .nav__cart { margin-right: 12px; }
+
+  .nav__inner { justify-content: space-between; }
+  .nav__links, .nav__split, .nav__rule, .nav__word { display: none; }
   .nav__burger { display: inline-flex; }
-  .nav__inner { grid-template-columns: auto 1fr; }
+  .nav__actions { margin-left: 0; }
+
+  .nav__kanji {
+    font-size: 1.3125rem;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+
   .nav__sub-note { display: none; }
   .nav__sub-cta { min-height: 40px; }
 }

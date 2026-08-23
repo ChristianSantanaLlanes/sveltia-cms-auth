@@ -129,6 +129,8 @@ export function initCart() {
     const has = t.units > 0;
 
     unitsEl.textContent = has ? plural(t.units, 'pieza', 'piezas') : 'Sin piezas';
+    // Sin piezas no hay resumen que enseñar: el panel vuelve a una sola columna.
+    panel.classList.toggle('is-empty', !has);
     empty.hidden = has;
     list.hidden = !has;
     foot.hidden = !has;

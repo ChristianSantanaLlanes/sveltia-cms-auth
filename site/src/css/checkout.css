@@ -22,6 +22,8 @@
 }
 
 .checkout__panel {
+  --co-measure: 42rem;
+  --co-pad: clamp(1rem, 3vw, 2.5rem);
   position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -96,36 +98,48 @@
 .checkout__close:hover { background: var(--washi-2); color: var(--ink); }
 
 /* ------------------------------------------------------------------ rejilla */
-/* Móvil: una sola columna de scroll (el resumen se queda pegado arriba).
-   Desktop: dos columnas independientes, formulario claro y resumen oscuro. */
+/* Tres bandas fijas: resumen, columna que hace scroll y muelle de acción.
+   El muelle es una fila propia de la rejilla, nunca contenido flotante: así el
+   botón primario no puede quedar por debajo del borde de la ventana. */
 .checkout__grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "aside" "main" "dock";
+  min-height: 0;
+  overflow: hidden;
+}
+.checkout__aside {
+  grid-area: aside;
+  min-height: 0;
+  max-height: 50vh;
+  max-height: 50dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.checkout__main {
+  grid-area: main;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
-.checkout__grid > .checkout__aside { flex: 0 0 auto; }
-.checkout__grid > .checkout__main { flex: 1 1 auto; }
+.checkout__foot { grid-area: dock; }
 
 @media (min-width: 900px) {
   .checkout__grid {
-    display: grid;
     grid-template-columns: minmax(0, 1fr) clamp(330px, 33%, 420px);
-    grid-template-rows: minmax(0, 1fr);
-    grid-template-areas: "main aside";
-    overflow: hidden;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main  aside"
+      "dock  aside";
   }
-  .checkout__main { grid-area: main; overflow-y: auto; overscroll-behavior: contain; }
-  .checkout__aside { grid-area: aside; overflow-y: auto; overscroll-behavior: contain; }
+  .checkout__aside { max-height: none; }
 }
 
 .checkout__main {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  padding: clamp(1.25rem, 3vw, 2.25rem) clamp(1rem, 3vw, 2.5rem) 0;
+  padding: clamp(1.25rem, 3vw, 2.25rem) var(--co-pad) clamp(1rem, 2.2vw, 1.6rem);
 }
 
 /* -------------------------------------------------------------- indicador */
@@ -191,7 +205,7 @@
 .checkout__form { display: contents; }
 [data-step-panel][hidden] { display: none; }
 
-.step { max-width: 42rem; }
+.step { max-width: var(--co-measure); margin-bottom: clamp(1.5rem, 3vw, 2.25rem); }
 .step__kanji {
   font-family: var(--font-serif);
   font-size: 0.875rem;
@@ -217,8 +231,8 @@
 .fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem 1rem;
-  margin-top: clamp(1.5rem, 3vw, 2rem);
+  gap: 0.6rem 1.25rem;
+  margin-top: clamp(1.5rem, 3.4vw, 2.5rem);
 }
 .field { display: block; min-width: 0; }
 .field--wide { grid-column: 1 / -1; }
@@ -307,7 +321,7 @@ select.field__input {
   align-items: start;
   gap: 0 0.7rem;
   margin-top: 1.25rem;
-  max-width: 42rem;
+  max-width: var(--co-measure);
 }
 .check__box {
   width: 22px;
@@ -333,7 +347,7 @@ select.field__input {
   align-items: flex-start;
   gap: 0.6rem;
   margin-top: 1.5rem;
-  max-width: 42rem;
+  max-width: var(--co-measure);
   padding: 0.85rem 1rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-m);
@@ -351,7 +365,7 @@ select.field__input {
   gap: 0;
   margin: clamp(1.5rem, 3vw, 2rem) 0 0;
   padding: 0;
-  max-width: 42rem;
+  max-width: var(--co-measure);
   list-style: none;
   border-top: 1px solid var(--line);
 }
@@ -476,34 +490,86 @@ select.field__input {
 }
 .checkout__empty-note { margin: 0.75rem 0 1.5rem; color: var(--ink-2); }
 
-/* ------------------------------------------------------------------- pie */
-.checkout__foot {
-  position: sticky;
-  bottom: 0;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  justify-content: flex-end;
-  margin-top: auto;
-  padding: 0.85rem 0 calc(0.85rem + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to top, var(--washi) 76%, rgba(246, 245, 242, 0));
+/* ---------------------------------------------------- compromisos del pedido */
+/* Cierra la columna del formulario: ocupa la holgura de los pasos cortos y
+   mantiene el mismo borde derecho que los campos. */
+.pledge {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem 1.5rem;
+  width: 100%;
+  max-width: var(--co-measure);
+  margin: auto 0 0;
+  padding: clamp(1.15rem, 2.6vw, 1.6rem) 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
 }
+.pledge[hidden] { display: none; }
+.pledge__item { min-width: 0; }
+.pledge__label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 640;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.pledge__text {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+@media (max-width: 559px) {
+  .pledge { grid-template-columns: minmax(0, 1fr); gap: 0.65rem; padding-top: 1.15rem; }
+  .pledge__label { margin-bottom: 0.15rem; }
+  .pledge__text { font-size: 0.8125rem; line-height: 1.45; }
+}
+
+/* ------------------------------------------------------- muelle de acción */
+.checkout__foot {
+  position: relative;
+  z-index: 3;
+  isolation: isolate;
+  padding: clamp(0.9rem, 1.9vw, 1.2rem) var(--co-pad)
+           calc(clamp(1rem, 2.1vw, 1.4rem) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  background: var(--washi-2);
+}
+/* Difuminado sobre el filete: avisa de que la columna sigue hacia arriba. */
 .checkout__foot::before {
   content: "";
   position: absolute;
-  top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: var(--line);
+  bottom: 100%;
+  height: 26px;
+  background: linear-gradient(to top, var(--washi), rgba(246, 245, 242, 0));
+  pointer-events: none;
 }
 .checkout__foot[hidden] { display: none; }
+.checkout__foot-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: var(--co-measure);
+}
+.checkout__foot-note {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 42ch;
+  margin-right: auto;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
 .checkout__prev[hidden], .checkout__next[hidden], .checkout__place[hidden] { display: none; }
-.checkout__prev { margin-right: auto; }
-.checkout__next, .checkout__place { flex: 0 0 auto; }
+.checkout__prev, .checkout__next, .checkout__place { flex: 0 0 auto; }
 @media (max-width: 719px) {
-  .checkout__prev { margin-right: 0; padding: 0 1.1rem; }
+  .checkout__foot-note { display: none; }
+  .checkout__prev { padding: 0 1.1rem; }
   .checkout__next, .checkout__place { flex: 1 1 auto; padding: 0 1.25rem; }
 }
 
@@ -514,6 +580,7 @@ select.field__input {
   border-left: 1px solid rgba(0, 0, 0, 0.4);
 }
 .sum { display: flex; flex-direction: column; min-height: 100%; }
+.sum__body { flex: 0 0 auto; }
 
 .sum__toggle {
   display: flex;
@@ -616,6 +683,53 @@ select.field__input {
 .sum__row--fine dd { color: var(--ink-3); }
 .sum__free { color: var(--hamon); }
 
+/* Cronología del encargo: baja el peso del raíl a su tercio inferior. */
+.sum__dock {
+  margin-top: auto;
+  padding: clamp(1.25rem, 3vw, 1.7rem) clamp(1rem, 3vw, 1.5rem) clamp(1.5rem, 3vw, 2rem);
+  border-top: 1px solid var(--line-dark);
+}
+.sum__dock-head { margin-bottom: 0.95rem; }
+.sum__dock-head .eyebrow { color: var(--steel); }
+
+.track { display: grid; gap: 0.9rem; margin: 0; padding: 0; list-style: none; }
+.track__step { position: relative; padding-left: 1.4rem; }
+.track__step::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--steel);
+}
+.track__step:first-child::before { background: var(--shu); }
+.track__step::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 1.05rem;
+  bottom: -0.9rem;
+  width: 1px;
+  background: var(--line-dark);
+}
+.track__step:last-child::after { content: none; }
+.track__when {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 640;
+  letter-spacing: 0.03em;
+  color: var(--steel-hi);
+}
+.track__what {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
 .sum__fine {
   margin-top: 1.25rem;
   font-size: 0.75rem;
@@ -625,14 +739,15 @@ select.field__input {
 
 @media (max-width: 899px) {
   .checkout__aside {
-    position: sticky;
-    top: 0;
     z-index: 4;
     border-left: 0;
     border-bottom: 1px solid var(--line-dark);
   }
   .sum__body[hidden] { display: none; }
   .sum__head { display: none; }
+  /* En estrecho el raíl es solo la barra del total: la cronología ocuparía
+     media pantalla y se cortaría a media línea dentro del desplegable. */
+  .sum__dock { display: none; }
 }
 @media (min-width: 900px) {
   .sum__body[hidden] { display: block; }

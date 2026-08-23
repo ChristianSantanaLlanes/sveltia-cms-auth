@@ -35,6 +35,8 @@
     </div>
 
     <footer class="cart__foot" data-cart-foot>
+      <p class="eyebrow cart__sum-eyebrow">Resumen</p>
+
       <dl class="cart__sum">
         <div class="cart__row">
           <dt>Subtotal</dt>
@@ -45,11 +47,13 @@
           <dd data-cart-shipping>—</dd>
         </div>
         <div class="cart__row cart__row--total">
-          <dt>Total</dt>
+          <dt>
+            Total
+            <span class="cart__vat">IVA (21 %) incluido: <span data-cart-vat>0 €</span></span>
+          </dt>
           <dd data-cart-total>0 €</dd>
         </div>
       </dl>
-      <p class="cart__vat">IVA (21 %) incluido: <span data-cart-vat>0 €</span></p>
 
       <button class="btn btn--lg cart__checkout" type="button" data-checkout-open>Tramitar el pedido</button>
       <p class="cart__fine">Aranceles y despacho pagados en origen. La fecha exacta de entrega se confirma por escrito al cerrar el encargo.</p>

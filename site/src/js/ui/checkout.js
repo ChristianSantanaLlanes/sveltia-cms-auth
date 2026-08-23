@@ -99,6 +99,7 @@ export function initCheckout() {
   const nextBtn = panel.querySelector('[data-step-next]');
   const placeBtn = panel.querySelector('[data-place-order]');
   const emptyPanel = panel.querySelector('[data-empty-panel]');
+  const pledge = panel.querySelector('[data-pledge]');
   const sumToggle = panel.querySelector('[data-summary-toggle]');
   const sumBody = panel.querySelector('#co-summary');
   const sumLines = panel.querySelector('[data-sum-lines]');
@@ -253,6 +254,7 @@ export function initCheckout() {
   const paintFoot = () => {
     const done = step === LAST;
     foot.hidden = done;
+    if (pledge) pledge.hidden = done;
     prevBtn.hidden = step === 1 || done;
     nextBtn.hidden = step >= 4;
     placeBtn.hidden = step !== 4;
@@ -282,6 +284,7 @@ export function initCheckout() {
     emptyPanel.hidden = !isEmpty;
     stepsList.hidden = isEmpty;
     foot.hidden = isEmpty || step === LAST;
+    if (pledge) pledge.hidden = isEmpty || step === LAST;
     if (isEmpty) for (const p of stepPanels) p.hidden = true;
     else for (const p of stepPanels) p.hidden = Number(p.dataset.stepPanel) !== step;
   };

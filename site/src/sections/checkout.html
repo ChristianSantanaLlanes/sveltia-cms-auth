@@ -62,6 +62,24 @@
               </div>
             </dl>
 
+          </div>
+
+          <div class="sum__dock">
+            <p class="sum__dock-head"><span class="eyebrow">Después de confirmar</span></p>
+            <ol class="track">
+              <li class="track__step">
+                <span class="track__when">Hoy</span>
+                <span class="track__what">Se reserva el acero y el maestro abre la ficha de forja a tu nombre.</span>
+              </li>
+              <li class="track__step">
+                <span class="track__when">Semanas 1–6</span>
+                <span class="track__what">Plegado, temple, pulido y montura: cuatro correos con fotos de tu hoja, uno por hito.</span>
+              </li>
+              <li class="track__step">
+                <span class="track__when">Semana 7</span>
+                <span class="track__what">Transporte desde Seki, cinco días laborables, y entrega bajo firma.</span>
+              </li>
+            </ol>
             <p class="sum__fine">Aranceles y despacho de aduanas pagados en origen. La forja empieza el día que se confirma el pedido.</p>
           </div>
         </div>
@@ -292,13 +310,31 @@
           <button class="btn btn--lg done__back" type="button" data-checkout-close>Volver a la tienda</button>
         </section>
 
-        <footer class="checkout__foot" data-foot>
+        <ul class="pledge" data-pledge>
+          <li class="pledge__item">
+            <span class="pledge__label">Entrega</span>
+            <span class="pledge__text">Bajo firma y con el DNI a la vista. Solo a mayores de 18.</span>
+          </li>
+          <li class="pledge__item">
+            <span class="pledge__label">Devolución</span>
+            <span class="pledge__text">30 días desde la entrega, transporte incluido.</span>
+          </li>
+          <li class="pledge__item">
+            <span class="pledge__label">Registro</span>
+            <span class="pledge__text">Número grabado en la espiga y certificado firmado a mano.</span>
+          </li>
+        </ul>
+
+      </div>
+
+      <footer class="checkout__foot" data-foot>
+        <div class="checkout__foot-inner">
+          <p class="checkout__foot-note">No se cobra nada hasta que la hoja sale del taller.</p>
           <button class="btn btn--ghost checkout__prev" type="button" data-step-prev hidden>Atrás</button>
           <button class="btn btn--lg checkout__next" type="button" data-step-next>Continuar</button>
           <button class="btn btn--lg checkout__place" type="button" data-place-order hidden>Confirmar el pedido</button>
-        </footer>
-
-      </div>
+        </div>
+      </footer>
     </div>
   </section>
 </div>

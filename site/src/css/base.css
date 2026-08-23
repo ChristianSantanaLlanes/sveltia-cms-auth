@@ -64,3 +64,12 @@ a { color: inherit; }
 
 /* El chrome fijo (nav + barra de producto) no puede comerse el titular al saltar a un ancla. */
 :where(section[id], footer[id], header[id]) { scroll-margin-top: calc(var(--nav-h, 48px) + var(--nav-sub-h, 0px) + 12px); }
+
+/* Las secciones que no se ven al cargar no pagan estilo ni composición hasta que se acercan.
+   El tamaño estimado evita que la barra de scroll pegue saltos. */
+@media (prefers-reduced-data: no-preference) {
+  :where(#hamon, #forge, #tsuba, #catalogo, #specs, #faq, #footer) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 1200px;
+  }
+}

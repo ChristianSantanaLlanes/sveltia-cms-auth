@@ -1,5 +1,5 @@
 {
-  "updated": "17:22",
+  "updated": "22:29",
   "phase": "Fase 3 · ronda 2, cerrando brechas",
   "headline": "Construyendo KUROGANE contra apple.com/airpods-pro",
   "metrics": {
@@ -12,11 +12,11 @@
       "a11y": 91
     },
     "ours": {
-      "perf": 96,
-      "lcp": 1311,
+      "perf": 98,
+      "lcp": 1397,
       "cls": 0,
-      "tbt": 239,
-      "bytes": 127929,
+      "tbt": 172,
+      "bytes": 57119,
       "a11y": 96
     }
   },
@@ -238,6 +238,14 @@
     {
       "t": "17:45",
       "text": "Carrito y checkout también ganan a ciegas. Ronda 1 cerrada: 11 piezas de 13. El crítico del checkout encontró además un fallo funcional real: el botón principal quedaba partido por el borde de la ventana."
+    },
+    {
+      "t": "22:35",
+      "text": "Rendimiento afinado: el coste no era el JavaScript (88 ms) sino Estilo y Composición (1.031 ms). Con content-visibility en las secciones bajo el pliegue, la performance sube a 98, el bloqueo baja a 172 ms y la carga inicial queda en 57 kB."
+    },
+    {
+      "t": "22:40",
+      "text": "Trabajo asegurado con commit y push en la rama claude/katana-store-landing-qsodw2."
     }
   ]
 }

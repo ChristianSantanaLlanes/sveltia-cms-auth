@@ -1,9 +1,11 @@
-/** Pieza: nav. Barra global pegajosa, contador de carrito, barra de producto y menú móvil. */
+/** Pieza: nav. Barra global pegajosa, contador de carrito, barra de producto, buscador y menú. */
 import { subscribe, totals } from '../store.js';
 import { PRODUCTS, formatPrice, productById } from '../catalog.js';
 
 const DESKTOP = '(min-width: 900px)';
 const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+const fold = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 export function initNav() {
   const root = document.querySelector('[data-nav]');
@@ -11,6 +13,7 @@ export function initNav() {
 
   const bar = root.querySelector('.nav__bar');
   const toggle = root.querySelector('[data-nav-toggle]');
+  const searchBtn = root.querySelector('[data-nav-search]');
   const menu = root.querySelector('[data-nav-menu]');
   const sub = root.querySelector('[data-nav-sub]');
   const subCta = sub && sub.querySelector('.nav__sub-cta');
@@ -95,7 +98,7 @@ export function initNav() {
     subscribe(() => {
       const { units } = totals();
       badge.textContent = String(units);
-      badge.hidden = units === 0;
+      badge.classList.toggle('is-empty', units === 0);
       cartBtn.setAttribute(
         'aria-label',
         units === 0 ? 'Abrir el carrito, vacío' : `Abrir el carrito, ${units} ${units === 1 ? 'artículo' : 'artículos'}`,
@@ -134,10 +137,115 @@ export function initNav() {
     for (const t of targets) spy.observe(t.el);
   }
 
-  /* ------------------------------------------------- menú móvil */
+  /* ------------------------------------------------- navegación común */
+  const goTo = (href, productId) => {
+    if (productId) document.dispatchEvent(new CustomEvent('kg:configure', { detail: { productId }, bubbles: true }));
+    const target = href && document.querySelector(href);
+    if (!target) return;
+    requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+  };
+
+  /* ------------------------------------------------- menú y buscador */
+  const findForm = root.querySelector('[data-nav-find]');
+  const findInput = root.querySelector('[data-nav-find-input]');
+  const findList = root.querySelector('[data-nav-find-list]');
+  const findStatus = root.querySelector('[data-nav-find-status]');
+  const menuList = root.querySelector('[data-nav-menu-list]');
+
+  const index = [
+    ...menuLinks
+      .filter((a) => a.closest('[data-nav-menu-list]'))
+      .map((a) => ({
+        label: a.querySelector('span') ? a.querySelector('span').textContent : a.textContent.trim(),
+        meta: a.querySelector('i') ? a.querySelector('i').textContent : '',
+        href: a.getAttribute('href'),
+        terms: '',
+      })),
+    ...PRODUCTS.map((p) => ({
+      label: p.name,
+      meta: formatPrice(p.base),
+      href: '#configurador',
+      productId: p.id,
+      terms: [p.kanji, p.steel, p.hamon, p.tagline].filter(Boolean).join(' '),
+    })),
+  ].map((e) => ({ ...e, hay: fold(`${e.label} ${e.meta} ${e.terms}`) }));
+
+  let results = [];
+
+  const renderFind = (query) => {
+    if (!findList || !menuList) return;
+    const q = fold(query.trim());
+    if (!q) {
+      results = [];
+      findList.hidden = true;
+      findList.textContent = '';
+      menuList.hidden = false;
+      if (findStatus) findStatus.textContent = '';
+      return;
+    }
+    results = index.filter((e) => e.hay.includes(q)).slice(0, 8);
+    menuList.hidden = true;
+    findList.hidden = false;
+    findList.textContent = '';
+
+    if (!results.length) {
+      const li = document.createElement('li');
+      li.className = 'nav__find-none';
+      li.textContent = `Sin resultados para «${query.trim()}».`;
+      findList.append(li);
+    } else {
+      for (const item of results) {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = item.href;
+        const name = document.createElement('span');
+        name.textContent = item.label;
+        const meta = document.createElement('i');
+        meta.setAttribute('aria-hidden', 'true');
+        meta.textContent = item.meta;
+        a.append(name, meta);
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          closeMenu(false);
+          goTo(item.href, item.productId);
+        });
+        li.append(a);
+        findList.append(li);
+      }
+    }
+
+    if (findStatus) {
+      findStatus.textContent = results.length
+        ? `${results.length} ${results.length === 1 ? 'resultado' : 'resultados'} para ${query.trim()}`
+        : `Sin resultados para ${query.trim()}`;
+    }
+  };
+
+  const resetFind = () => {
+    if (findInput) findInput.value = '';
+    renderFind('');
+  };
+
+  if (findInput) findInput.addEventListener('input', () => renderFind(findInput.value));
+
+  if (findForm) {
+    findForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const first = results[0];
+      if (!first) return;
+      closeMenu(false);
+      goTo(first.href, first.productId);
+    });
+  }
+
   let open = false;
   let lastFocus = null;
   let lockedY = 0;
+
+  const setExpanded = (value) => {
+    for (const btn of [toggle, searchBtn]) if (btn) btn.setAttribute('aria-expanded', String(value));
+    if (toggle) toggle.setAttribute('aria-label', value ? 'Cerrar el menú' : 'Abrir el menú');
+  };
 
   const lockScroll = () => {
     if (document.body.classList.contains('is-scroll-locked')) return;
@@ -163,7 +271,7 @@ export function initNav() {
 
   const trapList = () => {
     const inMenu = menu ? Array.from(menu.querySelectorAll(FOCUSABLE)) : [];
-    return [toggle, cartBtn, ...inMenu].filter((el) => el && el.offsetParent !== null);
+    return [toggle, searchBtn, cartBtn, ...inMenu].filter((el) => el && el.offsetParent !== null);
   };
 
   const onKeydown = (e) => {
@@ -178,16 +286,17 @@ export function initNav() {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
 
-  function openMenu() {
-    if (open || !menu) return;
-    open = true;
-    lastFocus = document.activeElement;
-    root.classList.add('is-open');
-    toggle.setAttribute('aria-expanded', 'true');
-    toggle.setAttribute('aria-label', 'Cerrar el menú');
-    lockScroll();
-    document.addEventListener('keydown', onKeydown);
-    const first = menu.querySelector(FOCUSABLE);
+  function openMenu(mode) {
+    if (!menu) return;
+    if (!open) {
+      open = true;
+      lastFocus = document.activeElement;
+      root.classList.add('is-open');
+      setExpanded(true);
+      lockScroll();
+      document.addEventListener('keydown', onKeydown);
+    }
+    const first = mode === 'search' && findInput ? findInput : menu.querySelector(FOCUSABLE);
     if (first) requestAnimationFrame(() => first.focus());
   }
 
@@ -195,28 +304,37 @@ export function initNav() {
     if (!open) return;
     open = false;
     root.classList.remove('is-open');
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-label', 'Abrir el menú');
+    setExpanded(false);
     document.removeEventListener('keydown', onKeydown);
     unlockScroll();
+    resetFind();
     if (restore && lastFocus && document.contains(lastFocus)) lastFocus.focus();
     lastFocus = null;
   }
 
   if (toggle && menu) {
     toggle.addEventListener('click', () => (open ? closeMenu() : openMenu()));
+  }
 
+  if (searchBtn && menu) {
+    searchBtn.addEventListener('click', () => {
+      if (open && document.activeElement === findInput) closeMenu();
+      else openMenu('search');
+    });
+  }
+
+  if (menu) {
     for (const link of menuLinks) {
       link.addEventListener('click', (e) => {
-        const target = document.querySelector(link.getAttribute('href'));
-        if (!target) { closeMenu(false); return; }
+        const href = link.getAttribute('href');
+        if (!document.querySelector(href)) { closeMenu(false); return; }
         e.preventDefault();
         closeMenu(false);
-        requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+        goTo(href);
       });
     }
 
-    const onBreakpoint = (e) => { if (e.matches) closeMenu(false); };
+    const onBreakpoint = () => { if (open) closeMenu(false); };
     if (desktop.addEventListener) desktop.addEventListener('change', onBreakpoint);
     else desktop.addListener(onBreakpoint);
   }

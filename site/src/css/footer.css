@@ -14,9 +14,13 @@
   --f-ink: rgba(255, 255, 255, 0.72);
   --f-line: var(--line-dark);
   --f-row: 52px;
+  /* La banda que ocupan la barra global y la de producto. El pie reserva ese
+     alto en su cabecera: cuando su borde superior encaja arriba, el chrome fijo
+     se apoya en sumi vacío y no tacha ni parte ninguna línea. */
+  --f-chrome: calc(var(--nav-h) + var(--nav-sub-h, 0px));
   background: var(--sumi);
   color: var(--washi);
-  padding-block: clamp(2.75rem, 6vw, 5rem) clamp(2rem, 3.5vw, 2.75rem);
+  padding-block: max(clamp(2.75rem, 6vw, 5rem), calc(var(--f-chrome) + 0.75rem)) clamp(2rem, 3.5vw, 2.75rem);
   padding-bottom: calc(clamp(2rem, 3.5vw, 2.75rem) + env(safe-area-inset-bottom));
   font-size: 0.8125rem;
   line-height: 1.55;
@@ -254,13 +258,17 @@
 /* ==========================================================================
    REMATE — marca, enlaces legales, copyright y país
    ========================================================================== */
+/* En estrecho el registro plegable ya cierra con su propio filete: el remate no
+   dibuja otro a 28 px del anterior. El filete vuelve a partir de 760 px, donde
+   los plegables pierden el suyo. */
 #footer .footer__end {
   display: grid;
-  gap: 1.5rem;
-  margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
-  padding-top: clamp(1.25rem, 2.5vw, 1.75rem);
-  border-top: 1px solid var(--f-line);
+  gap: 0.9rem;
+  margin-top: clamp(1.5rem, 3vw, 2rem);
 }
+
+#footer .footer__mini { margin-block: 0.35rem; }
+#footer .footer__top-link { margin-top: 0.5rem; }
 
 #footer .footer__brand {
   display: grid;
@@ -337,18 +345,22 @@
   transition: color 180ms var(--ease-out);
 }
 
+/* La punta mira arriba y al pasar el ratón sube: el gesto y el destino
+   coinciden. Sin desplazamiento horizontal, que en la columna derecha del
+   remate se saldría del ancho de la rejilla. */
 #footer .footer__top-link::after {
   content: "";
+  flex: none;
   width: 7px;
   height: 7px;
   border-top: 1.5px solid currentColor;
   border-right: 1.5px solid currentColor;
-  transform: rotate(-45deg) translate(1px, 1px);
+  transform: translateY(1px) rotate(-45deg);
   transition: transform 220ms var(--ease-out);
 }
 
 #footer .footer__top-link:hover { color: var(--washi); }
-#footer .footer__top-link:hover::after { transform: rotate(-45deg) translate(3px, 3px); }
+#footer .footer__top-link:hover::after { transform: translateY(-2px) rotate(-45deg); }
 
 /* dedos gordos: el objetivo táctil manda sobre la densidad */
 @media (pointer: coarse) {
@@ -392,6 +404,8 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
     column-gap: clamp(1.5rem, 3.2vw, 3rem);
+    /* si los cinco datos no caben en una fila, la segunda no se pega a la primera */
+    row-gap: clamp(1.25rem, 2.4vw, 1.75rem);
     margin-top: clamp(2rem, 4vw, 3rem);
     padding-top: clamp(1.25rem, 2.4vw, 1.75rem);
     border-top: 1px solid var(--f-line);
@@ -425,61 +439,69 @@
   #footer .footer__demo { margin-block: 0; }
   #footer .credits__list { columns: 2; column-gap: clamp(1.5rem, 4vw, 3rem); }
 
-  /* remate: marca a la izquierda, legales y copyright al centro, país a la
-     derecha; el filete superior acaba justo donde acaba la rejilla */
+  /* ---- remate ----
+     El filete superior arranca y acaba exactamente en el ancho de la rejilla.
+     La fila legal lleva separadores de barra con espaciado constante, y se le
+     da siempre ancho suficiente para caber en UNA línea: así ninguna barra
+     queda colgando al principio ni al final de un renglón partido. */
   #footer .footer__end {
-    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: end;
     column-gap: clamp(2rem, 5vw, 4.5rem);
-    row-gap: 1rem;
+    row-gap: 1.15rem;
+    margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+    padding-top: clamp(1.25rem, 2.5vw, 1.75rem);
+    border-top: 1px solid var(--f-line);
   }
 
-  #footer .footer__brand {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-  }
+  #footer .footer__mini,
+  #footer .footer__top-link { margin-block: 0; }
 
   #footer .footer__mini {
-    grid-column: 2;
-    grid-row: 1;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: baseline;
     column-gap: 0;
   }
 
-  /* el separador viaja con el enlace que le sigue: si la fila parte, nunca
-     queda una barra colgada al final de la línea */
   #footer .footer__mini li + li::before {
     content: "|";
     margin-inline: 0.85rem;
     color: rgba(255, 255, 255, 0.32);
   }
 
-  #footer .footer__mini a { min-height: 0; display: inline; }
+  #footer .footer__mini a { min-height: 0; display: inline; white-space: nowrap; }
 
-  #footer .footer__copy {
-    grid-column: 2;
-    grid-row: 2;
+  /* 760–1119: la columna central no da para la fila legal completa, así que
+     la fila legal ocupa el ancho entero y el remate se ordena en tres bandas:
+     marca + volver arriba · legales · copyright y país. */
+  #footer .footer__end {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  #footer .footer__place {
-    grid-column: 3;
-    grid-row: 1;
-    text-align: end;
-  }
-
-  #footer .footer__top-link {
-    grid-column: 3;
-    grid-row: 2;
-    justify-self: end;
-    min-height: 0;
-  }
+  #footer .footer__brand { grid-area: 1 / 1; }
+  #footer .footer__top-link { grid-area: 1 / 2; justify-self: end; align-self: end; min-height: 0; }
+  #footer .footer__mini { grid-area: 2 / 1 / 3 / -1; }
+  #footer .footer__copy { grid-area: 3 / 1; }
+  #footer .footer__place { grid-area: 3 / 2; text-align: end; }
 }
 
 @media (min-width: 1000px) {
-  #footer { padding-block: clamp(4rem, 7vw, 6.5rem) clamp(2.25rem, 3.5vw, 3rem); }
+  #footer { padding-block: max(clamp(4rem, 7vw, 6.5rem), calc(var(--f-chrome) + 0.75rem)) clamp(2.25rem, 3.5vw, 3rem); }
   #footer .footer__map { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   #footer .footer__facts { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   #footer .credits__list { columns: 3; }
+}
+
+@media (min-width: 1120px) {
+  /* marca a la izquierda, legales y copyright al centro, país a la derecha */
+  #footer .footer__end {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    row-gap: 1rem;
+  }
+
+  #footer .footer__brand { grid-area: 1 / 1 / 3 / 2; }
+  #footer .footer__mini { grid-area: 1 / 2; }
+  #footer .footer__copy { grid-area: 2 / 2; }
+  #footer .footer__place { grid-area: 1 / 3; text-align: end; }
+  #footer .footer__top-link { grid-area: 2 / 3; justify-self: end; align-self: auto; }
 }

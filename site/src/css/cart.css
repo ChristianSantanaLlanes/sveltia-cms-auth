@@ -146,7 +146,7 @@
 /* Con el envío ya cubierto no hay progreso que medir: fuera la barra, se queda la frase. */
 .cart__ship.is-free .cart__ship-bar { display: none; }
 
-.cart__ship.is-free .cart__ship-note b { color: var(--gold); }
+.cart__ship.is-free .cart__ship-note b { color: var(--washi); }
 
 /* --- zona con scroll ----------------------------------------------------- */
 .cart__scroll {
@@ -264,7 +264,7 @@
   margin-top: 0.875rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1.125rem;
 }
 
 /* cantidad */
@@ -307,7 +307,6 @@
 }
 
 .cart-line__remove {
-  margin-left: auto;
   flex: none;
   min-height: 38px;
   padding: 0 0.125rem;
@@ -373,6 +372,8 @@
   background: var(--sumi-soft);
 }
 
+.cart__foot[hidden] { display: none; }
+
 .cart__sum { margin: 0; }
 
 .cart__row {
@@ -410,11 +411,16 @@
 }
 
 .cart__vat {
-  margin-top: 0.25rem;
+  display: block;
+  margin-top: 0.1875rem;
   font-size: 0.75rem;
+  font-weight: 400;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
+
+/* Rótulo de la columna de resumen: solo tiene sentido cuando hay columna. */
+.cart__sum-eyebrow { display: none; }
 
 .cart__checkout {
   --btn-bg: var(--shu-hot);
@@ -440,6 +446,99 @@
   line-height: 1.45;
   color: var(--ink-3);
 }
+
+/* --- escritorio: dos columnas -------------------------------------------- */
+/* En ancho grande el panel deja de ser el móvil ampliado: las líneas ocupan la
+   columna izquierda y el resumen con el botón de pago se queda fijo a la
+   derecha, a la vista desde el primer momento y sin depender del scroll. */
+@media (min-width: 64rem) {
+  .cart__panel {
+    width: min(94vw, 54rem);
+    grid-template-columns: minmax(0, 1fr) 20.5rem;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "head head"
+      "ship side"
+      "list side";
+  }
+
+  .cart__head {
+    grid-area: head;
+    align-items: center;
+    padding: 1.125rem 1.25rem 1rem 1.75rem;
+  }
+
+  .cart__head-text {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: baseline;
+    column-gap: 0.75rem;
+  }
+
+  .cart__eyebrow { grid-column: 1 / -1; }
+
+  .cart__title {
+    margin-top: 0.25rem;
+    font-size: 1.75rem;
+  }
+
+  .cart__units { margin-top: 0; }
+
+  .cart__ship {
+    grid-area: ship;
+    padding: 0.875rem 1.75rem 1rem;
+  }
+
+  .cart__scroll { grid-area: list; }
+
+  .cart__empty { padding-inline: 1.75rem; }
+
+  .cart-line {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1.375rem 1.75rem;
+  }
+
+  .cart-line__name,
+  .cart-line__amount { font-size: 1rem; }
+
+  .cart-line__controls { margin-top: 0.75rem; }
+
+  /* El resumen: columna propia, fija, con el pago siempre visible. */
+  .cart__foot {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1.5rem 1.75rem;
+    border-top: 0;
+    border-left: 1px solid var(--line-dark);
+    overflow-y: auto;
+  }
+
+  .cart__sum-eyebrow {
+    display: block;
+    margin-bottom: 1rem;
+    color: var(--steel);
+  }
+
+  .cart__row--total dd { font-size: 1.625rem; }
+
+  .cart__checkout { margin-top: 1.375rem; }
+
+  .cart__fine { margin-top: 0.9375rem; }
+
+  /* Sin piezas no hay resumen: el panel vuelve a una sola columna estrecha. */
+  .cart__panel.is-empty {
+    width: min(94vw, 30rem);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "ship"
+      "list";
+  }
+}
+
 
 /* --- móvil --------------------------------------------------------------- */
 @media (max-width: 480px) {
