@@ -29,7 +29,8 @@
     "faq",
     "footer",
     "cart",
-    "checkout"
+    "checkout",
+    "transition"
   ],
   "entry": "js/main.js",
   "criticalCss": [

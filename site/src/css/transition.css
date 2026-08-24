@@ -1,0 +1,59 @@
+/* transition — abrir un producto: la tarjeta se convierte en la ficha.
+   El JS (js/transition.js) pone el mismo `view-transition-name` a los cinco
+   elementos que la tarjeta y el configurador tienen en común; aquí solo se
+   decide cómo viaja cada uno. Nada de esto pesa hasta que alguien pulsa
+   «Configurar»: sin transición no hay pseudoelementos que estilar. */
+
+/* Regla de la casa para los dos relevos: el fotograma viejo se queda quieto y
+   opaco DEBAJO, y el nuevo entra encima. Un fundido cruzado de verdad deja las
+   dos capas a media opacidad y por el hueco se cuela el fondo claro de la
+   página: saltar del catálogo (papel) al configurador (tinta) parpadearía en
+   blanco justo en mitad del viaje. */
+::view-transition-old(root),
+::view-transition-old(kg-shot) {
+  animation: none;
+}
+
+::view-transition-new(root) {
+  animation-name: kg-fade-in;
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-out);
+}
+
+/* Los cinco comparten curva y duración a propósito: a ritmos distintos se
+   vería un desfile de piezas sueltas, no una sola cosa cambiando de sitio. */
+::view-transition-group(kg-shot),
+::view-transition-group(kg-kanji),
+::view-transition-group(kg-name),
+::view-transition-group(kg-claim),
+::view-transition-group(kg-cta) {
+  animation-duration: 560ms;
+  animation-timing-function: var(--ease-morph);
+}
+
+/* La foto. Por defecto el navegador estira cada fotograma hasta la caja del
+   otro y la hoja se deforma a mitad de viaje: con `cover` recorta igual que
+   las dos cajas reales (placa 5:7 → marco 4:5) y la hoja mantiene su forma. */
+::view-transition-old(kg-shot),
+::view-transition-new(kg-shot) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* La foto de la tarjeta aguanta debajo casi todo el viaje —es la que el ojo
+   venía siguiendo— y solo al final entra encima la versión grande y nítida. */
+::view-transition-new(kg-shot) {
+  animation-name: kg-shot-in;
+  animation-duration: 560ms;
+  animation-timing-function: linear;
+}
+
+@keyframes kg-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes kg-shot-in {
+  0%, 45% { opacity: 0; }
+  100% { opacity: 1; }
+}

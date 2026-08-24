@@ -14,7 +14,7 @@
       <!-- ---------------------------------------------------------------- escenario -->
       <div class="cfg__stage">
         <figure class="cfg__hero">
-          <div class="cfg__hero-frame">
+          <div class="cfg__hero-frame" data-morph="shot">
             <picture>
               <source data-config-src="avif" type="image/avif"
                 sizes="(min-width: 1000px) 44vw, (min-width: 700px) 60vw, 92vw"
@@ -29,10 +29,10 @@
           </div>
 
           <figcaption class="cfg__hero-cap">
-            <span class="cfg__hero-kanji" data-config-kanji aria-hidden="true">無銘</span>
+            <span class="cfg__hero-kanji" data-morph="kanji" data-config-kanji aria-hidden="true">無銘</span>
             <span class="cfg__hero-text">
-              <span class="cfg__hero-name" data-config-name>Mumei</span>
-              <span class="cfg__hero-claim" data-config-claim>Tamahagane plegado 12 veces. Nada sobra.</span>
+              <span class="cfg__hero-name" data-morph="name" data-config-name>Mumei</span>
+              <span class="cfg__hero-claim" data-morph="claim" data-config-claim>Tamahagane plegado 12 veces. Nada sobra.</span>
             </span>
           </figcaption>
         </figure>
@@ -355,7 +355,7 @@
           <span class="cfg__buy-k">Total</span>
           <span class="cfg__buy-v" data-config-total>1890 €</span>
         </p>
-        <button class="btn btn--lg cfg__buy-cta" type="button" data-add-to-cart data-product="mumei">
+        <button class="btn btn--lg cfg__buy-cta" type="button" data-morph="cta" data-add-to-cart data-product="mumei">
           Añadir al carrito
         </button>
         <p class="cfg__buy-fine">
