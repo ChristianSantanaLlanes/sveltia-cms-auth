@@ -1,0 +1,50 @@
+:root {
+  color-scheme: light;
+  /* Ink & paper */
+  --sumi: #0b0b0c;
+  --sumi-soft: #16161a;
+  --ink: #1d1d1f;
+  --ink-2: #4b4b50;
+  --ink-3: #6b6b71;
+  --washi: #f6f5f2;
+  --washi-2: #ecebe6;
+  --line: rgba(11, 11, 12, 0.12);
+  --line-dark: rgba(255, 255, 255, 0.14);
+  /* Steel & fire */
+  --steel: #b8bcc2;
+  --steel-hi: #e7e9ec;
+  --shu: #a8322a;
+  --shu-hot: #d1442f;
+  --gold: #c8a45c;
+  --hamon: #dfe4e8;
+  /* Surface */
+  --surface: var(--washi);
+  --surface-dark: var(--sumi);
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --radius-pill: 980px;
+  /* Type */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", Georgia, serif;
+  --t-hero: clamp(2.75rem, 7.2vw, 5.5rem);
+  --t-h2: clamp(2rem, 4.6vw, 3.5rem);
+  --t-h3: clamp(1.375rem, 2.4vw, 1.875rem);
+  --t-body: clamp(1rem, 1.15vw, 1.1875rem);
+  --t-small: 0.8125rem;
+  --lh-tight: 1.05;
+  --lh-body: 1.5;
+  --tracking-tight: -0.022em;
+  /* Layout */
+  --wrap: 1240px;
+  --wrap-narrow: 860px;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+  --nav-h: 48px;
+  --section-y: clamp(4.5rem, 9vw, 8.5rem);
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur: 420ms;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.06);
+  --shadow-2: 0 2px 6px rgba(0,0,0,.08), 0 24px 60px rgba(0,0,0,.14);
+}

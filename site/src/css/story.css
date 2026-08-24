@@ -1,0 +1,1150 @@
+/* story */
+
+/* ==========================================================================
+   BASE COMPARTIDA — clases .story*
+   La comparten story-hamon (#hamon), story-forge (#forge) y story-tsuba (#tsuba).
+   Es NEUTRA EN COLOR a propósito: hereda del contenedor (.section--dark o el
+   fondo washi por defecto) y solo fija ritmo, medida y jerarquía.
+   Cada pieza pone su composición y sus colores en su propio bloque
+   .story--<id>, más abajo. NO BORRES NADA DE AQUÍ: si necesitas algo distinto,
+   añádelo en tu bloque, que gana por especificidad.
+   ========================================================================== */
+
+/* --- cabecera: eyebrow + titular enorme ---------------------------------- */
+.story__head {
+  margin-bottom: clamp(2.25rem, 5vw, 3.75rem);
+}
+.story__head .eyebrow + .story__title {
+  margin-top: clamp(0.75rem, 1.6vw, 1.125rem);
+}
+.story__title {
+  font-size: clamp(2.5rem, 5.8vw, 4.5rem);
+  font-weight: 660;
+  letter-spacing: -0.032em;
+  line-height: 0.98;
+  max-width: 16ch;
+  text-wrap: balance;
+}
+
+/* --- figura a sangre ------------------------------------------------------ */
+.story__figure {
+  margin: 0;
+}
+.story__frame {
+  position: relative;
+  overflow: hidden;
+  /* sin CLS: el hueco existe antes de que baje la foto */
+  aspect-ratio: 16 / 9;
+}
+.story__frame > picture,
+.story__frame img {
+  width: 100%;
+  height: 100%;
+}
+.story__frame img {
+  object-fit: cover;
+}
+.story__caption {
+  display: block;
+  margin-top: clamp(0.875rem, 1.6vw, 1.25rem);
+  font-size: var(--t-small);
+  line-height: 1.45;
+  letter-spacing: 0;
+  max-width: 52ch;
+}
+
+/* --- prosa: medida corta, siempre ---------------------------------------- */
+.story__prose {
+  max-width: 46ch;
+}
+.story__lede {
+  text-wrap: pretty;
+}
+.story__p {
+  margin-top: 1.05em;
+  font-size: clamp(0.9375rem, 1.05vw, 1.0625rem);
+  line-height: 1.62;
+  text-wrap: pretty;
+}
+/* términos japoneses en romaji: cursiva discreta, sin color propio */
+.story__term {
+  font-style: italic;
+  font-synthesis: none;
+}
+
+/* --- datos técnicos: peine de filos finos -------------------------------- */
+.story__data {
+  margin: 0;
+}
+.story__datum {
+  padding-block: clamp(0.9rem, 1.6vw, 1.2rem);
+  border-top: 1px solid var(--line);
+}
+.story__datum:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.story__datum-k {
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.story__datum-v {
+  margin: 0.45rem 0 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.story__num {
+  font-size: clamp(1.75rem, 2.6vw, 2.375rem);
+  font-weight: 620;
+  letter-spacing: -0.028em;
+  line-height: 1;
+}
+.story__unit {
+  text-decoration: none;
+  font-size: 0.62em;
+  font-weight: 560;
+  letter-spacing: 0.02em;
+}
+.story__note {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+/* ==========================================================================
+   PIEZA: story-hamon  →  <section id="hamon" class="... story story--hamon">
+   Fondo sumi, foto del temple a sangre de borde a borde, prosa a la izquierda
+   y los tres datos en una columna-raíl a la derecha.
+   ========================================================================== */
+
+.story--hamon {
+  overflow: clip;
+}
+
+/* la figura rompe el .wrap y va a sangre; el texto se queda dentro */
+.story--hamon .story__figure {
+  width: 100%;
+}
+
+/* El pie va al mismo eje que el titular y la prosa: el figcaption ES el .wrap
+   (borde izquierdo = gutter) y la medida la limita el span de dentro. Antes el
+   max-width caía sobre el propio .wrap y el margin-inline:auto lo centraba,
+   que era la única alineación fuera de retícula de la sección. */
+.story--hamon .story__caption {
+  color: color-mix(in srgb, var(--steel) 74%, var(--sumi));
+  max-width: none;
+}
+.story--hamon .story__caption-t {
+  display: block;
+  max-width: 52ch;
+  text-wrap: pretty;
+}
+
+/* La banda de foto se recorta a formato cinemascópico en pantallas anchas: el
+   16:9 dejaba ~250 px de fondo gris muerto arriba y abajo del filo. Con 21:9 el
+   objeto de la foto —la frontera entre los dos aceros— ocupa el alto útil. */
+@media (min-width: 900px) {
+  .story--hamon .story__frame {
+    aspect-ratio: 21 / 9;
+  }
+}
+
+/* --- cuerpo: prosa + raíl de datos --------------------------------------- */
+.story--hamon .story__body {
+  margin-top: clamp(2.5rem, 5vw, 4.25rem);
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 6rem);
+}
+@media (min-width: 900px) {
+  .story--hamon .story__body {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    align-items: start;
+  }
+}
+
+.story--hamon .story__p {
+  color: color-mix(in srgb, var(--washi) 74%, var(--sumi));
+}
+.story--hamon .story__term {
+  color: color-mix(in srgb, var(--hamon) 88%, var(--sumi));
+}
+
+.story--hamon .story__datum {
+  border-top-color: var(--line-dark);
+}
+.story--hamon .story__datum:last-child {
+  border-bottom-color: var(--line-dark);
+}
+.story--hamon .story__datum-k {
+  color: var(--steel);
+}
+.story--hamon .story__num {
+  color: var(--hamon);
+  font-variant-numeric: tabular-nums;
+}
+.story--hamon .story__note {
+  color: color-mix(in srgb, var(--steel) 80%, var(--sumi));
+  max-width: 42ch;
+}
+
+/* --- riesgo: la revelación del temple ------------------------------------
+   La máscara avanza de izquierda a derecha como el agua sobre la hoja, y una
+   línea de brillo viaja pegada al borde de la máscara (el frente de temple).
+   Solo clip-path + transform + opacity. Se dispara con la clase .is-in que
+   ya añade js/ui/reveal.js (IntersectionObserver compartido): aquí solo
+   redefinimos qué significa .reveal para este marco concreto.
+   -------------------------------------------------------------------------- */
+.story--hamon .story__frame.reveal {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1400ms var(--ease-in-out);
+  will-change: clip-path;
+}
+.story--hamon .story__frame.reveal.is-in {
+  clip-path: inset(0 0 0 0);
+}
+
+/* la foto se asienta un punto mientras pasa el agua */
+.story--hamon .story__frame.reveal img {
+  transform: scale(1.045);
+  transition: transform 1700ms var(--ease-out);
+}
+.story--hamon .story__frame.reveal.is-in img {
+  transform: none;
+}
+
+/* frente de temple: su borde derecho viaja exactamente con el borde de la
+   máscara (misma duración y misma curva), y se apaga al llegar al final */
+.story--hamon .story__frame.reveal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    transparent 0 calc(100% - 120px),
+    color-mix(in srgb, var(--hamon) 14%, transparent) calc(100% - 34px),
+    color-mix(in srgb, var(--hamon) 58%, transparent) calc(100% - 3px),
+    var(--hamon) 100%
+  );
+  transform: translateX(-100%);
+  opacity: 0.85;
+  transition: transform 1400ms var(--ease-in-out), opacity 320ms linear 1180ms;
+  will-change: transform;
+}
+.story--hamon .story__frame.reveal.is-in::after {
+  transform: translateX(0);
+  opacity: 0;
+}
+
+/* sin movimiento: la foto entera, quieta, desde el primer fotograma */
+@media (prefers-reduced-motion: reduce) {
+  .story--hamon .story__frame.reveal {
+    clip-path: none;
+    transition: none;
+    will-change: auto;
+  }
+  .story--hamon .story__frame.reveal img {
+    transform: none;
+    transition: none;
+  }
+  .story--hamon .story__frame.reveal::after {
+    display: none;
+  }
+}
+
+/* sin JS no hay .is-in: que la foto se vea igual */
+@media (scripting: none) {
+  .story--hamon .story__frame.reveal {
+    clip-path: none;
+  }
+  .story--hamon .story__frame.reveal img {
+    transform: none;
+  }
+  .story--hamon .story__frame.reveal::after {
+    display: none;
+  }
+}
+
+/* --- móvil (390px es el caso de prueba) ---------------------------------- */
+@media (max-width: 719px) {
+  .story--hamon .story__title {
+    max-width: 13ch;
+    letter-spacing: -0.028em;
+  }
+  /* el 16:9 puro se queda enano a 390px: recortamos un poco de ancho
+     para que la línea del temple siga siendo el objeto grande de la pantalla */
+  .story--hamon .story__frame {
+    aspect-ratio: 3 / 2;
+  }
+  .story--hamon .story__frame img {
+    object-position: 50% 50%;
+  }
+  .story--hamon .story__note {
+    max-width: none;
+  }
+}
+
+/* --- reserva sin color-mix ------------------------------------------------ */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .story--hamon .story__caption,
+  .story--hamon .story__note {
+    color: #8e9298;
+  }
+  .story--hamon .story__p {
+    color: #bcbbb7;
+  }
+  .story--hamon .story__term {
+    color: var(--hamon);
+  }
+  .story--hamon .story__frame.reveal::after {
+    background: linear-gradient(to right, rgba(223, 228, 232, 0) 0 calc(100% - 120px), rgba(223, 228, 232, 0.14) calc(100% - 34px), rgba(223, 228, 232, 0.58) calc(100% - 3px), rgba(223, 228, 232, 1) 100%);
+  }
+}
+
+/* ==========================================================================
+   PIEZA: story-forge  →  <section id="forge" class="... story story--forge">
+   Fondo washi (rompe el sumi de #hamon), foto de fragua a sangre, cuatro
+   pasos del proceso en peine, y una banda washi-2 con la PLANIFICACIÓN REAL
+   del pedido: un diagrama de barras a escala de días, no una lista numerada.
+   Escala del diagrama: 25 días = 100 % del carril (la fase más larga es el
+   pulido, 8–25 días). Todas las barras comparten origen, así que se pueden
+   comparar entre sí de un vistazo.
+   ========================================================================== */
+
+/* Nota de contraste: --ink-3 sobre washi/washi-2 se queda en ~3,1:1 y no llega
+   a AA para texto pequeño. Todo el texto secundario de esta pieza usa --ink-2
+   (7,3:1 sobre washi-2); --ink-3 se reserva para la trama de las barras, que
+   es textura y no texto. */
+.story--forge {
+  overflow: clip;
+  padding-bottom: 0; /* la banda del plan cierra la sección */
+}
+
+/* --- entrada: texto a un lado, fragua al otro -----------------------------
+   Móvil: apilado, foto a sangre de borde a borde (así ya funcionaba).
+   Escritorio (≥900 px): rejilla de dos columnas que ROMPE el .wrap. La columna
+   de texto arranca exactamente en el filo izquierdo del wrap y la foto se va a
+   sangre por la derecha: la sección cumple lo que promete (texto a un lado,
+   imagen al otro) y no queda medio encuadre vacío.
+   -------------------------------------------------------------------------- */
+.forge__lead {
+  display: grid;
+  row-gap: clamp(1.75rem, 4vw, 2.75rem);
+}
+/* el head ya no lleva .wrap: la sangría la pone esta regla en apilado y la
+   rejilla en escritorio */
+.story--forge .story__head {
+  width: min(100% - var(--gutter) * 2, var(--wrap));
+  margin-inline: auto;
+  margin-bottom: 0;
+}
+.story--forge .forge__lede {
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  max-width: 40ch;
+}
+/* .story__caption trae max-width en ch, así que la caja quedaría centrada por
+   su cuenta. Aquí la queremos alineada con el borde izquierdo de la foto: la
+   caja ocupa todo el ancho disponible y la medida corta la pone el <span>. */
+.story--forge .story__caption {
+  color: var(--ink-2);
+  max-width: none;
+  padding-inline: var(--gutter);
+}
+.forge__caption-t {
+  display: block;
+  max-width: 56ch;
+}
+
+/* dos datos de anclaje bajo la entradilla: dan peso a la columna de texto
+   frente a la foto vertical y adelantan cifras que el cuerpo no repite */
+.forge__facts {
+  margin-top: clamp(1.75rem, 3vw, 2.5rem);
+  max-width: 42ch;
+}
+.forge__facts .story__datum-k {
+  color: var(--ink-2);
+}
+.forge__facts .story__num {
+  font-size: clamp(1.5rem, 2.1vw, 2rem);
+  font-variant-numeric: tabular-nums;
+}
+.forge__facts .story__note {
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+
+@media (min-width: 900px) {
+  .forge__lead {
+    /* sangría izquierda = filo del wrap; a la derecha, nada: la foto sangra */
+    padding-left: max(var(--gutter), calc((100% - var(--wrap)) / 2));
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr);
+    column-gap: clamp(2.5rem, 5vw, 4.5rem);
+    row-gap: 0;
+    align-items: center;
+  }
+  .story--forge .story__head {
+    width: auto;
+    margin-inline: 0;
+  }
+  /* el titular manda dentro de una columna más estrecha: baja un punto de
+     escala para conservar el corte en dos líneas ('capas en / seis milímetros') */
+  .story--forge .story__title {
+    font-size: clamp(2.25rem, 4.4vw, 4rem);
+    max-width: 18ch;
+  }
+  .forge__figure {
+    grid-column: 2;
+  }
+  /* vertical: la fragua pide altura y equilibra la columna de texto */
+  .story--forge .story__frame {
+    aspect-ratio: 4 / 5;
+  }
+  /* el sujeto (las llamas y la barra al rojo) vive en el tercio izquierdo de
+     la toma: al recortar en vertical hay que ir a buscarlo */
+  .story--forge .story__frame img {
+    object-position: 34% 52%;
+  }
+  .story--forge .story__caption {
+    padding-inline: 0 var(--gutter);
+  }
+}
+.story--forge .story__p {
+  color: var(--ink-2);
+}
+.story--forge .story__term {
+  color: var(--ink);
+}
+.forge__model {
+  font-weight: 620;
+  color: var(--ink);
+}
+
+/* --- los cuatro pasos: peine de filos finos ------------------------------ */
+.forge__steps {
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  display: grid;
+  gap: clamp(1.75rem, 3vw, 2.5rem) clamp(1.5rem, 3vw, 2.75rem);
+}
+@media (min-width: 700px) {
+  .forge__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1080px) {
+  .forge__steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.forge__step {
+  border-top: 1px solid var(--line);
+  padding-top: clamp(0.9rem, 1.6vw, 1.15rem);
+}
+.forge__step-n {
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.16em;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.forge__step-t {
+  margin-top: 0.5rem;
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  font-weight: 620;
+  letter-spacing: -0.018em;
+  line-height: 1.18;
+  text-wrap: balance;
+}
+.forge__step .story__p {
+  margin-top: 0.7rem;
+  max-width: 44ch;
+}
+
+/* --- banda del plan ------------------------------------------------------- */
+.forge__plan {
+  margin-top: clamp(3.5rem, 7vw, 6rem);
+  padding-block: clamp(3rem, 6.5vw, 5.5rem);
+  background: var(--washi-2);
+  border-top: 1px solid var(--line);
+}
+.forge__plan-head {
+  max-width: 52ch;
+}
+.forge__plan-t {
+  margin-top: clamp(0.6rem, 1.2vw, 0.9rem);
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  font-weight: 650;
+  letter-spacing: -0.028em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+.forge__plan-lede {
+  margin-top: 0.9rem;
+  max-width: 46ch;
+}
+
+/* --- diagrama: geometría compartida por filas y por el eje ---------------- */
+.forge__chart {
+  --c-n: 2.25rem;
+  --c-name: clamp(13ch, 18vw, 22ch);
+  --c-range: 8.5ch;
+  --c-gap: clamp(0.75rem, 1.6vw, 1.75rem);
+  margin-top: clamp(2.25rem, 4.5vw, 3.5rem);
+}
+.forge__scale-legend {
+  font-size: var(--t-small);
+  line-height: 1.45;
+  color: var(--ink-2);
+  max-width: 54ch;
+  margin-bottom: clamp(0.9rem, 1.8vw, 1.4rem);
+}
+.forge__phases {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.forge__ph {
+  display: grid;
+  column-gap: var(--c-gap);
+  align-items: start;
+  padding-block: clamp(0.85rem, 1.5vw, 1.1rem);
+  border-top: 1px solid var(--line);
+  /* móvil primero: número + nombre + rango, barra debajo, texto al final */
+  grid-template-columns: var(--c-n) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "num name  range"
+    ".   bar   bar"
+    ".   desc  desc";
+  row-gap: 0.55rem;
+}
+.forge__ph:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.forge__ph-n {
+  grid-area: num;
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.7;
+}
+.forge__ph-name {
+  grid-area: name;
+  font-size: clamp(0.9375rem, 1.15vw, 1.0625rem);
+  font-weight: 620;
+  letter-spacing: -0.014em;
+  line-height: 1.25;
+}
+.forge__ph-alt {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
+.forge__ph-range {
+  grid-area: range;
+  text-align: right;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+  line-height: 1.45;
+}
+.forge__ph-num {
+  font-weight: 640;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.forge__ph-desc {
+  grid-area: desc;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+/* --- la barra: sólido = mínimo, trama = margen ---------------------------- */
+.forge__bar {
+  grid-area: bar;
+  position: relative;
+  display: block;
+  height: 14px;
+  align-self: center;
+  border-bottom: 1px solid var(--line);
+  /* marcas de semana a 7, 14 y 21 días sobre una escala de 25 */
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0 calc(28% - 1px),
+    var(--line) calc(28% - 1px) 28%
+  );
+}
+.forge__bar-ext,
+.forge__bar-min {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 1px;
+  display: block;
+}
+.forge__bar-ext {
+  width: calc(var(--d-max) * 100% / 25);
+  background-color: var(--washi);
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--ink-3) 0 1px,
+    transparent 1px 5px
+  );
+}
+.forge__bar-min {
+  width: calc(var(--d-min) * 100% / 25);
+  background: var(--sumi);
+}
+
+/* --- eje: el mismo carril que las barras, por sangría exacta -------------- */
+/* el carril del eje se coloca con MARGEN, no con relleno: así la caja mide
+   exactamente lo que mide la columna de barras y el % de cada marca cae
+   sobre el mismo punto que el % de cada barra.
+   OJO: --c-name está en ch, y ch depende del font-size del elemento que lo
+   usa. El eje debe conservar el tamaño de texto de las filas para que el
+   margen mida lo mismo que la columna; el texto pequeño va en la marca. */
+.forge__axis {
+  position: relative;
+  height: 1.25rem;
+  margin-top: 0.65rem;
+  margin-left: calc(var(--c-n) + var(--c-gap));
+  color: var(--ink-2);
+}
+.forge__tick {
+  position: absolute;
+  top: 0;
+  left: calc(var(--at) * 1%);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.6875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.forge__tick:first-child {
+  transform: none;
+}
+
+/* --- totales -------------------------------------------------------------- */
+.forge__totals {
+  margin: clamp(2.25rem, 4.5vw, 3.5rem) 0 0;
+  display: grid;
+  gap: 0;
+}
+.forge__total {
+  padding-block: clamp(1rem, 1.8vw, 1.35rem);
+  border-top: 1px solid var(--line);
+}
+.forge__total:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.forge__total .story__datum-k {
+  color: var(--ink-2);
+}
+.forge__total-v {
+  margin: 0.45rem 0 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.forge__total .story__num {
+  font-variant-numeric: tabular-nums;
+}
+.forge__total .story__note {
+  color: var(--ink-2);
+  max-width: 44ch;
+}
+
+/* --- desktop: la barra se va a su propia columna -------------------------- */
+@media (min-width: 900px) {
+  .forge__ph {
+    grid-template-columns: var(--c-n) var(--c-name) var(--c-range) minmax(0, 1fr);
+    /* la barra vive en la MISMA fila que el nombre y el rango: mide esa fase,
+       así que tiene que leerse a su altura. La descripción cruza por debajo. */
+    grid-template-areas:
+      "num name range bar"
+      "num desc desc  desc";
+    row-gap: 0.4rem;
+  }
+  /* orden de lectura: nombre → días → barra */
+  .forge__ph-range {
+    text-align: right;
+    align-self: center;
+    line-height: 1.3;
+  }
+  .forge__bar {
+    height: 16px;
+    align-self: center;
+  }
+  .forge__ph-desc {
+    max-width: 70ch;
+  }
+  .forge__axis {
+    margin-left: calc(var(--c-n) + var(--c-name) + var(--c-range) + var(--c-gap) * 3);
+  }
+  .forge__totals {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: clamp(1.5rem, 3vw, 3rem);
+  }
+  .forge__total {
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* --- riesgo: las barras crecen desde el origen ---------------------------
+   Solo transform. Se disparan con la .is-in que ya pone js/ui/reveal.js sobre
+   .forge__chart; el escalonado lo da --i, que va en el style de cada <li>.
+   -------------------------------------------------------------------------- */
+.forge__chart.reveal .forge__bar-ext,
+.forge__chart.reveal .forge__bar-min {
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 820ms var(--ease-out);
+  transition-delay: calc(var(--i, 1) * 55ms);
+  will-change: transform;
+}
+.forge__chart.reveal .forge__bar-min {
+  transition-delay: calc(var(--i, 1) * 55ms + 130ms);
+}
+.forge__chart.reveal.is-in .forge__bar-ext,
+.forge__chart.reveal.is-in .forge__bar-min {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forge__chart.reveal .forge__bar-ext,
+  .forge__chart.reveal .forge__bar-min {
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+}
+@media (scripting: none) {
+  .forge__chart.reveal .forge__bar-ext,
+  .forge__chart.reveal .forge__bar-min {
+    transform: none;
+  }
+}
+
+/* --- móvil (390 px es el caso de prueba) --------------------------------- */
+@media (max-width: 719px) {
+  .story--forge .story__title {
+    max-width: 12ch;
+  }
+  /* el 16:9 se queda enano a 390 px: la fragua necesita altura */
+  .story--forge .story__frame {
+    aspect-ratio: 4 / 3;
+  }
+  .forge__chart {
+    --c-n: 1.9rem;
+  }
+  .forge__ph-name {
+    line-height: 1.2;
+  }
+  .forge__ph-desc {
+    max-width: none;
+  }
+}
+
+/* ==========================================================================
+   PIEZA: story-tsuba  →  <section id="tsuba" class="... story story--tsuba">
+   Fondo sumi otra vez (rompe el washi de #forge) con tres piezas de montura.
+
+   REGLA DE LA VITRINA — es lo que sostiene toda la composición:
+   las tres fotos vienen de tres archivos distintos (dos cuadradas y una 16:9),
+   con el fondo de estudio a 205, 129 y 107 de luminancia, las dos primeras con
+   dominante azul y la segunda además sobre tela. Para que el tríptico se lea
+   como UNA sesión de fotos y no como tres recortes de catálogo, las tres pasan
+   por el mismo tratamiento:
+
+     1. MISMO MARCO — 5:4 en las tres columnas, mismo ancho, misma altura.
+        Con columnas iguales la medida de línea también es igual (~48 caracteres
+        en las tres), que era lo que rompía el ritmo cuando la tercera doblaba
+        el ancho de las otras.
+     2. MISMO REENCUADRE — cada foto declara en su style la ventana que enseña:
+        --fw = fracción del ancho original visible, --cx/--cy = el punto de la
+        foto que cae en el centro del marco. El <img> se escala a 100%/--fw y se
+        traslada por ese punto: geometría exacta, sin object-position a ojo.
+        Las ventanas están elegidas con dos condiciones: que la pieza que nombra
+        el pie sea la que se ve (la 03 enseña la vaina lacada, no la empuñadura)
+        y que las tres ocupen la misma franja del marco. Medido sobre la captura:
+        el sujeto va de 6 % a 94 % de alto en la 01, de 6 % a 91 % en la 02 y
+        cruza de lado a lado en la 03.
+     3. MISMA LUZ — revelado medido, no a ojo (ver el bloque de filtros): los
+        tres fondos acaban en la misma luminancia, el mismo gris neutro y la
+        misma textura. Es el revelado que no se pudo hacer en la toma.
+
+   La regla de 1px que abre cada pie sigue siendo la prueba visible: cruza las
+   tres columnas a la misma altura, igual que las bases de las fotos.
+   ========================================================================== */
+
+.story--tsuba {
+  overflow: clip;
+}
+.story--tsuba .tsuba__lede {
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  max-width: 44ch;
+}
+
+/* --- la tira: móvil primero = carrusel con scroll-snap ------------------- */
+.tsuba__strip {
+  --slide: min(78vw, 360px);
+  display: flex;
+  gap: clamp(0.9rem, 3.5vw, 1.5rem);
+  padding-inline: var(--gutter);
+  /* cola de aire al final: sin ella la tercera pieza no puede llegar al mismo
+     punto de reposo que las otras dos y el indicador mentiría */
+  padding-inline-end: max(var(--gutter), calc(100% - var(--slide) - var(--gutter)));
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline-start: var(--gutter);
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tsuba__strip::-webkit-scrollbar { display: none; }
+
+/* punto de anclaje de los indicadores: 1px en el arranque de la diapositiva.
+   Anclar a la figura entera hacía que el navegador arrastrara también la página
+   en vertical para encajarla; a 1px de alto no hay nada que encajar y el salto
+   se queda donde debe, en horizontal. */
+.tsuba__anchor {
+  display: block;
+  inline-size: 100%;
+  block-size: 1px;
+  margin-block-end: -1px;
+  scroll-margin-inline-start: var(--gutter);
+}
+
+.tsuba__item {
+  flex: 0 0 var(--slide);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+  scroll-margin-inline-start: var(--gutter);
+}
+
+/* --- el marco: 5:4 en las tres, y dentro el reencuadre declarado ---------- */
+.tsuba__frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-m);
+  aspect-ratio: 5 / 4;
+  background: var(--sumi-soft);
+  /* filo fino para que la foto no flote sin borde sobre el sumi */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sumi) 16%, transparent);
+}
+.tsuba__frame > picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+/* --fw / --cx / --cy vienen en el style de cada figura. El ancho del <img> es
+   el del marco dividido por la fracción visible, y el translate lleva el punto
+   (--cx, --cy) de la foto al centro del marco. Como --fw ≤ ancho útil, la foto
+   siempre cubre: no puede asomar el fondo. */
+.tsuba__frame img {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: 50%;
+  inline-size: calc(100% / var(--fw, 1));
+  block-size: auto;
+  max-inline-size: none;
+  transform: translate(calc(var(--cx, 50%) * -1), calc(var(--cy, 50%) * -1));
+}
+
+/* --- revelado: los tres fondos al mismo gris ------------------------------
+   Medido sobre la ventana que enseña cada foto, no a ojo. De partida el fondo
+   está en 205, 129 y 107 de luminancia, y los dos primeros tiran a azul (+20 y
+   +14 de B sobre R). La cadena es la misma en las tres —brillo, contraste,
+   sepia, saturación— y solo cambian los números:
+
+     brillo    lleva la mediana de cada ventana a 147
+     contraste iguala el rango tonal (la de la vaina venía muy plana)
+     sepia     mata la dominante azul de las dos primeras: calienta justo lo que
+               el fondo tenía de frío, y la tercera ya era neutra
+     saturar   compensa el sepia para que las tres queden en el mismo ~0,55 de
+               saturación neta: el oro sigue siendo oro en las tres
+
+   Comprobado en la captura de 1440: mediana 147,1 / 147,4 / 147,4 y fondo
+   (151,152,150), (149,148,147) y (151,148,148). Antes eran tres platós.
+   -------------------------------------------------------------------------- */
+#tsuba-p1 .tsuba__frame img {
+  filter: brightness(0.695) contrast(1) sepia(0.2) saturate(0.69);
+}
+#tsuba-p2 .tsuba__frame img {
+  /* la única con fondo de tela: el desenfoque borra la trama del lino —que
+     delataba un plató distinto— y casi no le cuesta nada a la figura, que ya
+     venía blanda de origen. Medido con el laplaciano del fondo: la trama baja
+     de 18 a 3,9, contra 1,9 y 1,7 de las otras dos; sin él se queda en 31 y
+     canta. El brillo compensa lo que sube la mediana al promediar la trama. */
+  filter: blur(1.6px) brightness(1.05) contrast(1.05) sepia(0.24) saturate(0.72);
+}
+#tsuba-p3 .tsuba__frame img {
+  filter: brightness(1.354) contrast(1.15) sepia(0.03) saturate(0.57);
+}
+
+/* misma caída de luz en las tres: los fondos originales se apagan cada uno
+   hacia un lado, así que un velo de esquinas idéntico —y muy flojo— impone una
+   sola dirección de luz sobre las tres y remata la ilusión de una sola sesión */
+.tsuba__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(115% 130% at 50% 42%, transparent 45%, rgba(11, 11, 12, 0.16) 100%);
+}
+
+/* --- el pie: la regla que demuestra la alineación ------------------------ */
+.tsuba__cap {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: clamp(1rem, 1.8vw, 1.4rem);
+  padding-top: clamp(0.85rem, 1.5vw, 1.15rem);
+  border-top: 1px solid var(--line-dark);
+}
+.tsuba__n {
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.16em;
+  color: var(--steel);
+  font-variant-numeric: tabular-nums;
+}
+.tsuba__t {
+  margin-top: 0.45rem;
+  font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+  font-weight: 640;
+  letter-spacing: -0.018em;
+  line-height: 1.2;
+}
+.tsuba__t .story__term {
+  font-style: normal; /* aquí el romaji ES el nombre de la pieza, no una glosa */
+}
+.tsuba__t-es {
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  color: var(--steel);
+}
+.tsuba__t-es::before {
+  content: "— ";
+}
+.story--tsuba .tsuba__p {
+  margin-top: 0.7rem;
+  /* la medida la fija la columna, que ahora es la misma en las tres */
+  max-width: none;
+  color: color-mix(in srgb, var(--washi) 72%, var(--sumi));
+}
+.tsuba__lead {
+  font-weight: 620;
+  color: var(--washi);
+}
+.tsuba__lead .story__term {
+  color: var(--hamon);
+}
+.story--tsuba .story__term {
+  color: color-mix(in srgb, var(--hamon) 88%, var(--sumi));
+}
+.tsuba__spec {
+  /* segunda alineación óptica: los tres pies cierran en la MISMA línea, sea cual
+     sea el largo de su párrafo (el auto empuja, el padding garantiza el aire) */
+  margin-top: auto;
+  padding-top: clamp(1.1rem, 2vw, 1.5rem);
+  font-size: 0.6875rem;
+  font-weight: 560;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--steel);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- indicadores del carrusel (solo móvil) ------------------------------- */
+.tsuba__nav {
+  margin-top: clamp(1.1rem, 2.5vw, 1.6rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.tsuba__hint {
+  font-size: var(--t-small);
+  line-height: 1.4;
+  color: var(--steel);
+  max-width: 22ch;
+}
+.tsuba__dots {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+}
+.tsuba__dot {
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  text-decoration: none;
+}
+.tsuba__dot-mark {
+  inline-size: 24px;
+  block-size: 2px;
+  border-radius: 2px;
+  background: var(--steel-hi);
+  opacity: 0.34;
+  transform: scaleX(0.26);
+  transition: transform 320ms var(--ease-out), opacity 320ms var(--ease-out);
+}
+/* Sin JS: el estado activo lo lleva :target (al pulsar) y, si nadie ha
+   pulsado todavía, la primera pieza. */
+.story--tsuba:has(#tsuba-a1:target) .tsuba__dots > li:nth-child(1) .tsuba__dot-mark,
+.story--tsuba:has(#tsuba-a2:target) .tsuba__dots > li:nth-child(2) .tsuba__dot-mark,
+.story--tsuba:has(#tsuba-a3:target) .tsuba__dots > li:nth-child(3) .tsuba__dot-mark,
+.story--tsuba:not(:has(.tsuba__anchor:target)) .tsuba__dots > li:nth-child(1) .tsuba__dot-mark {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- riesgo: el indicador va pegado al dedo ------------------------------
+   Donde hay animaciones ligadas al scroll, cada pieza publica su propia línea
+   de tiempo y su punto la consume: el indicador deja de ser un adorno y pasa a
+   medir el arrastre en tiempo real, sin una línea de JS. Los porcentajes salen
+   del reposo del snap: con la cola de aire del final, las tres piezas paran en
+   el mismo punto del recorrido (~0,52–0,64 según el ancho de pantalla), así que
+   la ventana encendida va de 50 % a 66 %. El vecino más cercano se queda a más
+   de 0,3 de distancia: nunca se encienden dos a la vez.
+   -------------------------------------------------------------------------- */
+@keyframes tsuba-dot {
+  0%, 42% { opacity: 0.34; transform: scaleX(0.26); }
+  50%, 66% { opacity: 1; transform: scaleX(1); }
+  74%, 100% { opacity: 0.34; transform: scaleX(0.26); }
+}
+@media (max-width: 719px) {
+  @supports (animation-timeline: view()) and (timeline-scope: --t) {
+    .story--tsuba { timeline-scope: --tsuba-1, --tsuba-2, --tsuba-3; }
+    #tsuba-p1 { view-timeline: --tsuba-1 inline; }
+    #tsuba-p2 { view-timeline: --tsuba-2 inline; }
+    #tsuba-p3 { view-timeline: --tsuba-3 inline; }
+    .tsuba__dots > li .tsuba__dot-mark {
+      animation: tsuba-dot linear both;
+      animation-range: cover 0% cover 100%;
+      transition: none;
+    }
+    .tsuba__dots > li:nth-child(1) .tsuba__dot-mark { animation-timeline: --tsuba-1; }
+    .tsuba__dots > li:nth-child(2) .tsuba__dot-mark { animation-timeline: --tsuba-2; }
+    .tsuba__dots > li:nth-child(3) .tsuba__dot-mark { animation-timeline: --tsuba-3; }
+  }
+}
+
+/* --- cierre: contexto + acceso al configurador --------------------------- */
+.tsuba__cta {
+  margin-top: clamp(2.5rem, 5vw, 3.75rem);
+  padding-top: clamp(1.4rem, 2.8vw, 2rem);
+  border-top: 1px solid var(--line-dark);
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 1.75rem);
+  align-items: center;
+}
+.tsuba__cta-t {
+  font-size: clamp(1rem, 1.35vw, 1.1875rem);
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--washi) 72%, var(--sumi));
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+.tsuba__cta-btn {
+  justify-self: start;
+}
+
+/* --- desktop: la tira se convierte en rejilla de tres columnas iguales ---- */
+@media (min-width: 720px) {
+  .tsuba__strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: clamp(1.25rem, 2.4vw, 2rem);
+    align-items: stretch;
+    width: min(100% - var(--gutter) * 2, var(--wrap));
+    margin-inline: auto;
+    padding-inline: 0;
+    overflow: visible;
+  }
+  .tsuba__item {
+    flex: initial;
+  }
+  .tsuba__nav {
+    display: none;
+  }
+  .tsuba__cta {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: clamp(2rem, 5vw, 4rem);
+  }
+  .tsuba__cta-btn {
+    justify-self: end;
+  }
+}
+
+/* --- riesgo menor: las fotos se asientan al entrar ------------------------
+   El <img> ya gasta su transform en el reencuadre, así que el escalado de
+   entrada va en el <picture>, que ocupa el marco entero. Un solo .reveal en la
+   tira (js/ui/reveal.js ya lo observa) y el escalonado lo da --i.
+   -------------------------------------------------------------------------- */
+.tsuba__strip.reveal .tsuba__frame > picture {
+  transform: scale(1.055);
+  transition: transform 1100ms var(--ease-out);
+  transition-delay: calc(var(--i, 1) * 90ms);
+  will-change: transform;
+}
+.tsuba__strip.reveal.is-in .tsuba__frame > picture {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tsuba__strip {
+    scroll-behavior: auto;
+  }
+  .tsuba__strip.reveal .tsuba__frame > picture {
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+  .tsuba__dot-mark {
+    transition: none;
+  }
+}
+@media (scripting: none) {
+  .tsuba__strip.reveal .tsuba__frame > picture {
+    transform: none;
+  }
+}
+
+/* --- reserva sin color-mix ------------------------------------------------ */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .story--tsuba .tsuba__p,
+  .tsuba__cta-t {
+    color: #b3b2af;
+  }
+  .story--tsuba .story__term {
+    color: var(--hamon);
+  }
+  .tsuba__frame {
+    box-shadow: inset 0 0 0 1px rgba(11, 11, 12, 0.16);
+  }
+}
+
+/* --- móvil (390 px es el caso de prueba) --------------------------------- */
+@media (max-width: 719px) {
+  .story--tsuba .story__title {
+    max-width: 12ch;
+  }
+}

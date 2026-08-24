@@ -1,0 +1,230 @@
+/* hero — primera pantalla. La hoja entera es un OBJETO recortado sobre tinta, no una
+   textura de fondo: la foto viene sobre negro puro, así que se funde con el sumi por
+   mezcla (screen) y no necesita ningún velo encima. El texto vive en su propia columna,
+   sobre fondo sólido, con contraste AA de sobra en todo el recorrido. */
+
+#hero {
+  /* ancho de la columna de la hoja y de la columna de texto: nunca se pisan */
+  --blade-w: 38%;
+  --blade-right: 0px;
+  --blade-cx: 81%;
+  --blade-px: 50%;
+  --hero-col: 58vw;
+
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-content: end;
+  /* la barra es sticky y ocupa flujo: el hero llena exactamente lo que queda */
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  padding-block:
+    clamp(2rem, 6vh, 4rem)
+    calc(clamp(1.75rem, 4.5vh, 3.25rem) + env(safe-area-inset-bottom, 0px));
+  overflow: clip;
+  background-color: var(--sumi);
+  color: var(--washi);
+}
+
+/* --- la hoja ------------------------------------------------------------- */
+/* Caja más estrecha que la proporción 3:4 de la foto: `cover` recorta a los lados
+   (que son negro) y conserva la hoja ENTERA de arriba abajo. */
+/* Sin `z-index` propio: crearía un contexto de apilamiento y encerraría la mezcla
+   dentro de la figura, devolviendo el rectángulo negro que queremos disolver. */
+#hero .hero__figure {
+  position: absolute;
+  top: 0;
+  right: var(--blade-right);
+  bottom: clamp(6.5rem, 17vh, 10rem);
+  width: var(--blade-w);
+  pointer-events: none;
+}
+#hero .hero__figure picture {
+  display: block;
+  height: 100%;
+}
+#hero .hero__figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--blade-px) 50%;
+  /* sube el punto de luz: el hamon y el jihada tienen que leerse a un metro */
+  filter: brightness(1.08) contrast(1.06);
+  /* el negro de la foto desaparece dentro del sumi; solo queda el acero */
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 2.5%, #000 95%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 2.5%, #000 95%, transparent 100%);
+}
+
+/* Luz de taller detrás del acero: da profundidad sin tocar la zona del texto. */
+#hero .hero__glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(26% 44% at var(--blade-cx) 42%,
+      color-mix(in srgb, var(--steel) 16%, transparent) 0%,
+      color-mix(in srgb, var(--steel) 6%, transparent) 44%,
+      transparent 74%);
+}
+
+/* --- contenido ------------------------------------------------------------ */
+#hero .hero__inner {
+  position: relative;
+  z-index: 2;
+}
+
+#hero .hero__eyebrow {
+  color: var(--steel-hi);
+  margin-bottom: clamp(0.75rem, 1.6vh, 1.25rem);
+}
+
+#hero .hero__title {
+  font-size: var(--t-hero);
+  font-weight: 660;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  max-width: min(13ch, var(--hero-col));
+  text-wrap: balance;
+  color: var(--washi);
+}
+
+#hero .hero__lede {
+  margin-top: clamp(1rem, 2.2vh, 1.5rem);
+  max-width: min(44ch, var(--hero-col));
+  color: color-mix(in srgb, var(--washi) 88%, var(--steel));
+  text-wrap: pretty;
+}
+
+#hero .hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(1.5rem, 3.4vh, 2.25rem);
+  max-width: var(--hero-col);
+}
+#hero .btn--glass {
+  --btn-bg: color-mix(in srgb, var(--washi) 14%, transparent);
+  --btn-fg: var(--washi);
+  border: 1px solid color-mix(in srgb, var(--washi) 42%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+#hero .btn--glass:hover {
+  background: color-mix(in srgb, var(--washi) 24%, transparent);
+  border-color: color-mix(in srgb, var(--washi) 68%, transparent);
+}
+
+/* --- tira de datos duros -------------------------------------------------- */
+/* En móvil vive por debajo del pie de la hoja, así que puede ocupar todo el ancho. */
+#hero .hero__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.875rem, 2.5vw, 2.75rem);
+  margin: clamp(2rem, 5vh, 3.25rem) 0 0;
+  padding-top: clamp(0.875rem, 1.8vh, 1.25rem);
+  border-top: 1px solid color-mix(in srgb, var(--hamon) 26%, transparent);
+  max-width: var(--hero-col);
+}
+#hero .hero__fact dt {
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--steel-hi) 78%, var(--sumi));
+}
+#hero .hero__fact dd {
+  margin: 0.3rem 0 0;
+  font-size: clamp(0.875rem, 1.05vw, 1rem);
+  font-weight: 520;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  color: var(--washi);
+}
+
+/* --- móvil y tabletas estrechas ------------------------------------------- */
+@media (max-width: 719px) {
+  #hero .hero__eyebrow {
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+  }
+  #hero {
+    /* empuja la hoja hacia el borde para abrir aire entre el acero y la medida corta */
+    --blade-px: 46%;
+  }
+  #hero .hero__title {
+    /* el titular se mide solo: tres líneas cortas que nunca llegan a la hoja */
+    max-width: 10ch;
+    letter-spacing: -0.028em;
+  }
+  #hero .hero__lede {
+    font-size: 1.0625rem;
+  }
+  #hero .hero__facts {
+    /* la hoja termina por encima: aquí ya no estorba nadie */
+    max-width: 100%;
+    gap: 0.75rem;
+  }
+  #hero .hero__actions .btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* --- escritorio: la hoja va a sangre y la columna de texto se ensancha ----- */
+@media (min-width: 720px) {
+  #hero {
+    --blade-w: min(42vw, 34rem);
+    --blade-right: clamp(0.75rem, 2.5vw, 2.5rem);
+    --blade-cx: 78%;
+    --hero-col: min(46rem, 52vw);
+  }
+  #hero .hero__figure {
+    bottom: 0;
+  }
+  #hero .hero__facts {
+    gap: 0;
+  }
+  #hero .hero__fact {
+    padding-inline: clamp(1.25rem, 2.4vw, 2.25rem);
+  }
+  #hero .hero__fact:first-child {
+    padding-inline-start: 0;
+  }
+  #hero .hero__fact + .hero__fact {
+    border-inline-start: 1px solid color-mix(in srgb, var(--hamon) 22%, transparent);
+  }
+}
+
+/* --- pantallas bajas (móvil apaisado): que no se corte nada --------------- */
+@media (max-height: 560px) and (min-width: 720px) {
+  #hero {
+    min-height: 32rem;
+  }
+  #hero .hero__facts {
+    margin-top: 1.5rem;
+  }
+}
+
+/* --- sin color-mix: reserva sólida ---------------------------------------- */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  #hero .hero__glow {
+    background: radial-gradient(26% 44% at var(--blade-cx) 42%, rgba(184, 188, 194, 0.16) 0%, rgba(184, 188, 194, 0.06) 44%, rgba(184, 188, 194, 0) 74%);
+  }
+  #hero .hero__lede { color: #e2e1df; }
+  #hero .hero__fact dt { color: #b5b7ba; }
+  #hero .hero__facts { border-top-color: rgba(223, 228, 232, 0.26); }
+  #hero .hero__fact + .hero__fact { border-inline-start-color: rgba(223, 228, 232, 0.22); }
+  #hero .btn--glass {
+    --btn-bg: rgba(246, 245, 242, 0.14);
+    border-color: rgba(246, 245, 242, 0.42);
+  }
+}
+
+/* --- sin mezcla: que el rectángulo de la foto no se note ------------------ */
+@supports not (mix-blend-mode: screen) {
+  #hero .hero__figure img {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 22%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 22%);
+  }
+}

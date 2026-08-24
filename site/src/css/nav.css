@@ -1,0 +1,525 @@
+/* nav — barra global pegajosa + barra secundaria de producto + menú móvil
+   Métrica medida en píxeles reales, no declarada (barra de 48 px):
+   · UNA banda de tinta: filas 18–30, centro óptico 24,00 exacto para el lockup y
+     para los tres iconos (12 x 12 px cada uno). La caja de mayúsculas de los
+     rótulos cae dentro, centrada en 24,0–24,25. Nada sobresale por arriba ni por
+     abajo, tampoco el contador del carrito.
+   · DOS tintas y nada más: la marca entera en --ink (núcleo 29); rótulos e iconos
+     en --ink-2 (núcleo 75). Ninguna mitad de la marca cambia de tinta.
+   · UN paso: 32,5–33,25 px entre rótulos (dispersión 0,75) y 32,0 px entre iconos.
+     TRES grupos separados por una calle de 1,5 pasos (48,25 y 48,5 px):
+     [marca] calle [seis rótulos] calle [utilidades]. Ni una pleca suelta: la única
+     pleca del sitio vive dentro del lockup y ahí significa 'marca'.
+   · El lockup es UNA pieza vectorial (SVG inline, 122 x 12 px de tinta, idéntica a
+     cualquier ancho): kanji dibujados sobre la rejilla de 1 px, pleca en el mismo
+     trazado, una sola tinta, huecos de 6,00 px simétricos a ambos lados de la pleca.
+   Los botones de icono miden 44 px con 12 px de tinta: los 16 px muertos de cada
+   lado se descuentan con márgenes para que el hueco visible sea el declarado y para
+   que el inset de tinta salga idéntico a izquierda y derecha (334/334 y 20/20). */
+
+:root { --nav-sub-h: 52px; }
+
+#top-nav {
+  --nav-bg: rgba(246, 245, 242, 0.66);
+  --nav-bg-scrolled: rgba(246, 245, 242, 0.88);
+  /* paso entre iguales, calle entre grupos y aire muerto de los botones de icono */
+  --nav-step: clamp(1rem, 1.9vw, 1.75rem);
+  --nav-street: calc(var(--nav-step) * 1.5);
+  --nav-dead: 16px;        /* (44 px de botón − 12 px de tinta) / 2 */
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  isolation: isolate;
+}
+
+/* Compensa la barra pegajosa al saltar por anclas */
+#catalogo, #configurador, #hamon, #forge, #faq, #specs, #tsuba, #trust {
+  scroll-margin-top: calc(var(--nav-h) + var(--nav-sub-h) + 12px);
+}
+
+.nav__bar {
+  position: relative;
+  z-index: 3;
+  height: var(--nav-h);
+  background: var(--nav-bg);
+  transition: background-color 300ms var(--ease-out);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .nav__bar {
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    backdrop-filter: saturate(180%) blur(18px);
+  }
+}
+
+/* Suelo de la barra: filo de 1 px SIEMPRE presente (la barra se apoya en algo),
+   un punto más firme al desplazar. Sin borde: no altera la caja ni provoca salto. */
+.nav__bar::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--line);
+  opacity: 0.75;
+  transition: opacity 300ms var(--ease-out);
+  pointer-events: none;
+}
+
+.nav.is-scrolled .nav__bar { background: var(--nav-bg-scrolled); }
+.nav.is-scrolled .nav__bar::after { opacity: 1; }
+
+/* Un solo bloque centrado en el eje real de la barra: los márgenes de página
+   salen idénticos por construcción, sin huecos huérfanos que explicar. */
+.nav__inner {
+  width: min(100% - var(--gutter) * 2, var(--wrap));
+  margin-inline: auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+/* ---- logotipo: una sola pieza, una sola tinta ---- */
+.nav__logo {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 44px;
+  /* calle a la derecha; los 4,5 px compensan el aire lateral del primer rótulo
+     (la tinta del SVG llega al borde y la de una letra no) */
+  margin-inline-end: calc(var(--nav-street) + 4.5px);
+  text-decoration: none;
+  color: var(--ink);
+  transition: opacity 200ms var(--ease-out);
+}
+
+/* el lockup entero es un solo objeto: se apaga junto, no por partes */
+.nav__logo:hover { opacity: 0.62; }
+
+.nav__mark { display: block; }
+
+/* los kanji son rectas sobre la rejilla: sin antialias no se empastan a 12 px */
+.nav__mark-grid { shape-rendering: crispEdges; }
+
+.nav__mark-word {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  fill: currentColor;
+  stroke: none;
+}
+
+/* ---- enlaces ---- */
+.nav__links { flex: none; min-width: 0; }
+
+.nav__links ul {
+  display: flex;
+  align-items: center;
+  gap: var(--nav-step);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav__links a {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding-inline: 2px;
+  font-size: 0.875rem;
+  font-weight: 520;
+  letter-spacing: -0.006em;
+  white-space: nowrap;
+  color: var(--ink-2);
+  text-decoration: none;
+  position: relative;
+  transition: color 200ms var(--ease-out);
+}
+
+.nav__links a:hover { color: var(--ink); }
+
+.nav__links a::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 10px;
+  height: 1.5px;
+  background: var(--shu);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 320ms var(--ease-out);
+}
+
+.nav__links a[aria-current="true"] { color: var(--ink); }
+.nav__links a[aria-current="true"]::after { transform: scaleX(1); }
+
+/* ---- acciones ---- */
+.nav__actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  /* calle a la izquierda y recorte del aire muerto para que el inset derecho
+     de la tinta iguale al izquierdo sin tocar el tamaño del objetivo táctil */
+  margin-left: calc(var(--nav-street) - var(--nav-dead) + 5px);
+  margin-right: calc(var(--nav-dead) * -1);
+}
+
+/* Entre dos botones contiguos ya hay 32 px de hueco de tinta (16 + 16). El paso de
+   la barra es fluido: se corrige con margen para que el hueco entre lupa y bolsa
+   valga lo mismo que entre dos rótulos. Solo con ratón: en táctil no se solapan. */
+@media (min-width: 900px) {
+  .nav__actions > * + * { margin-left: max(-6px, calc(var(--nav-step) - 27.5px)); }
+}
+
+.nav__icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 200ms var(--ease-out);
+}
+
+.nav__icon:hover { color: var(--ink); }
+
+/* El contador vive DENTRO de la bolsa: no hay aro, no hay esquina y nada
+   se sale de la banda de tinta común de la barra. Sin unidades no existe. */
+.nav__count {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 3.6px;   /* centra la cifra en el cuerpo de la bolsa, no en el botón */
+  color: var(--shu);
+  font-size: 0.4375rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  transform-origin: 50% 62%;   /* el pulso gira sobre la cifra, no sobre la caja del botón */
+  pointer-events: none;
+}
+
+.nav__count.is-empty { display: none; }
+
+/* dos cifras: mismo hueco, cuerpo justo para que la bolsa no se llene de tinta */
+.nav__count.is-wide { font-size: 0.375rem; letter-spacing: -0.05em; }
+
+.nav__count.is-bump { animation: nav-bump 420ms var(--ease-out); }
+
+@keyframes nav-bump {
+  0% { transform: scale(1); }
+  38% { transform: scale(1.32); }
+  100% { transform: scale(1); }
+}
+
+/* ---- hamburguesa ---- */
+.nav__burger { display: none; }
+
+.nav__burger svg line {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 320ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+
+/* tres trazos de 12 px: misma caja de tinta y misma masa que lupa y bolsa.
+   Al abrir, los extremos se juntan en la fila 12 (centro exacto) y el de en medio se apaga. */
+.nav.is-open .nav__burger-a { transform: translateY(5.3px) rotate(45deg); }
+.nav.is-open .nav__burger-b { transform: translateY(-5.3px) rotate(-45deg); }
+.nav.is-open .nav__burger-c { opacity: 0; transform: scaleX(0.4); }
+
+/* ---- barra secundaria de producto ---- */
+.nav__sub {
+  position: absolute;
+  z-index: 2;
+  inset-inline: 0;
+  top: 100%;
+  height: var(--nav-sub-h);
+  background: rgba(11, 11, 12, 0.9);
+  color: var(--washi);
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 320ms var(--ease-out), transform 380ms var(--ease-out);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .nav__sub {
+    -webkit-backdrop-filter: saturate(150%) blur(18px);
+    backdrop-filter: saturate(150%) blur(18px);
+  }
+}
+
+.nav.is-past-hero .nav__sub {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.nav.is-open .nav__sub {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+.nav__sub-inner {
+  width: min(100% - var(--gutter) * 2, var(--wrap));
+  margin-inline: auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav__sub-model {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.nav__sub-kanji {
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  color: var(--steel);
+}
+
+.nav__sub-name {
+  font-size: 0.9375rem;
+  font-weight: 620;
+  letter-spacing: -0.012em;
+  white-space: nowrap;
+}
+
+.nav__sub-note {
+  font-size: var(--t-small);
+  color: var(--steel);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav__sub-price {
+  font-size: var(--t-small);
+  color: var(--steel);
+  white-space: nowrap;
+}
+
+.nav__sub-price strong {
+  color: var(--washi);
+  font-weight: 620;
+  font-size: 0.9375rem;
+  letter-spacing: -0.012em;
+}
+
+.nav__sub-cta {
+  min-height: 36px;
+  padding: 0 1.125rem;
+  font-size: 0.875rem;
+}
+
+/* ---- menú / buscador a pantalla completa ---- */
+.nav__menu {
+  position: fixed;
+  z-index: 1;
+  inset: 0;
+  padding-top: var(--nav-h);
+  background: rgba(246, 245, 242, 0.97);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 300ms var(--ease-out), visibility 0s linear 300ms;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .nav__menu { background: rgba(246, 245, 242, 0.86); -webkit-backdrop-filter: blur(26px) saturate(180%); backdrop-filter: blur(26px) saturate(180%); }
+}
+
+.nav__menu[hidden] { display: none; }
+
+.nav.is-open .nav__menu {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 300ms var(--ease-out), visibility 0s;
+}
+
+.nav__menu-inner {
+  width: min(100% - var(--gutter) * 2, var(--wrap-narrow));
+  margin-inline: auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-block: clamp(1.25rem, 4vw, 2.5rem) calc(2rem + env(safe-area-inset-bottom));
+}
+
+/* buscador */
+.nav__find {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 52px;
+  margin-bottom: clamp(1.25rem, 4vw, 2rem);
+  padding-inline: 0.125rem;
+  border-bottom: 1px solid var(--ink-3);
+}
+
+.nav__find-icon { flex: none; color: var(--ink-2); }
+
+.nav__find-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.nav__find-input::placeholder { color: var(--ink-3); }
+.nav__find-input:focus { outline: none; }
+.nav__find:focus-within { border-bottom-color: var(--shu); }
+.nav__find-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+.nav__menu-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.nav__menu-list[hidden] { display: none; }
+
+.nav__menu-list li { border-bottom: 1px solid var(--line); }
+
+.nav__menu-list a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: clamp(0.85rem, 3.2vw, 1.15rem);
+  text-decoration: none;
+  color: var(--ink);
+  font-size: clamp(1.75rem, 8.5vw, 2.5rem);
+  font-weight: 640;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.1;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 460ms var(--ease-out), transform 520ms var(--ease-out), color 200ms;
+}
+
+.nav__menu-list a:hover { color: var(--shu); }
+
+.nav__menu-list i {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-size: 0.9375rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  flex: none;
+}
+
+.nav.is-open .nav__menu-list a { opacity: 1; transform: none; }
+.nav.is-open .nav__menu-list li:nth-child(1) a { transition-delay: 60ms; }
+.nav.is-open .nav__menu-list li:nth-child(2) a { transition-delay: 105ms; }
+.nav.is-open .nav__menu-list li:nth-child(3) a { transition-delay: 150ms; }
+.nav.is-open .nav__menu-list li:nth-child(4) a { transition-delay: 195ms; }
+.nav.is-open .nav__menu-list li:nth-child(5) a { transition-delay: 240ms; }
+.nav.is-open .nav__menu-list li:nth-child(6) a { transition-delay: 285ms; }
+
+/* resultados: mismo esqueleto, otra escala, sin escalonado */
+.nav__menu-list--find a {
+  font-size: clamp(1.25rem, 5.2vw, 1.75rem);
+  font-weight: 600;
+  transition: color 200ms;
+  opacity: 1;
+  transform: none;
+}
+
+.nav__menu-list--find i {
+  font-family: var(--font-sans);
+  font-size: var(--t-small);
+  letter-spacing: -0.01em;
+  color: var(--ink-2);
+}
+
+.nav__find-none {
+  padding-block: 1rem;
+  color: var(--ink-2);
+  font-size: var(--t-body);
+}
+
+.nav__menu-foot {
+  margin-top: auto;
+  padding-top: clamp(1.75rem, 6vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.875rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 460ms var(--ease-out), transform 520ms var(--ease-out);
+}
+
+.nav.is-open .nav__menu-foot { opacity: 1; transform: none; transition-delay: 300ms; }
+
+.nav__menu-cta { align-self: stretch; }
+
+@media (min-width: 900px) {
+  .nav__menu-cta { align-self: flex-start; }
+}
+
+.nav__menu-note {
+  font-size: var(--t-small);
+  color: var(--ink-2);
+  max-width: 34ch;
+  line-height: 1.45;
+}
+
+/* ---- móvil / tablet: marca al tamaño de un icono y tres objetivos a ritmo par ---- */
+@media (max-width: 899px) {
+  :root { --nav-sub-h: 58px; }
+
+  .nav__inner { justify-content: space-between; }
+  .nav__links { display: none; }
+  .nav__burger { display: inline-flex; }
+
+  /* el lockup se queda entero y al mismo tamaño: una tienda con menú en español
+     necesita su nombre, y la marca no cambia de proporción al cambiar de ancho */
+  .nav__logo { margin-inline-end: 0; }
+  .nav__actions { margin-left: 0; }
+
+  .nav__sub-note { display: none; }
+  .nav__sub-cta { min-height: 40px; }
+}
+
+@media (max-width: 419px) {
+  .nav__sub-inner { gap: 0.5rem; }
+  .nav__sub-model { gap: 0.375rem; }
+  .nav__sub-price { font-size: 0.75rem; }
+  .nav__sub-price strong { font-size: 0.875rem; }
+  .nav__sub-cta { padding: 0 0.9375rem; font-size: 0.8125rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav__menu-list a, .nav__menu-foot { opacity: 1; transform: none; }
+  .nav__sub { transition: opacity 1ms linear; }
+}

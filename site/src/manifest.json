@@ -1,0 +1,42 @@
+{
+  "sections": [
+    "nav",
+    "hero",
+    "trust",
+    "story-hamon",
+    "story-forge",
+    "story-tsuba",
+    "catalog",
+    "configurator",
+    "specs",
+    "faq",
+    "footer"
+  ],
+  "overlays": [
+    "cart",
+    "checkout"
+  ],
+  "css": [
+    "tokens",
+    "base",
+    "nav",
+    "hero",
+    "trust",
+    "story",
+    "catalog",
+    "configurator",
+    "specs",
+    "faq",
+    "footer",
+    "cart",
+    "checkout"
+  ],
+  "entry": "js/main.js",
+  "criticalCss": [
+    "tokens",
+    "base",
+    "nav",
+    "hero",
+    "trust"
+  ]
+}

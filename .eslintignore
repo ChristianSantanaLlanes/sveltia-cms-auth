@@ -1,1 +1,5 @@
 node_modules
+
+# Ver .prettierignore: el subproyecto site/ y su arnés en tools/ se validan aparte.
+site
+tools

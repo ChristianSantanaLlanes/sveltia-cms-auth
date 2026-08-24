@@ -1,0 +1,108 @@
+<div id="cart" class="cart" data-cart hidden>
+  <div class="cart__veil" data-cart-close aria-hidden="true"></div>
+
+  <aside id="cart-panel" class="cart__panel" role="dialog" aria-modal="true" aria-labelledby="cart-title" tabindex="-1">
+
+    <header class="cart__head">
+      <div class="cart__head-text">
+        <p class="eyebrow cart__eyebrow">Pedido</p>
+        <h2 class="cart__title" id="cart-title">Tu carrito</h2>
+        <p class="cart__units" data-cart-units>Sin piezas</p>
+      </div>
+      <button class="cart__close" type="button" data-cart-close aria-label="Cerrar el carrito">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <line x1="6.5" y1="6.5" x2="17.5" y2="17.5"></line>
+          <line x1="17.5" y1="6.5" x2="6.5" y2="17.5"></line>
+        </svg>
+      </button>
+    </header>
+
+    <div class="cart__ship" data-cart-ship hidden>
+      <p class="cart__ship-note" data-cart-ship-note></p>
+      <div class="cart__ship-bar" aria-hidden="true"><span class="cart__ship-fill" data-cart-ship-fill></span></div>
+    </div>
+
+    <div class="cart__scroll" data-cart-scroll>
+      <ul class="cart__lines" data-cart-lines></ul>
+
+      <div class="cart__empty" data-cart-empty hidden>
+        <p class="cart__empty-kanji" aria-hidden="true">空</p>
+        <h3 class="cart__empty-title">Todavía no hay ninguna hoja aquí.</h3>
+        <p class="cart__empty-note">Del taller de Seki salen seis modelos. Elige uno y ajusta longitud, pulido, tsuba y saya antes de encargarlo: la forja empieza cuando cierras el pedido.</p>
+        <a class="btn cart__empty-cta" href="#catalogo" data-cart-close>Ver el catálogo</a>
+        <a class="link-arrow cart__empty-link" href="#configurador" data-cart-close>Configurar una katana</a>
+      </div>
+    </div>
+
+    <footer class="cart__foot" data-cart-foot>
+      <p class="eyebrow cart__sum-eyebrow">Resumen</p>
+
+      <dl class="cart__sum">
+        <div class="cart__row">
+          <dt>Subtotal</dt>
+          <dd data-cart-subtotal>0 €</dd>
+        </div>
+        <div class="cart__row">
+          <dt>Envío asegurado a España</dt>
+          <dd data-cart-shipping>—</dd>
+        </div>
+        <div class="cart__row cart__row--total">
+          <dt>
+            Total
+            <span class="cart__vat">IVA (21 %) incluido: <span data-cart-vat>0 €</span></span>
+          </dt>
+          <dd data-cart-total>0 €</dd>
+        </div>
+      </dl>
+
+      <button class="btn btn--lg cart__checkout" type="button" data-checkout-open>Tramitar el pedido</button>
+      <p class="cart__fine">Aranceles y despacho pagados en origen. La fecha exacta de entrega se confirma por escrito al cerrar el encargo.</p>
+    </footer>
+
+    <p class="visually-hidden" data-cart-live aria-live="polite"></p>
+  </aside>
+
+  <template data-cart-line-template>
+    <li class="cart__line-item">
+      <article class="cart-line" data-cart-line>
+        <div class="cart-line__thumb">
+          <picture>
+            <source type="image/avif" data-src-avif>
+            <source type="image/webp" data-src-webp>
+            <img width="480" height="600" alt="" loading="lazy" decoding="async" data-src-jpg>
+          </picture>
+        </div>
+
+        <div class="cart-line__body">
+          <div class="cart-line__top">
+            <h3 class="cart-line__name">
+              <span data-line-name></span>
+              <i class="cart-line__kanji" lang="ja" aria-hidden="true" data-line-kanji></i>
+            </h3>
+            <p class="cart-line__price">
+              <span class="cart-line__amount" data-line-amount></span>
+              <span class="cart-line__unit" data-line-unit></span>
+            </p>
+          </div>
+
+          <p class="cart-line__summary" data-line-summary></p>
+          <p class="cart-line__eng" data-line-eng hidden>Grabado <span class="cart-line__eng-text" data-line-eng-text></span></p>
+          <p class="cart-line__lead" data-line-lead></p>
+
+          <div class="cart-line__controls">
+            <div class="qty" role="group" data-qty>
+              <button class="qty__btn" type="button" data-qty-dec>
+                <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><line x1="3.5" y1="8" x2="12.5" y2="8"></line></svg>
+              </button>
+              <span class="qty__val" data-line-qty>1</span>
+              <button class="qty__btn" type="button" data-qty-inc>
+                <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><line x1="3.5" y1="8" x2="12.5" y2="8"></line><line x1="8" y1="3.5" x2="8" y2="12.5"></line></svg>
+              </button>
+            </div>
+            <button class="cart-line__remove" type="button" data-remove>Quitar</button>
+          </div>
+        </div>
+      </article>
+    </li>
+  </template>
+</div>

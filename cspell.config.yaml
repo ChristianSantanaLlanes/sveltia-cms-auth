@@ -14,6 +14,10 @@ files:
 useGitignore: true
 ignorePaths:
   - pnpm-lock.yaml
+  # El sitio KUROGANE está en español con vocabulario japonés: otro diccionario,
+  # otro subproyecto. Se valida con tools/audit.mjs, no con este corrector.
+  - site/**
+  - tools/**
 words:
   - Decap
   - hostnames

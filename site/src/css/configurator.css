@@ -1,0 +1,832 @@
+/* configurator — el banco de trabajo: la hoja elegida y las seis decisiones
+   repartidas en una sola rejilla, con el coste real siempre a la vista en la
+   barra de abajo. Todo vive bajo #configurador para no pisar a nadie.
+   El orden cambia por ancho: en móvil manda la decisión (el selector de modelo
+   abre el bloque), en escritorio la foto y el selector van lado a lado. */
+
+#configurador {
+  --cfg-panel: #131317;          /* superficie sobre sumi, un punto por encima */
+  --cfg-panel-hi: #1b1b20;
+  --cfg-line: rgba(255, 255, 255, 0.13);
+  --cfg-line-hi: rgba(255, 255, 255, 0.32);
+  --cfg-dim: #9a9aa1;            /* 6,4:1 sobre sumi: AA para texto pequeño */
+  --cfg-bar-h: 4.75rem;
+  padding-bottom: 0;             /* la barra de precio cierra la sección */
+}
+
+/* ---------------------------------------------------------------- cabecera */
+.cfg__head {
+  max-width: 62rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+.cfg__title {
+  margin-top: clamp(0.75rem, 1.6vw, 1.125rem);
+  font-size: clamp(2.5rem, 5.8vw, 4.5rem);
+  font-weight: 660;
+  letter-spacing: -0.032em;
+  line-height: 0.98;
+  max-width: 17ch;
+  text-wrap: balance;
+}
+.cfg__lede {
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+  max-width: 48ch;
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------------ rejilla */
+.cfg__grid {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 4.5rem);
+  align-items: start;
+}
+/* ---------------------------------------------------------------- escenario */
+.cfg__hero {
+  margin: 0;
+}
+.cfg__hero-frame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius-m);
+  background: var(--cfg-panel);
+}
+.cfg__hero-frame picture,
+.cfg__hero-frame img {
+  width: 100%;
+  height: 100%;
+}
+.cfg__hero-frame img {
+  object-fit: cover;
+  transition: opacity 260ms var(--ease-out);
+}
+/* cambio de modelo: la foto nueva entra por opacidad, nunca por salto de caja */
+.cfg__hero-frame.is-swapping img {
+  opacity: 0;
+}
+
+.cfg__hero-cap {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(0.75rem, 1.6vw, 1.125rem);
+  margin-top: clamp(1rem, 2vw, 1.375rem);
+}
+.cfg__hero-kanji {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  line-height: 1;
+  color: var(--steel);
+  flex: none;
+}
+.cfg__hero-text {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.cfg__hero-name {
+  font-size: clamp(1.25rem, 2vw, 1.625rem);
+  font-weight: 640;
+  letter-spacing: -0.024em;
+  line-height: 1.05;
+}
+.cfg__hero-claim {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--cfg-dim);
+  text-wrap: pretty;
+}
+
+/* --- datos duros de la hoja ---------------------------------------------- */
+.cfg__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: clamp(1.25rem, 2.4vw, 1.75rem) 0 0;
+}
+.cfg__fact {
+  border-top: 1px solid var(--cfg-line);
+  padding: clamp(0.7rem, 1.4vw, 0.95rem) 0;
+}
+.cfg__fact:nth-child(odd) {
+  padding-inline-end: 1rem;
+}
+.cfg__fact:nth-child(even) {
+  padding-inline-start: clamp(1rem, 2vw, 1.5rem);
+  border-inline-start: 1px solid var(--cfg-line);
+}
+.cfg__fact dt {
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+.cfg__fact dd {
+  margin: 0.3rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 520;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  color: var(--washi);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- las tres monturas elegidas, con material real ------------------------ */
+.cfg__mounts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.625rem, 1.4vw, 1rem);
+  margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cfg__mount {
+  min-width: 0;
+}
+.cfg__mount picture {
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-s);
+  background: var(--cfg-panel);
+}
+.cfg__mount img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* filo de color = la laca / el hierro elegidos, no un bloque decorativo */
+.cfg__mount-sw {
+  display: block;
+  height: 3px;
+  margin-top: 5px;
+  border-radius: 2px;
+  background: var(--sw, var(--steel));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  transition: background-color 220ms var(--ease-out);
+}
+.cfg__mount-txt {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 0.5rem;
+}
+.cfg__mount-k {
+  font-size: 0.625rem;
+  font-weight: 620;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+.cfg__mount-v {
+  font-size: 0.8125rem;
+  font-weight: 560;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--washi);
+}
+
+/* -------------------------------------------------------------------- panel */
+.cfg__panel {
+  display: grid;
+  gap: clamp(2.25rem, 4vw, 3rem);
+  /* la barra de precio flota encima mientras configuras: que no tape nada */
+  padding-bottom: calc(var(--cfg-bar-h) + 0.75rem);
+}
+.cfg__group-head {
+  margin-bottom: clamp(0.875rem, 1.8vw, 1.25rem);
+}
+.cfg__group-t {
+  font-size: clamp(1.125rem, 1.6vw, 1.375rem);
+  font-weight: 640;
+  letter-spacing: -0.022em;
+  line-height: 1.15;
+}
+.cfg__group-t label {
+  cursor: pointer;
+}
+.cfg__group-help {
+  margin-top: 0.35rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--cfg-dim);
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+
+/* --- selector de modelo --------------------------------------------------- */
+.cfg__models {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 560px) {
+  .cfg__models {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.cfg__model {
+  position: relative;
+  display: grid;
+  gap: 0.1rem;
+  align-content: start;
+  width: 100%;
+  min-height: 5.75rem;
+  padding: 0.7rem 0.8rem 0.75rem;
+  text-align: start;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--cfg-line);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: background-color 200ms var(--ease-out), border-color 200ms var(--ease-out);
+}
+.cfg__model:hover {
+  background: var(--cfg-panel);
+  border-color: var(--cfg-line-hi);
+}
+.cfg__model[aria-pressed="true"] {
+  background: var(--cfg-panel-hi);
+  border-color: var(--washi);
+  box-shadow: inset 0 0 0 1px var(--washi);
+}
+.cfg__model-kanji {
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  line-height: 1.1;
+  color: var(--steel);
+}
+.cfg__model[aria-pressed="true"] .cfg__model-kanji {
+  color: var(--hamon);
+}
+.cfg__model-name {
+  margin-top: 0.1rem;
+  font-size: 1.125rem;
+  font-weight: 620;
+  letter-spacing: -0.022em;
+  line-height: 1.15;
+}
+/* la cifra es lo segundo que se lee: decide la compra, no puede ser la
+   tipografía más pequeña de la pantalla */
+.cfg__model-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+.cfg__model-from {
+  font-size: 0.6875rem;
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  color: var(--cfg-dim);
+}
+.cfg__model-eur {
+  font-size: 1.0625rem;
+  font-weight: 640;
+  line-height: 1;
+  letter-spacing: -0.026em;
+  color: var(--steel-hi);
+  font-variant-numeric: tabular-nums;
+}
+.cfg__model[aria-pressed="true"] .cfg__model-eur {
+  color: var(--washi);
+}
+.cfg__model[aria-pressed="true"] .cfg__model-from {
+  color: var(--steel);
+}
+.cfg__model-tag {
+  margin-top: 0.3rem;
+  font-size: 0.625rem;
+  font-weight: 620;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* --- filas de opción: se leen como una lista de materiales ---------------- */
+.cfg__opts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.375rem;
+}
+.cfg__opt {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.75rem, 1.6vw, 1.125rem);
+  width: 100%;
+  min-height: 60px;
+  padding: 0.6rem 0.875rem 0.6rem 0.7rem;
+  text-align: start;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--cfg-line);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: background-color 200ms var(--ease-out), border-color 200ms var(--ease-out);
+}
+.cfg__opt:hover {
+  background: var(--cfg-panel);
+  border-color: var(--cfg-line-hi);
+}
+.cfg__opt[aria-pressed="true"] {
+  background: var(--cfg-panel-hi);
+  border-color: var(--washi);
+  box-shadow: inset 0 0 0 1px var(--washi);
+}
+
+/* casilla de la izquierda: color de material o barra de longitud */
+.cfg__opt-mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px var(--cfg-line);
+  transition: box-shadow 200ms var(--ease-out);
+}
+.cfg__opt[aria-pressed="true"] .cfg__opt-mark {
+  box-shadow: inset 0 0 0 1px var(--cfg-line-hi), 0 0 0 2px var(--sumi), 0 0 0 3px var(--hamon);
+}
+.cfg__sw {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--sw, var(--steel));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+/* longitud: la barra mide de verdad (68/71/74 sobre 74 cm) */
+.cfg__len {
+  display: block;
+  width: var(--l, 100%);
+  height: 3px;
+  border-radius: 2px;
+  background: var(--steel);
+  justify-self: center;
+}
+.cfg__opt[aria-pressed="true"] .cfg__len {
+  background: var(--hamon);
+}
+
+.cfg__opt-txt {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.cfg__opt-l {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.016em;
+  line-height: 1.2;
+}
+.cfg__opt-n {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--cfg-dim);
+  text-wrap: pretty;
+}
+.cfg__opt-d {
+  font-size: 0.8125rem;
+  font-weight: 560;
+  color: var(--cfg-dim);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.008em;
+}
+.cfg__opt[aria-pressed="true"] .cfg__opt-d {
+  color: var(--washi);
+}
+
+/* --- grabado -------------------------------------------------------------- */
+.cfg__eng {
+  display: grid;
+  gap: 0.5rem;
+}
+.cfg__eng-input {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 1rem;
+  background: var(--cfg-panel);
+  color: var(--washi);
+  border: 1px solid var(--cfg-line);
+  border-radius: var(--radius-m);
+  font-size: 1.0625rem;
+  font-weight: 560;
+  letter-spacing: 0.02em;
+  transition: border-color 200ms var(--ease-out), background-color 200ms var(--ease-out);
+}
+.cfg__eng-input::placeholder {
+  color: #8a8a92;
+  font-weight: 460;
+  letter-spacing: 0;
+}
+.cfg__eng-input:hover {
+  border-color: var(--cfg-line-hi);
+}
+.cfg__eng-input:focus {
+  background: var(--cfg-panel-hi);
+  border-color: var(--washi);
+}
+.cfg__eng-state {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--cfg-dim);
+  font-variant-numeric: tabular-nums;
+}
+.cfg__eng-price {
+  transition: color 200ms var(--ease-out);
+}
+.cfg__eng.is-on .cfg__eng-price {
+  color: var(--washi);
+  font-weight: 560;
+}
+
+/* ------------------------------------------------- barra de precio pegajosa */
+.cfg__buy {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  background: color-mix(in srgb, var(--sumi) 92%, #fff);
+  border-top: 1px solid var(--cfg-line);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .cfg__buy {
+    background: color-mix(in srgb, var(--sumi) 94%, transparent);
+    -webkit-backdrop-filter: saturate(160%) blur(20px);
+    backdrop-filter: saturate(160%) blur(20px);
+  }
+}
+.cfg__buy-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: clamp(1rem, 2.5vw, 2rem);
+  row-gap: 0.4rem;
+  padding-block: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  min-height: var(--cfg-bar-h);
+}
+.cfg__buy-sum {
+  grid-column: 1;
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.cfg__buy-model {
+  font-size: 1rem;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.cfg__buy-variants {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--cfg-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cfg__buy-total {
+  grid-column: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  justify-content: end;
+}
+.cfg__buy-k {
+  font-size: 0.6875rem;
+  font-weight: 620;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--steel);
+}
+.cfg__buy-v {
+  font-size: clamp(1.375rem, 2.4vw, 1.75rem);
+  font-weight: 660;
+  letter-spacing: -0.028em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--washi);
+}
+.cfg__buy-cta {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+}
+.cfg__buy-fine {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: var(--cfg-dim);
+}
+
+/* el total late un instante cuando cambia: solo transform */
+.cfg__buy-v {
+  transition: transform 260ms var(--ease-out);
+  transform-origin: 100% 50%;
+}
+.cfg__buy-v.is-bump {
+  transform: scale(1.055);
+}
+
+/* --- desktop: todo en una línea ------------------------------------------ */
+@media (min-width: 760px) {
+  .cfg__buy-inner {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    row-gap: 0;
+    column-gap: clamp(1.25rem, 3vw, 2.5rem);
+  }
+  .cfg__buy-sum {
+    grid-row: 1;
+    gap: 0.2rem;
+  }
+  .cfg__buy-total {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: column;
+    align-items: end;
+    gap: 0.2rem;
+  }
+  .cfg__buy-cta {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .cfg__buy-fine {
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: 0.15rem;
+  }
+  .cfg__buy-variants {
+    font-size: 0.8125rem;
+  }
+}
+
+/* --- móvil (390 px es el caso de prueba) --------------------------------- */
+@media (max-width: 759px) {
+  #configurador {
+    --cfg-bar-h: 7rem;
+  }
+  /* la barra vive fija en pantalla: tres líneas justas, ni una más */
+  .cfg__buy-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.5rem;
+    padding-top: 0.7rem;
+  }
+  /* modelo y variantes en una sola línea: la barra no puede comerse la pantalla */
+  .cfg__buy-sum {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+  .cfg__buy-model {
+    flex: none;
+  }
+  .cfg__buy-cta {
+    min-height: 48px;
+  }
+  .cfg__buy-total {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: column;
+    align-items: start;
+    justify-content: center;
+    gap: 0.15rem;
+  }
+  .cfg__buy-cta {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+  .cfg__buy-fine {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 0;
+  }
+  .cfg__title {
+    max-width: 13ch;
+    letter-spacing: -0.028em;
+  }
+  .cfg__hero-frame {
+    aspect-ratio: 1 / 1;
+  }
+  .cfg__opt {
+    padding-inline: 0.6rem 0.75rem;
+    gap: 0.75rem;
+  }
+  .cfg__opt-mark {
+    width: 34px;
+    height: 34px;
+  }
+  .cfg__opt-n {
+    font-size: 0.78125rem;
+  }
+}
+
+/* --- sin color-mix: reserva sólida --------------------------------------- */
+@supports not (color: color-mix(in srgb, red, blue)) {
+  .cfg__buy {
+    background: #141416;
+  }
+}
+
+/* --- movimiento reducido -------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .cfg__hero-frame img,
+  .cfg__buy-v {
+    transition: none;
+  }
+  .cfg__hero-frame.is-swapping img {
+    opacity: 1;
+  }
+  .cfg__buy-v.is-bump {
+    transform: none;
+  }
+}
+
+/* --- tableta (640–999 px): sin dos columnas de página, el escenario se
+   reparte solo: hoja a la izquierda, datos y monturas a la derecha, para que
+   la foto no se coma la pantalla entera. Va al final a propósito: gana al
+   bloque móvil de arriba. ------------------------------------------------- */
+@media (min-width: 640px) and (max-width: 999px) {
+  .cfg__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    grid-template-areas:
+      "hero facts"
+      "hero mounts";
+    /* la fila 2 se queda con el sobrante: las monturas suben a pegarse a los
+       datos en vez de flotar a media altura */
+    grid-template-rows: auto 1fr;
+    column-gap: clamp(1.25rem, 3vw, 2.25rem);
+    align-items: start;
+  }
+  .cfg__hero { grid-area: hero; }
+  .cfg__hero-frame { aspect-ratio: 4 / 5; }
+  .cfg__facts {
+    grid-area: facts;
+    margin-top: 0;
+  }
+  .cfg__mounts { grid-area: mounts; }
+}
+
+/* --- móvil (≤639 px): la pieza se repiensa, no se apila -------------------
+   Antes el bloque era el escritorio apilado: titular, párrafo y una foto a
+   pantalla completa, así que la primera decisión no aparecía hasta muy abajo.
+   Ahora manda la decisión: el selector de modelo —seis opciones con su cifra—
+   abre el bloque y cabe en la primera pantalla; justo debajo, la ficha compacta
+   (foto vertical + identidad) confirma lo elegido sin salir de pantalla, y tras
+   ella los datos de la hoja. Las tres monturas cierran el bloque como
+   recapitulación justo antes del botón. Escenario y panel se disuelven
+   (display: contents) para poder reordenar sin tocar el marcado.
+   ------------------------------------------------------------------------ */
+@media (max-width: 639.98px) {
+  #configurador {
+    padding-top: 3rem;
+  }
+  .cfg__head {
+    margin-bottom: 1.75rem;
+  }
+  .cfg__lede {
+    font-size: 1rem;
+    max-width: 40ch;
+  }
+
+  .cfg__grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-bottom: calc(var(--cfg-bar-h) + 0.75rem);
+  }
+  .cfg__stage,
+  .cfg__panel {
+    display: contents;
+  }
+
+  /* ficha del encargo: la hoja a la izquierda, quién es a la derecha */
+  .cfg__hero {
+    order: 2;
+    display: grid;
+    grid-template-columns: 42% minmax(0, 1fr);
+    column-gap: 1rem;
+    align-items: center;
+  }
+  .cfg__hero-frame {
+    aspect-ratio: 4 / 5;
+  }
+  .cfg__hero-cap {
+    display: grid;
+    align-content: center;
+    gap: 0.3rem;
+    margin-top: 0;
+  }
+  .cfg__hero-kanji {
+    font-size: 1.25rem;
+  }
+  .cfg__hero-name {
+    font-size: 1.5rem;
+  }
+  .cfg__hero-claim {
+    font-size: 0.8125rem;
+  }
+
+  .cfg__group {
+    order: 4;
+  }
+  .cfg__group.cfg__group--models {
+    order: 1;
+  }
+  .cfg__facts {
+    order: 3;
+    margin: 0;
+  }
+  .cfg__mounts {
+    order: 5;
+    margin: 0;
+  }
+}
+
+/* --- escritorio (≥1000 px): una sola rejilla, sin columna muerta ----------
+   Antes el escenario iba pegajoso en una columna y el panel de decisiones en
+   la otra: como el panel medía tres veces más, la mitad izquierda de la
+   sección quedaba en negro durante ~1600 px. Ya no hay dos columnas de página
+   sino una rejilla única en la que escenario y panel se disuelven
+   (display: contents) y cada bloque ocupa su celda:
+
+     hoja  │ Modelo          ← la foto solo depende del modelo: van juntos
+     hoja  │ datos de la hoja
+     hoja  │ monturas elegidas
+     ──────┴──────────────
+     Longitud  │ Acabado
+     Tsuba     │ Saya
+     Grabado (a lo ancho)
+
+   El precio vivo sigue en la barra pegajosa de abajo, que es lo que hay que
+   tener siempre delante mientras se decide. ------------------------------- */
+@media (min-width: 1000px) {
+  .cfg__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "hero  models"
+      "hero  facts"
+      "hero  mounts"
+      "blade edge"
+      "tsuba saya"
+      "eng   eng";
+    grid-template-rows: auto auto 1fr auto auto auto;
+    align-items: start;
+    column-gap: clamp(2rem, 3.6vw, 3.25rem);
+    row-gap: clamp(2rem, 3.2vw, 2.75rem);
+    /* la barra de precio flota encima del final del bloque */
+    padding-bottom: calc(var(--cfg-bar-h) + 1rem);
+  }
+  .cfg__stage,
+  .cfg__panel {
+    display: contents;
+  }
+
+  .cfg__hero { grid-area: hero; }
+  .cfg__facts {
+    grid-area: facts;
+    margin: 0;
+  }
+  /* las monturas se apoyan en el borde inferior de la foto: el sobrante de la
+     columna se reparte como aire entre datos y monturas, no como hueco */
+  .cfg__mounts {
+    grid-area: mounts;
+    align-self: end;
+    margin: 0;
+  }
+  .cfg__group--models { grid-area: models; }
+  .cfg__panel > .cfg__group:nth-child(2) { grid-area: blade; }
+  .cfg__panel > .cfg__group:nth-child(3) { grid-area: edge; }
+  .cfg__panel > .cfg__group:nth-child(4) { grid-area: tsuba; }
+  .cfg__panel > .cfg__group:nth-child(5) { grid-area: saya; }
+  .cfg__group--engraving { grid-area: eng; }
+
+  /* el grabado ocupa el ancho entero: enunciado a la izquierda, campo a la
+     derecha, para que la caja no se estire doce caracteres a 1100 px */
+  .cfg__group--engraving {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(2rem, 3.6vw, 3.25rem);
+    align-items: center;
+  }
+  .cfg__group--engraving .cfg__group-head {
+    margin-bottom: 0;
+  }
+}
