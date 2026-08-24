@@ -1,6 +1,6 @@
 {
-  "updated": "23:40",
-  "phase": "Fase 5 · 12 de 13 ganadas, el nav en su cuarta ronda",
+  "updated": "00:20",
+  "phase": "Pleno · 13 de 13 elegidas a ciegas",
   "headline": "Construyendo KUROGANE contra apple.com/airpods-pro",
   "metrics": {
     "apple": {
@@ -23,7 +23,7 @@
   "pieces": [
     {
       "name": "Barra de navegación y carrito",
-      "status": "building",
+      "status": "won",
       "rounds": [
         {
           "winner": "apple",
@@ -36,9 +36,13 @@
         {
           "winner": "apple",
           "gap": "Dibujar 黒鉄｜KUROGANE como una marca bloqueada de verdad, no como tres cadenas de texto vivo pegadas. Ahora mismo el kanji, la pleca y el latin tienen tres centros opticos distintos (15,5 / 16,5 / 16,0), los huecos alrededor de la pleca son 4 px y 5 px, la pleca cae 1 px por debajo de la linea base de sus dos vecinos, cada mitad va en una tinta distinta y la proporcion kanji-latin cambia sola entre anchos (1,43 en escritorio, 1,57 en movil). Una sola pieza vectorial, una tinta y una proporcion fija."
+        },
+        {
+          "winner": "ours",
+          "gap": "El lockup no llega a ser un solo objeto: los kanji tienen trazo de 3 px y caja de 32 px, la barra separadora 3 px y 32 px, y KUROGANE astas de 5-6 px con altura de mayuscula de 26 px; el divisor sobresale 3 px por encima del ojo mayusculo y 3 px por debajo de la linea base, y la mitad japonesa se ve un peso entero mas ligera que la latina. Bajar el CJK a ~0,85 del cuerpo latino, igualar su grosor al de la negrita y recortar la barra a la altura exacta de mayuscula para que las tres piezas compartan una sola caja optica."
         }
       ],
-      "note": "Gana A por metrica pura -una sola tinta, un solo tamaño, una sola banda y pasos de 24-25 px- mientras B trae la unica jerarquia de marca de las dos y la malgasta en un lockup de tres centros y dos tintas y una bolsa que se sale de la banda por arriba y por abajo."
+      "note": "B mide al micron una barra que no jerarquiza nada y deja su marca borrosa y del mismo tamano que la hamburguesa; A escalona el ritmo y hace que la marca mande, aunque su propio logotipo este cosido con dos pesos y tres alturas."
     },
     {
       "name": "Hero y elemento LCP",
@@ -322,6 +326,10 @@
     {
       "t": "23:40",
       "text": "Cuarta ronda del nav: el lockup pasa a ser una sola pieza vectorial medida, con una tinta y una proporción fija. Es la última pieza que le falta al pleno."
+    },
+    {
+      "t": "00:20",
+      "text": "Pleno. La barra de navegación gana en su cuarta ronda y con ella las 13 piezas han sido elegidas a ciegas frente a la zona equivalente de Apple. El bucle se cierra donde se dijo: cuando el crítico elige la nuestra sin saber cuál es."
     }
   ]
 }
