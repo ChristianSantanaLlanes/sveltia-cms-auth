@@ -1,24 +1,31 @@
 /* nav — barra global pegajosa + barra secundaria de producto + menú móvil
-   Métrica medida, no declarada. Con la barra recortada y umbral de tinta a 205:
-   · un solo paso entre tintas — 32,5 px a 1440 (enlaces, filete, lupa y bolsa
-     dentro de ±1 px), 22 px a 900; el único hueco distinto es el del lockup (7,5 px),
-     que es lo que lo hace un objeto y no tres.
-   · dos tintas: marca en --ink (núcleo 29), navegación y utilidades en --ink-2
-     (núcleo 75); los filetes son --ink-3.
-   · tres iconos con la misma caja de tinta: 15 px de ancho, trazo 1,4 px.
-   · banda vertical común: filas 16,5–32,5 de 48. Nada sobresale, ni el contador.
-   Los botones de icono llevan aire interno fijo (44 px de caja, 15 px de tinta),
-   así que se compensa con --nav-ink-* y con el margen de .nav__actions. */
+   Métrica medida en píxeles reales, no declarada (barra de 48 px):
+   · UNA banda de tinta: filas 18–30, centro óptico 24,00 exacto para el lockup y
+     para los tres iconos (12 x 12 px cada uno). La caja de mayúsculas de los
+     rótulos cae dentro, centrada en 24,0–24,25. Nada sobresale por arriba ni por
+     abajo, tampoco el contador del carrito.
+   · DOS tintas y nada más: la marca entera en --ink (núcleo 29); rótulos e iconos
+     en --ink-2 (núcleo 75). Ninguna mitad de la marca cambia de tinta.
+   · UN paso: 32,5–33,25 px entre rótulos (dispersión 0,75) y 32,0 px entre iconos.
+     TRES grupos separados por una calle de 1,5 pasos (48,25 y 48,5 px):
+     [marca] calle [seis rótulos] calle [utilidades]. Ni una pleca suelta: la única
+     pleca del sitio vive dentro del lockup y ahí significa 'marca'.
+   · El lockup es UNA pieza vectorial (SVG inline, 122 x 12 px de tinta, idéntica a
+     cualquier ancho): kanji dibujados sobre la rejilla de 1 px, pleca en el mismo
+     trazado, una sola tinta, huecos de 6,00 px simétricos a ambos lados de la pleca.
+   Los botones de icono miden 44 px con 12 px de tinta: los 16 px muertos de cada
+   lado se descuentan con márgenes para que el hueco visible sea el declarado y para
+   que el inset de tinta salga idéntico a izquierda y derecha (334/334 y 20/20). */
 
 :root { --nav-sub-h: 52px; }
 
 #top-nav {
   --nav-bg: rgba(246, 245, 242, 0.66);
   --nav-bg-scrolled: rgba(246, 245, 242, 0.88);
-  /* hueco entre tintas y aire interno de los botones de icono */
-  --nav-step: clamp(0.875rem, 1.9vw, 1.75rem);
-  --nav-ink-start: 10px;   /* retranqueo para que el hueco visible ante el primer icono valga --nav-step */
-  --nav-ink-end: 14.5px;   /* aire muerto tras la última tinta (44px de botón − 15px de tinta) / 2 */
+  /* paso entre iguales, calle entre grupos y aire muerto de los botones de icono */
+  --nav-step: clamp(1rem, 1.9vw, 1.75rem);
+  --nav-street: calc(var(--nav-step) * 1.5);
+  --nav-dead: 16px;        /* (44 px de botón − 12 px de tinta) / 2 */
   position: sticky;
   top: 0;
   z-index: 90;
@@ -45,7 +52,8 @@
   }
 }
 
-/* Hairline sin borde: no altera la caja, no provoca layout shift */
+/* Suelo de la barra: filo de 1 px SIEMPRE presente (la barra se apoya en algo),
+   un punto más firme al desplazar. Sin borde: no altera la caja ni provoca salto. */
 .nav__bar::after {
   content: "";
   position: absolute;
@@ -53,7 +61,7 @@
   bottom: 0;
   height: 1px;
   background: var(--line);
-  opacity: 0;
+  opacity: 0.75;
   transition: opacity 300ms var(--ease-out);
   pointer-events: none;
 }
@@ -70,16 +78,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--nav-step);
+  gap: 0;
 }
 
-/* ---- logotipo ---- */
+/* ---- logotipo: una sola pieza, una sola tinta ---- */
 .nav__logo {
   display: inline-flex;
   align-items: center;
   flex: none;
-  gap: 0.4375rem;          /* un cuarto de --nav-step: el lockup respira dentro de la misma métrica */
   height: 44px;
+  /* calle a la derecha; los 4,5 px compensan el aire lateral del primer rótulo
+     (la tinta del SVG llega al borde y la de una letra no) */
+  margin-inline-end: calc(var(--nav-street) + 4.5px);
   text-decoration: none;
   color: var(--ink);
   transition: opacity 200ms var(--ease-out);
@@ -88,25 +98,17 @@
 /* el lockup entero es un solo objeto: se apaga junto, no por partes */
 .nav__logo:hover { opacity: 0.62; }
 
-.nav__kanji {
-  font-family: var(--font-serif);
-  font-size: 0.9375rem;
-  line-height: 1;
-  letter-spacing: 0;
-  color: inherit;
-}
+.nav__mark { display: block; }
 
-.nav__rule {
-  width: 1px;
-  height: 13px;
-  background: var(--ink-3);
-}
+/* los kanji son rectas sobre la rejilla: sin antialias no se empastan a 12 px */
+.nav__mark-grid { shape-rendering: crispEdges; }
 
-.nav__word {
-  font-size: 0.8125rem;
-  font-weight: 660;
-  letter-spacing: 0.155em;
-  line-height: 1;
+.nav__mark-word {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  fill: currentColor;
+  stroke: none;
 }
 
 /* ---- enlaces ---- */
@@ -154,34 +156,23 @@
 .nav__links a[aria-current="true"] { color: var(--ink); }
 .nav__links a[aria-current="true"]::after { transform: scaleX(1); }
 
-/* ---- filete: separa contenido de utilidades sin romper el ritmo ---- */
-.nav__split {
-  flex: none;
-  width: 1px;
-  height: 16px;
-  margin-left: 2px;
-  background: var(--ink-3);
-}
-
 /* ---- acciones ---- */
 .nav__actions {
   flex: none;
   display: flex;
   align-items: center;
   gap: 0;
-  /* la tinta del icono empieza --nav-ink-start dentro del botón: se descuenta para
-     que el hueco visible siga siendo --nav-step, y se recorta el sobrante final
-     para que el inset derecho iguale al izquierdo */
-  margin-left: calc(var(--nav-ink-start) * -1);
-  margin-right: calc(var(--nav-ink-end) * -1);
+  /* calle a la izquierda y recorte del aire muerto para que el inset derecho
+     de la tinta iguale al izquierdo sin tocar el tamaño del objetivo táctil */
+  margin-left: calc(var(--nav-street) - var(--nav-dead) + 5px);
+  margin-right: calc(var(--nav-dead) * -1);
 }
 
-/* Los botones miden 44px fijos y su tinta 15px, así que entre dos iconos hay 29px
-   de hueco fijo. El paso de la barra es fluido: se corrige con margen para que el
-   hueco de tinta entre lupa y bolsa valga siempre lo mismo que entre dos enlaces.
-   Solo con ratón: en táctil (<900px) los objetivos nunca se solapan. */
+/* Entre dos botones contiguos ya hay 32 px de hueco de tinta (16 + 16). El paso de
+   la barra es fluido: se corrige con margen para que el hueco entre lupa y bolsa
+   valga lo mismo que entre dos rótulos. Solo con ratón: en táctil no se solapan. */
 @media (min-width: 900px) {
-  .nav__actions > * + * { margin-left: calc(var(--nav-step) - 24px); }
+  .nav__actions > * + * { margin-left: max(-6px, calc(var(--nav-step) - 27.5px)); }
 }
 
 .nav__icon {
@@ -211,9 +202,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 5px;
+  padding-top: 3.6px;   /* centra la cifra en el cuerpo de la bolsa, no en el botón */
   color: var(--shu);
-  font-size: 0.5625rem;
+  font-size: 0.4375rem;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -225,7 +216,7 @@
 .nav__count.is-empty { display: none; }
 
 /* dos cifras: mismo hueco, cuerpo justo para que la bolsa no se llene de tinta */
-.nav__count.is-wide { font-size: 0.5rem; letter-spacing: -0.045em; }
+.nav__count.is-wide { font-size: 0.375rem; letter-spacing: -0.05em; }
 
 .nav__count.is-bump { animation: nav-bump 420ms var(--ease-out); }
 
@@ -241,12 +232,14 @@
 .nav__burger svg line {
   transform-box: fill-box;
   transform-origin: center;
-  transition: transform 320ms var(--ease-out);
+  transition: transform 320ms var(--ease-out), opacity 200ms var(--ease-out);
 }
 
-/* las dos líneas se juntan en el centro exacto: 7 unidades de viewBox a escala 22/24 */
-.nav.is-open .nav__burger-a { transform: translateY(3.2px) rotate(45deg); }
-.nav.is-open .nav__burger-b { transform: translateY(-3.2px) rotate(-45deg); }
+/* tres trazos de 12 px: misma caja de tinta y misma masa que lupa y bolsa.
+   Al abrir, los extremos se juntan en la fila 12 (centro exacto) y el de en medio se apaga. */
+.nav.is-open .nav__burger-a { transform: translateY(5.3px) rotate(45deg); }
+.nav.is-open .nav__burger-b { transform: translateY(-5.3px) rotate(-45deg); }
+.nav.is-open .nav__burger-c { opacity: 0; transform: scaleX(0.4); }
 
 /* ---- barra secundaria de producto ---- */
 .nav__sub {
@@ -506,14 +499,13 @@
   :root { --nav-sub-h: 58px; }
 
   .nav__inner { justify-content: space-between; }
-  .nav__links, .nav__split { display: none; }
+  .nav__links { display: none; }
   .nav__burger { display: inline-flex; }
-  .nav__actions { margin-left: 0; }
 
-  /* el lockup se queda entero: una tienda con menú en español necesita su nombre */
-  .nav__kanji { font-size: 1rem; }
-  .nav__rule { height: 14px; }
-  .nav__word { font-size: 0.75rem; letter-spacing: 0.14em; }
+  /* el lockup se queda entero y al mismo tamaño: una tienda con menú en español
+     necesita su nombre, y la marca no cambia de proporción al cambiar de ancho */
+  .nav__logo { margin-inline-end: 0; }
+  .nav__actions { margin-left: 0; }
 
   .nav__sub-note { display: none; }
   .nav__sub-cta { min-height: 40px; }

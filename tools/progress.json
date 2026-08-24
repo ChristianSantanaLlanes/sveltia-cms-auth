@@ -1,6 +1,6 @@
 {
-  "updated": "23:06",
-  "phase": "Fase 4 · ronda 2 juzgada",
+  "updated": "23:40",
+  "phase": "Fase 5 · 12 de 13 ganadas, el nav en su cuarta ronda",
   "headline": "Construyendo KUROGANE contra apple.com/airpods-pro",
   "metrics": {
     "apple": {
@@ -23,14 +23,22 @@
   "pieces": [
     {
       "name": "Barra de navegación y carrito",
-      "status": "lost",
+      "status": "building",
       "rounds": [
         {
           "winner": "apple",
           "gap": "El grupo de enlaces no esta anclado a ninguna retitula. Decide una sola regla y aplicala: o lo centras en el eje real de la barra, o lo alineas a la derecha contra la bolsa con el mismo gutter que hay entre enlaces (23-24 px), y iguala los insets izquierdo y derecho de pagina (hoy 104 contra 81 en escritorio). Sin eso, los dos vacios de 236 y 245 px leen como error de maquetacion, no como aire."
+        },
+        {
+          "winner": "apple",
+          "gap": "Meter el bloque de utilidades en la misma retícula y la misma tinta que la navegacion: quitar el badge (que el contador solo aparezca cuando hay algo dentro), bajar la lupa del casi negro al mismo gris de los enlaces, igualar el tamano optico de lupa y bolsa, y darles la misma separacion de 21-23 px que hay entre enlaces en lugar de los ~7 px actuales, con la pastilla reducida o eliminada para que ningun elemento sobresalga de la banda vertical comun."
+        },
+        {
+          "winner": "apple",
+          "gap": "Dibujar 黒鉄｜KUROGANE como una marca bloqueada de verdad, no como tres cadenas de texto vivo pegadas. Ahora mismo el kanji, la pleca y el latin tienen tres centros opticos distintos (15,5 / 16,5 / 16,0), los huecos alrededor de la pleca son 4 px y 5 px, la pleca cae 1 px por debajo de la linea base de sus dos vecinos, cada mitad va en una tinta distinta y la proporcion kanji-latin cambia sola entre anchos (1,43 en escritorio, 1,57 en movil). Una sola pieza vectorial, una tinta y una proporcion fija."
         }
       ],
-      "note": "Gana A por disciplina metrica pura: B tiene menos ruido y etiquetas mas propias, pero coloca su navegacion flotando entre dos vacios de 240 px y con los margenes descuadrados en ambos anchos."
+      "note": "Gana A por metrica pura -una sola tinta, un solo tamaño, una sola banda y pasos de 24-25 px- mientras B trae la unica jerarquia de marca de las dos y la malgasta en un lockup de tres centros y dos tintas y una bolsa que se sale de la banda por arriba y por abajo."
     },
     {
       "name": "Hero y elemento LCP",
@@ -306,6 +314,14 @@
     {
       "t": "23:06",
       "text": "Accesibilidad cerrada: landmark propio, enlace de salto enfocable, contraste AA en el texto terciario y nombres accesibles corregidos. Auditoría en 0 errores y 0 avisos."
+    },
+    {
+      "t": "23:35",
+      "text": "El nav pierde también la ronda 3, pero la brecha ya es milimétrica: el crítico reconoce que es la única de las dos con jerarquía de marca y le reprocha el dibujo del lockup, con tres centros ópticos y dos tintas."
+    },
+    {
+      "t": "23:40",
+      "text": "Cuarta ronda del nav: el lockup pasa a ser una sola pieza vectorial medida, con una tinta y una proporción fija. Es la última pieza que le falta al pleno."
     }
   ]
 }
