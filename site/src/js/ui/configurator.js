@@ -104,7 +104,9 @@ export function initConfigurator() {
     const jpg = `/assets/img/${product.img}-1200.jpg`;
     if (img.getAttribute('src') === jpg) return;
 
-    if (frame) {
+    // Durante la transición de vista el cambio de modelo ocurre fuera de
+    // pantalla y la foto la anima el navegador: aquí no hay nada que fundir.
+    if (frame && !document.documentElement.hasAttribute('data-morphing')) {
       frame.classList.add('is-swapping');
       clearTimeout(swapTimer);
       swapTimer = setTimeout(() => frame.classList.remove('is-swapping'), 900);

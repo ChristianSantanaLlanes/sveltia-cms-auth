@@ -11,6 +11,7 @@ site/src/manifest.json     # orden de secciones y CSS
 site/src/sections/<id>.html  # markup de cada pieza  <-- una pieza = un archivo
 site/src/css/<id>.css        # estilos de esa pieza
 site/src/js/ui/<id>.js       # comportamiento de esa pieza (export function init<Id>())
+site/src/js/transition.js    # abrir un producto: la tarjeta se convierte en la ficha
 site/src/js/catalog.js       # datos de producto y precios (NO editar sin motivo)
 site/src/js/store.js         # carrito, pedidos, persistencia (NO editar sin motivo)
 site/src/js/validate.js      # reglas de validación de checkout
@@ -52,7 +53,9 @@ Compilar: `node tools/build.mjs` → `site/dist/`. Servir: `node tools/serve.mjs
 Ganchos de comportamiento (data-attributes, no clases):
 `[data-cart-open]`, `[data-cart-close]`, `[data-cart-count]`, `[data-checkout-open]`,
 `[data-add-to-cart]` (con `data-product`), `[data-qty-inc]` / `[data-qty-dec]` / `[data-remove]` (con `data-key`),
-`[data-option]` (con `data-group` y `data-value`), `[data-engraving]`, `[data-price]`, `[data-config-total]`.
+`[data-option]` (con `data-group` y `data-value`), `[data-engraving]`, `[data-price]`, `[data-config-total]`,
+`[data-morph]` (con `shot` | `kanji` | `name` | `claim` | `cta`: los elementos que la tarjeta y la ficha
+comparten, marcados en los dos extremos, para la transición de vista).
 
 ## API disponible (importa, no reimplementes)
 

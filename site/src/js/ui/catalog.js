@@ -2,6 +2,7 @@
  *  Las seis tarjetas están escritas en el HTML: aquí no se pinta ninguna,
  *  solo se ocultan, se cuentan y se conectan con el configurador. */
 import { PRODUCTS } from '../catalog.js';
+import { canMorph, morphToDetail } from '../transition.js';
 
 /** Familias de hamon: agrupan los cinco trazos del catálogo en tres lecturas. */
 const FAMILIES = [
@@ -80,28 +81,56 @@ export function initCatalog() {
     return bar ? Math.round(bar.getBoundingClientRect().height) : 0;
   };
 
-  const configure = (productId) => {
+  const cardOf = (productId) => root.querySelector(`[data-product-card][data-product="${productId}"]`);
+
+  const configure = (productId, card = cardOf(productId)) => {
     if (!PRODUCTS.some((p) => p.id === productId)) return;
 
-    // El configurador escucha esto, cambia de modelo y ya emite él su kg:model.
-    document.dispatchEvent(new CustomEvent('kg:configure', { detail: { productId }, bubbles: true }));
-
     const target = document.getElementById('configurador');
-    if (!target) return;
 
-    const top = target.getBoundingClientRect().top + window.scrollY - navHeight() - 8;
-    window.scrollTo({ top: Math.max(top, 0), behavior: reduced() ? 'auto' : 'smooth' });
+    // El configurador escucha esto, cambia de modelo y ya emite él su kg:model.
+    const select = () => document.dispatchEvent(
+      new CustomEvent('kg:configure', { detail: { productId }, bubbles: true }),
+    );
 
-    // El teclado también tiene que aterrizar ahí, pero sin robarle el scroll suave.
-    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
-    target.focus({ preventScroll: true });
+    const land = (behavior) => {
+      if (!target) return;
+      const gap = navHeight() + 8;
+      const shot = target.querySelector('[data-morph="shot"]');
+      let top = target.getBoundingClientRect().top + window.scrollY - gap;
+      // La foto de la ficha es el final del viaje: tiene que verse al llegar.
+      // Donde el bloque empieza por el selector de modelo (móvil) esa foto cae
+      // bajo el pliegue, así que allí se aterriza sobre ella; el modelo ya
+      // viene elegido del catálogo y el selector queda justo encima.
+      if (shot) {
+        const box = shot.getBoundingClientRect();
+        const y = box.top + window.scrollY - top;
+        if (Math.min(window.innerHeight, y + box.height) - y < box.height / 3) {
+          top = box.top + window.scrollY - gap;
+        }
+      }
+      window.scrollTo({ top: Math.max(top, 0), behavior });
+      // El teclado también tiene que aterrizar ahí, pero sin robarle el scroll suave.
+      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+      target.focus({ preventScroll: true });
+    };
+
+    // Con View Transitions la tarjeta no lleva a la ficha: se convierte en ella,
+    // y el salto de scroll ocurre dentro de la animación en vez de antes.
+    if (target && canMorph(card)) {
+      morphToDetail({ card, detail: target, select, land: () => land('auto') });
+      return;
+    }
+
+    select();
+    land(reduced() ? 'auto' : 'smooth');
   };
 
   root.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-configure]');
     if (!btn || !root.contains(btn)) return;
     e.preventDefault();
-    configure(btn.dataset.product);
+    configure(btn.dataset.product, btn.closest('[data-product-card]'));
   });
 
   /* Las seis fotos son `loading="lazy"` y se quedan así: el navegador las pide

@@ -11,6 +11,7 @@ site/src/manifest.json       orden de secciones, CSS crítico vs diferido
 site/src/sections/*.html     una pieza por archivo
 site/src/css/*.css           el CSS de esa pieza
 site/src/js/ui/*.js          el comportamiento de esa pieza
+site/src/js/transition.js    abrir un producto: la tarjeta se convierte en la ficha
 site/src/js/catalog.js       catálogo, opciones y reglas de precio
 site/src/js/store.js         carrito, pedidos y persistencia (localStorage)
 site/src/js/validate.js      validación de checkout (incluye Luhn)
@@ -25,6 +26,18 @@ node tools/serve.mjs site/dist 8080      # servidor con brotli y cache inmutable
 El build inlinea el CSS crítico (nav, hero, franja de datos), deja el resto en `/assets/rest.css`
 sin bloquear el pintado, empaqueta el JS con esbuild e inyecta los créditos de foto en el pie
 a partir de `inventory.json`.
+
+## Abrir un producto
+
+Pulsar «Configurar» no salta al configurador: lo convierte. La tarjeta y la ficha marcan con
+`data-morph` las cinco cosas que tienen en común —foto, kanji, nombre, frase y botón— y
+`js/transition.js` les pone el mismo `view-transition-name` en los dos extremos, así que el
+navegador anima uno hasta el otro con la View Transitions API; `css/transition.css` decide cómo
+viaja cada uno. El modelo se cambia antes de arrancar (el configurador está fuera de pantalla) para
+que la foto de destino ya esté decodificada, con un tope de 300 ms para no dejar el clic colgado.
+
+Sin View Transitions, o con `prefers-reduced-motion: reduce`, el comportamiento es el de siempre:
+mismo cambio de modelo y mismo scroll, sin animación.
 
 ## Cómo se verifica
 
