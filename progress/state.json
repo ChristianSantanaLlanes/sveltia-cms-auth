@@ -1,18 +1,18 @@
 {
-  "updated": "2026-08-25 19:28 UTC",
-  "phase": "Render finish + hero/grid/checkout/mobile",
-  "headline": "The funnel works end to end; the finish is what is left",
-  "note": "An end-to-end test now walks home \u2192 inventory \u2192 configurator \u2192 checkout \u2192 confirmation and passes 17 of 17 checks: filters narrow the results, every option moves the price, an empty submit is refused with field-level messages, and a completed form places a real order. The remaining work is finish, not function.",
+  "updated": "2026-08-25 20:48 UTC",
+  "phase": "Nose surgery + mobile composition",
+  "headline": "Down to the silhouette and the phone",
+  "note": "Wheels, paint tiles and the checkout commit button are fixed and the end-to-end test still passes 17/17. What is left is the car's front overhang \u2014 measured at 1.76 wheel diameters where a premium EV reads at 1.0\u20131.25 \u2014 and a configurator that gives a phone only a third of its viewport to configure in.",
   "constraint": "tesla.com cannot be reached from this build sandbox: Tesla's edge (Akamai) blocks the datacenter IP for direct requests and for every public screenshot service tried, web.archive.org is blocked by this environment's egress policy, and Chromium here has no outbound HTTPS at all. Live side-by-side capture of the real funnel is therefore impossible from inside this session. Critics score against docs/reference-spec.md \u2014 the Tesla funnel written down as measurable properties \u2014 plus their own knowledge of that funnel, and every round must still name the single largest remaining gap.",
   "pieces": [
     {
       "id": "hero",
       "name": "Hero",
       "detail": "Full-viewport model section, headline, CTAs",
-      "status": "reviewing",
-      "rounds": 0,
-      "verdict": "",
-      "gap": "",
+      "status": "revising",
+      "rounds": 1,
+      "verdict": "BENCHMARK (high) \u2014 6/5/6/4",
+      "gap": "The wheels turn a $50k sedan into clip art, and they sit at the exact centre of the 880px-wide car that occupies 61% of the section. Three physical faults, all in the same component: (1) The black sidewall band runs from r=0.688 to r=1.0 \u2014 31% of the wheel rad",
       "shots": [
         "home-desktop"
       ]
@@ -46,10 +46,10 @@
       "id": "grid",
       "name": "Listing grid",
       "detail": "Inventory cards and layout",
-      "status": "reviewing",
-      "rounds": 0,
-      "verdict": "",
-      "gap": "",
+      "status": "revising",
+      "rounds": 1,
+      "verdict": "BENCHMARK (high) \u2014 5/4/5/2",
+      "gap": "The PAINT swatch row is broken text-on-text. At y~700-730 in the filter rail, the six paint names (Stellar White / Midnight Silver / Deep Blue / Obsidian Black / Ember Red / Glacier Quartz) render as unstyled ~14px inline text inside 40px cells, overflow in bo",
       "shots": [
         "inventory-desktop"
       ]
@@ -71,9 +71,9 @@
       "name": "Car render",
       "detail": "SVG vehicle, paint and wheel swaps",
       "status": "revising",
-      "rounds": 2,
-      "verdict": "BENCHMARK (jury 3\u20130 for B, then one fix round)",
-      "gap": "Rocker artefact between the wheels, flat front fascia, floating rear lamp.",
+      "rounds": 3,
+      "verdict": "BENCHMARK \u2014 nose overhang 1.76 wheel diameters vs ~1.15 target",
+      "gap": "Front overhang is 1.76 wheel diameters ahead of the front axle; the excess is all in a drooping, featureless nose plane.",
       "shots": [
         "design-desktop",
         "design-paint"
@@ -120,10 +120,10 @@
       "id": "checkout",
       "name": "Checkout form",
       "detail": "Fields, validation, order placement",
-      "status": "reviewing",
-      "rounds": 0,
-      "verdict": "",
-      "gap": "",
+      "status": "revising",
+      "rounds": 1,
+      "verdict": "BENCHMARK (medium) \u2014 7/7/6/6",
+      "gap": "The Place Order button breaks the geometry system the entire form just spent 3,000px establishing: it is a full pill (720\u00d756 with radius \u224828px, i.e. height/2) in saturated consumer-blue #3B5BEF, while every input, select, summary card and rule on the page is 4",
       "shots": [
         "checkout-desktop-full",
         "checkout-errors"
@@ -133,10 +133,10 @@
       "id": "mobile",
       "name": "Mobile",
       "detail": "390px across the whole funnel",
-      "status": "building",
-      "rounds": 0,
-      "verdict": "",
-      "gap": "",
+      "status": "revising",
+      "rounds": 1,
+      "verdict": "BENCHMARK (high) \u2014 5/7/7/6",
+      "gap": "On design-mobile the phone is 73% dead chrome: 55px header + 270px pinned render (34dvh, not the spec'd 45dvh) + a 145px \"DESIGN YOUR OWN / Vela 3 / Est. delivery\" intro block + a 144px fixed price bar leaves only ~230px of scrollable option area \u2014 one trim ro",
       "shots": [
         "home-mobile",
         "inventory-mobile",
@@ -213,6 +213,18 @@
     {
       "t": "2026-08-25 19:35",
       "msg": "Render finishing resumed; hero, grid, checkout and the first mobile pass queued behind it."
+    },
+    {
+      "t": "2026-08-25 20:40",
+      "msg": "Wheels rebuilt: knobby tread ring removed, rim face lifted to 86% of the tyre, arch shade added"
+    },
+    {
+      "t": "2026-08-25 20:45",
+      "msg": "Paint/wheel tiles go three-up with readable names \u2014 fixes a regression I introduced repairing the rail"
+    },
+    {
+      "t": "2026-08-25 20:50",
+      "msg": "Nose surgery and the mobile composition pass dispatched"
     }
   ]
 }
