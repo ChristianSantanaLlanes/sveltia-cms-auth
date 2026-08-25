@@ -1,7 +1,0 @@
-node_modules
-pnpm-lock.yaml
-
-# El sitio KUROGANE es un subproyecto con sus propias reglas y sus propias puertas
-# (tools/build.mjs, tools/e2e.mjs, tools/audit.mjs). No lo formatea este Prettier.
-site
-tools
