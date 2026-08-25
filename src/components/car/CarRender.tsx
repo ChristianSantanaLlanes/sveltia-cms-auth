@@ -1,6 +1,6 @@
 import { useId, type ReactElement } from 'react';
 import type { BodyStyle, PaintOption, WheelOption } from '@/types';
-import { Wheel, RimDefs } from './rims';
+import { Wheel, RimDefs, rimRatio } from './rims';
 import './CarRender.css';
 
 export interface CarRenderProps {
@@ -458,10 +458,13 @@ interface Geo {
   lampSide: string;
   windscreen: string;
   wsGlare: string;
+  wsGlareAxis: [Pt, Pt];
   wipers: string[];
   dlo: string;
   dloTopRail: string;
   pillarA: string;
+  pillarLead: string;
+  pillarAxis: [Pt, Pt];
   pillarB: string;
   glassAxis: [Pt, Pt];
   band: (t0: number, t1: number, x0?: number, x1?: number) => string;
@@ -483,7 +486,7 @@ interface Geo {
   under: string;
   underAxis: [Pt, Pt];
   wheels: Wheel3[];
-  contacts: { x: number; y: number; r: number }[];
+  contacts: { x: number; y: number; r: number; far: boolean }[];
   ground: { angle: number; cx: number; cy: number; span: number };
   fadePx: number;
 }
@@ -598,18 +601,36 @@ function build(spec: Spec, view: View, size: number): Geo {
   const lampSide = curve(spec.lampSide.map(([x, y]) => p(x, y, nearZ)), true);
 
   /* Glass. */
+  /* The header rail: the screen stops a hair short of the roof edge so no part
+     of it — nor of anything clipped to it — can land on painted metal. */
+  const wsTopY = spec.wsTop[1] - 0.016;
   const windscreen = poly([
     p(spec.wsBase[0], spec.wsBase[1], spec.wsZ[0]),
-    p(spec.wsTop[0], spec.wsTop[1], spec.wsZ[1]),
-    p(spec.wsTop[0], spec.wsTop[1], W - spec.wsZ[1]),
+    p(spec.wsTop[0], wsTopY, spec.wsZ[1]),
+    p(spec.wsTop[0], wsTopY, W - spec.wsZ[1]),
     p(spec.wsBase[0], spec.wsBase[1], W - spec.wsZ[0]),
   ]);
-  const wsGlare = poly([
-    p(spec.wsBase[0] + 0.1, spec.wsBase[1] + 0.02, spec.wsZ[0]),
-    p(spec.wsTop[0] - 0.02, spec.wsTop[1] - 0.01, spec.wsZ[1]),
-    p(spec.wsTop[0] - 0.02, spec.wsTop[1] - 0.01, W * 0.52),
-    p(spec.wsBase[0] + 0.1, spec.wsBase[1] + 0.02, W * 0.34),
-  ]);
+  /* The reflection is laid out in the screen's own parameters — u across the
+     car, t up the glass — so it can only ever land on glass, and its leading
+     edge bows with the cylindrical section instead of ruling a straight line. */
+  const wsPt = (u: number, t: number): Pt => {
+    const zLo = spec.wsZ[0] + (spec.wsZ[1] - spec.wsZ[0]) * t;
+    return p(
+      spec.wsBase[0] + (spec.wsTop[0] - spec.wsBase[0]) * t,
+      spec.wsBase[1] + (spec.wsTop[1] - spec.wsBase[1]) * t,
+      zLo + (W - 2 * zLo) * u
+    );
+  };
+  /* Trailing edge hugs the A-pillar; leading edge swells out across the middle
+     of the screen, which is the curve a cylinder puts into a straight horizon. */
+  const wsTrailU = (t: number) => 0.015 + 0.05 * t;
+  const wsLeadU = (t: number) => 0.29 + 0.24 * t + 0.13 * Math.sin(Math.PI * t);
+  const wsTs = samples(0.04, 0.95, 14);
+  const wsGlare = ribbon(
+    wsTs.map((t) => wsPt(wsTrailU(t), t)),
+    wsTs.map((t) => wsPt(wsLeadU(t), t))
+  );
+  const wsGlareAxis: [Pt, Pt] = [wsPt(wsTrailU(0.5), 0.5), wsPt(wsLeadU(0.5) + 0.04, 0.5)];
   const wipers = [0.34, 0.62].map((f) =>
     curve([
       p(spec.wsBase[0] + 0.02, spec.wsBase[1] + 0.005, W * f - 0.2),
@@ -620,12 +641,23 @@ function build(spec: Spec, view: View, size: number): Geo {
   const glassZ = q3 ? 0.06 : 0;
   const dlo = curve(spec.dlo.map(([x, y]) => p(x, y, glassZ)), true);
   const dloTopRail = curve(spec.dlo.slice(0, 9).map(([x, y]) => p(x, y, glassZ)));
-  const pillarA = poly([
+  /* The A-pillar. Its crown is tucked a hair under the roof rail so it ends on
+     paint rather than butting the roof, and it is shaded across its width — a
+     lit leading edge against the screen, shadow where it turns to the door. */
+  const pillarWs: [Pt, Pt] = [
     p(spec.wsBase[0], spec.wsBase[1], spec.wsZ[0]),
-    p(spec.wsTop[0], spec.wsTop[1], spec.wsZ[1]),
-    p(spec.dlo[3][0], spec.dlo[3][1], glassZ),
+    p(spec.wsTop[0], wsTopY, spec.wsZ[1]),
+  ];
+  const pillarDlo: [Pt, Pt] = [
+    p(spec.dlo[3][0], spec.dlo[3][1] - 0.014, glassZ),
     p(spec.dlo[0][0], spec.dlo[0][1], glassZ),
-  ]);
+  ];
+  const pillarA = poly([pillarWs[0], pillarWs[1], pillarDlo[0], pillarDlo[1]]);
+  const pillarLead = poly([pillarWs[0], pillarWs[1]], false);
+  const pillarAxis: [Pt, Pt] = [
+    [(pillarWs[0][0] + pillarWs[1][0]) / 2, (pillarWs[0][1] + pillarWs[1][1]) / 2],
+    [(pillarDlo[0][0] + pillarDlo[1][0]) / 2, (pillarDlo[0][1] + pillarDlo[1][1]) / 2],
+  ];
   const bIdx = spec.doors[1];
   const pillarB = poly([
     p(bIdx, yAt(spec.dlo.slice(0, 9), bIdx) - 0.004, glassZ),
@@ -754,17 +786,29 @@ function build(spec: Spec, view: View, size: number): Geo {
     const dn = p(axle, 0, z);
     return { cx: c[0], cy: c[1], ax: ex[0] - c[0], ay: ex[1] - c[1], by: dn[1] - c[1], far, shade };
   };
+  /* The far pair stand on the same floor as the near pair — their contact
+     patches are just further from the lens — but they are seen almost edge-on
+     past the body, so they are squashed to a sliver of their rolling width and
+     clipped to the silhouette. Nothing of them may reach past sheet metal. */
+  const farSquash = 0.4;
   const wheels: Wheel3[] = [];
+  const contacts: Geo['contacts'] = [];
   if (q3) {
-    wheels.push(mk(spec.axleF, W - 0.11, true, 0.9));
-    wheels.push(mk(spec.axleR, W - 0.11, true, 0.92));
+    for (const [axle, shade] of [
+      [spec.axleF, 0.9],
+      [spec.axleR, 0.92],
+    ] as const) {
+      const w = mk(axle, W - 0.11, true, shade);
+      contacts.push({ x: w.cx, y: w.cy + w.by, r: Math.abs(w.ax), far: true });
+      wheels.push({ ...w, ax: w.ax * farSquash, ay: w.ay * farSquash });
+    }
   }
   wheels.push(mk(spec.axleR, wheelZ, false, q3 ? 0.1 : 0.06));
   wheels.push(mk(spec.axleF, wheelZ, false, 0));
 
-  const contacts = wheels
-    .filter((w) => !w.far)
-    .map((w) => ({ x: w.cx, y: w.cy + w.by, r: Math.abs(w.ax) }));
+  for (const w of wheels) {
+    if (!w.far) contacts.push({ x: w.cx, y: w.cy + w.by, r: Math.abs(w.ax), far: false });
+  }
   const cF = p(spec.axleF, 0, wheelZ);
   const cR = p(spec.axleR, 0, wheelZ);
   const ground = {
@@ -795,10 +839,13 @@ function build(spec: Spec, view: View, size: number): Geo {
     lampSide,
     windscreen,
     wsGlare,
+    wsGlareAxis,
     wipers,
     dlo,
     dloTopRail,
     pillarA,
+    pillarLead,
+    pillarAxis,
     pillarB,
     glassAxis,
     band,
@@ -853,6 +900,8 @@ export default function CarRender({
   const [ca, cb] = g.faceAxis;
   const [va, vb] = g.faceVert;
   const [ga, gb] = g.glassAxis;
+  const [wa, wb] = g.wsGlareAxis;
+  const [pa, pb] = g.pillarAxis;
   const [ua, ub] = g.underAxis;
   const gr = g.ground;
   const flip = `translate(${gr.cx.toFixed(1)} ${gr.cy.toFixed(1)}) rotate(${gr.angle.toFixed(2)})`;
@@ -950,6 +999,34 @@ export default function CarRender({
           <stop offset="0.4" stopColor="#333c46" />
           <stop offset="1" stopColor="#151a20" />
         </linearGradient>
+        <linearGradient
+          id={`${uid}-pillar`}
+          gradientUnits="userSpaceOnUse"
+          x1={pa[0]}
+          y1={pa[1]}
+          x2={pb[0]}
+          y2={pb[1]}
+        >
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.22" />
+          <stop offset="0.22" stopColor="#ffffff" stopOpacity="0.07" />
+          <stop offset="0.62" stopColor="#05070a" stopOpacity="0.12" />
+          <stop offset="1" stopColor="#05070a" stopOpacity="0.3" />
+        </linearGradient>
+        {/* The screen reflection: no edge of it is a step — it comes up out of
+            the glass and falls back into it. */}
+        <linearGradient
+          id={`${uid}-wsRefl`}
+          gradientUnits="userSpaceOnUse"
+          x1={wa[0]}
+          y1={wa[1]}
+          x2={wb[0]}
+          y2={wb[1]}
+        >
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="0.22" stopColor="#eef3f8" stopOpacity="0.3" />
+          <stop offset="0.58" stopColor="#dde5ee" stopOpacity="0.24" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
 
         <linearGradient id={`${uid}-led`} gradientUnits="userSpaceOnUse" x1={ca[0]} y1={ca[1]} x2={cb[0]} y2={cb[1]}>
           <stop offset="0" stopColor="#b9cbe4" />
@@ -1019,6 +1096,23 @@ export default function CarRender({
         <clipPath id={`${uid}-clipFace`}>
           <path d={g.face} />
         </clipPath>
+        <linearGradient id={`${uid}-farTyre`} x1="0.2" y1="0" x2="0.8" y2="1">
+          <stop offset="0" stopColor="#1b1f25" />
+          <stop offset="0.6" stopColor="#0c0f13" />
+          <stop offset="1" stopColor="#05070a" />
+        </linearGradient>
+        <linearGradient id={`${uid}-farRim`} x1="0.2" y1="0" x2="0.8" y2="1">
+          <stop offset="0" stopColor="#454b53" />
+          <stop offset="0.55" stopColor="#262b31" />
+          <stop offset="1" stopColor="#101317" />
+        </linearGradient>
+
+        {/* The far pair may only ever show through the car's own silhouette. */}
+        <clipPath id={`${uid}-clipFar`}>
+          <path d={g.outline} />
+          {q3 && <path d={g.farBody} />}
+          {q3 && <path d={g.face} />}
+        </clipPath>
         <clipPath id={`${uid}-clipWs`}>
           <path d={g.windscreen} />
         </clipPath>
@@ -1057,32 +1151,61 @@ export default function CarRender({
             />
           </g>
           {g.contacts.map((c) => (
-            <g key={c.x} transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)}) rotate(${gr.angle.toFixed(2)})`}>
-              <ellipse cx="0" cy="1" rx={c.r * 1.15} ry={c.r * 0.26} fill={`url(#${uid}-patch)`} filter={`url(#${uid}-tight)`} />
-              <ellipse cx="0" cy="0.5" rx={c.r * 0.5} ry={c.r * 0.1} fill="#05070a" opacity="0.5" filter={`url(#${uid}-hair)`} />
+            <g
+              key={`${c.far ? 'f' : 'n'}${c.x.toFixed(1)}`}
+              transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)}) rotate(${gr.angle.toFixed(2)})`}
+              opacity={c.far ? 0.3 : 1}
+            >
+              <ellipse
+                cx="0"
+                cy="1"
+                rx={c.r * (c.far ? 1.0 : 1.15)}
+                ry={c.r * (c.far ? 0.28 : 0.26)}
+                fill={`url(#${uid}-patch)`}
+                filter={`url(#${uid}-${c.far ? 'soft' : 'tight'})`}
+              />
+              {!c.far && (
+                <ellipse
+                  cx="0"
+                  cy="0.5"
+                  rx={c.r * 0.5}
+                  ry={c.r * 0.1}
+                  fill="#05070a"
+                  opacity="0.5"
+                  filter={`url(#${uid}-hair)`}
+                />
+              )}
             </g>
           ))}
         </g>
       )}
 
       <g id={`${uid}-car`}>
-        {q3 &&
-          g.wheels
-            .filter((w) => w.far)
-            .map((w) => (
-              <Wheel
-                key={`f${w.cx.toFixed(1)}`}
-                uid={uid}
-                style={wheel.style}
-                size={wheel.size}
-                cx={w.cx}
-                cy={w.cy}
-                ax={w.ax}
-                ay={w.ay}
-                by={w.by}
-                shade={w.shade}
-              />
-            ))}
+        {q3 && (
+          <g clipPath={`url(#${uid}-clipFar)`}>
+            {g.wheels
+              .filter((w) => w.far)
+              .map((w) => (
+                <g
+                  key={`f${w.cx.toFixed(1)}`}
+                  transform={`matrix(${w.ax.toFixed(3)} ${w.ay.toFixed(3)} 0 ${w.by.toFixed(3)} ${w.cx.toFixed(
+                    2
+                  )} ${w.cy.toFixed(2)})`}
+                >
+                  <circle r="1" fill={`url(#${uid}-farTyre)`} />
+                  <circle r={rimRatio(wheel.size)} fill={`url(#${uid}-farRim)`} />
+                  <circle
+                    r={rimRatio(wheel.size) * 0.34}
+                    fill="#0a0d11"
+                    stroke="#ffffff"
+                    strokeOpacity="0.08"
+                    strokeWidth="0.03"
+                  />
+                  <circle r="1" fill="#05070a" fillOpacity={w.shade * 0.7} />
+                </g>
+              ))}
+          </g>
+        )}
 
         {q3 && (
           <>
@@ -1224,10 +1347,19 @@ export default function CarRender({
 
         {q3 && (
           <>
-            <path d={g.pillarA} fill="#0e1216" />
+            <path d={g.pillarA} fill="#141a21" />
+            <path d={g.pillarA} fill={`url(#${uid}-pillar)`} />
+            <path
+              d={g.pillarLead}
+              fill="none"
+              stroke="#ffffff"
+              strokeOpacity="0.16"
+              strokeWidth="1.4"
+              filter={`url(#${uid}-hair)`}
+            />
             <path d={g.windscreen} fill={`url(#${uid}-ws)`} />
             <g clipPath={`url(#${uid}-clipWs)`}>
-              <path d={g.wsGlare} fill="#ffffff" fillOpacity="0.09" filter={`url(#${uid}-soft)`} />
+              <path d={g.wsGlare} fill={`url(#${uid}-wsRefl)`} filter={`url(#${uid}-mid)`} />
               {g.wipers.map((d) => (
                 <path key={d} d={d} fill="none" stroke="#05070a" strokeOpacity="0.35" strokeWidth="1.3" />
               ))}

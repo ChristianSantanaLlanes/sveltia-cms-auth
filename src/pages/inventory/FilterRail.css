@@ -1,35 +1,38 @@
 /* ── Filter rail ────────────────────────────────────────────────────────────
  *
- * A rail that should read as instrumentation, not as a sidebar: uppercase
- * structural labels, tabular numerals everywhere a number appears, a live
- * tally at the top that proves the filters govern the result set, and two
- * swatch grids (paint, wheels) that show the product rather than name it.
+ * A rail that should read as instrumentation, not as a sidebar: one title that
+ * outranks its seven uppercase section labels, one checkbox grid, one left edge
+ * shared by the paint discs and the wheel tiles, two sliders built as real
+ * instruments, and one live caption grammar under every control — the selection
+ * on the left, the domain it was cut from on the right.
  * ---------------------------------------------------------------------------*/
 
 .rail {
   font-size: var(--fs-sm);
 }
 
-/* ── Header: title, reset, live tally ───────────────────────────────────────*/
+/* ── Header: the rail's own title, and the reset ────────────────────────────
+ *
+ * The title outranks its section labels on three axes at once — 20px against
+ * 12px, sentence case against uppercase, tight tracking against 0.1em — so the
+ * rail reads as one instrument with seven scales, not eight equal headings.
+ * The result tally lives once, in the results header across the gutter.
+ * ---------------------------------------------------------------------------*/
 
 .rail__top {
-  padding-bottom: var(--s-2);
-}
-
-.rail__top-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s-4);
-  min-height: 12px;
+  min-height: 24px;
+  padding-bottom: 10px;
 }
 
 .rail__title {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-h3);
   font-weight: 500;
-  letter-spacing: 0.14em;
-  line-height: 1;
-  text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.1;
   color: var(--text);
 }
 
@@ -37,54 +40,34 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 0;
-  color: var(--accent);
+  height: 22px;
+  padding: 0 9px 0 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--text-secondary);
   font-size: var(--fs-xs);
+  font-weight: 500;
   line-height: 1;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
   animation: rail-reset-in var(--dur) var(--ease-out) both;
 }
 
-.rail__reset svg {
-  opacity: 0.8;
+.rail__reset:hover {
+  border-color: var(--ink);
+  color: var(--text);
 }
 
-.rail__reset:hover {
-  color: var(--accent-hover);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.rail__reset:focus-visible {
+  border-radius: var(--r-pill);
 }
 
 @keyframes rail-reset-in {
   from { opacity: 0; transform: translateX(4px); }
-  to   { opacity: 1; transform: none; }
-}
-
-.rail__tally {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-top: var(--s-2);
-  color: var(--text-secondary);
-  font-size: var(--fs-xs);
-  line-height: 1.2;
-}
-
-.rail__tally-num {
-  font-size: var(--fs-body);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  animation: rail-tally-in var(--dur) var(--ease-out);
-}
-
-.rail__tally-of {
-  font-variant-numeric: tabular-nums;
-}
-
-@keyframes rail-tally-in {
-  from { opacity: 0; transform: translateY(-3px); }
   to   { opacity: 1; transform: none; }
 }
 
@@ -111,7 +94,7 @@
   align-items: center;
   gap: var(--s-2);
   width: 100%;
-  padding: 9px 0 8px;
+  padding: 8px 0 7px;
   color: var(--text);
   text-align: left;
 }
@@ -175,25 +158,20 @@
 }
 
 .rail__panel {
-  padding-bottom: var(--s-3);
+  padding-bottom: 10px;
 }
 
 .rail__section:last-of-type .rail__panel {
-  padding-bottom: var(--s-2);
+  padding-bottom: 6px;
 }
 
+/* One grid for every checkbox dimension: a single column, one label column and
+   one count column, so Model, Trim and Condition share a rhythm and the rail
+   has exactly one right-hand number rail. */
 .rail__rows {
   display: flex;
   flex-direction: column;
   margin-top: -2px;
-}
-
-/* Short labels (the four models) run two abreast so the identity block stays
-   the height of one paragraph instead of one screen. */
-.rail__rows--split {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: var(--s-5);
 }
 
 /* ── Checkbox row ───────────────────────────────────────────────────────────*/
@@ -203,7 +181,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 3px 0;
+  padding: 2px 0;
   cursor: pointer;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
@@ -304,31 +282,43 @@
   gap: var(--s-2);
 }
 
-.swatches__caption {
+/* Shared with .slider__caption below: selection left at 14px/500, the domain it
+   was cut from right at 12px muted. Every control in the rail reports itself
+   the same way. */
+.swatches__caption,
+.slider__caption {
   display: flex;
   align-items: baseline;
-  gap: 7px;
-  min-height: 16px;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 18px;
   margin-top: var(--s-2);
   font-size: var(--fs-xs);
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
-.swatches__name {
+.swatches__name,
+.slider__value {
   color: var(--text);
+  font-size: var(--fs-sm);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.swatches__stock {
-  flex: none;
-  color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
-/* Paint discs */
+.swatches__stock,
+.slider__scale {
+  flex: none;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Paint discs — full-bleed in their cell, so a paint chip and a wheel tile
+   start on the same left edge and read as one appearance module. Selection is
+   drawn inside the chip (ink ring, white gap) for the same reason. */
 
 .swatch {
   position: relative;
@@ -344,31 +334,23 @@
   opacity: 0.4;
 }
 
-.swatch::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 1px solid transparent;
-  border-radius: 50%;
-  transition: border-color var(--dur-fast) var(--ease-out);
-}
-
-/* Flat 100% fill + one hairline ring. No gradient, no shadow: the chip is the
-   paint sample, not a rendering of a painted sphere. */
 .swatch__disc {
   position: absolute;
-  inset: 3px;
+  inset: 0;
   border-radius: 50%;
   background: var(--swatch-base);
-  box-shadow: inset 0 0 0 1px var(--ink-08);
+  /* --swatch-ring is set per option: light paints get a drawn ring so Stellar
+     White is a chip on white, not a hole in the rail. */
+  box-shadow: inset 0 0 0 1px var(--swatch-ring, var(--ink-08));
+  transition: box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.swatch:hover::after {
-  border-color: var(--line);
+.swatch:hover .swatch__disc {
+  box-shadow: inset 0 0 0 2px var(--line), inset 0 0 0 4px var(--bg);
 }
 
-.swatch[aria-pressed='true']::after {
-  border-color: var(--ink);
+.swatch[aria-pressed='true'] .swatch__disc {
+  box-shadow: inset 0 0 0 2px var(--ink), inset 0 0 0 4px var(--bg);
 }
 
 .swatch:focus-visible {
@@ -419,7 +401,7 @@
 
 .wheel[aria-pressed='true'] .wheel__plate {
   background: var(--bg);
-  box-shadow: inset 0 0 0 1.5px var(--ink);
+  box-shadow: inset 0 0 0 2px var(--ink);
 }
 
 .wheel__size {
@@ -442,56 +424,57 @@
   border-radius: var(--r-sm);
 }
 
-/* ── Sliders ────────────────────────────────────────────────────────────────*/
+/* ── Sliders ────────────────────────────────────────────────────────────────
+ *
+ * Built as instruments, not as decoration. The track is 4px — four times the
+ * hairline that divides the sections — and its unselected remainder is drawn in
+ * --line so the shopper can always see how much of the domain is still on the
+ * table. The track is inset by half a thumb at each end, so a fill percentage
+ * lands exactly under the handle that set it. Handles are 20px: larger than the
+ * 17px checkboxes above them, ringed in 2px of ink, and they are the only round
+ * white objects in the rail.
+ * ---------------------------------------------------------------------------*/
 
 .slider {
   padding-top: 1px;
 }
 
-.slider__values {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-3);
-  margin-bottom: var(--s-2);
-}
-
-.slider__value {
-  color: var(--text);
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.slider__value--muted {
-  color: var(--text-tertiary);
-  font-size: var(--fs-xs);
-  font-weight: 400;
-}
-
 .slider__control {
   position: relative;
-  height: 20px;
+  height: 28px;
 }
 
 .slider__track {
   position: absolute;
-  top: 9px;
-  left: 1px;
-  right: 1px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--line-soft);
+  top: 12px;
+  /* Half a thumb in from each end: the track's ends are the thumbs' centres. */
+  left: 10px;
+  right: 10px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
 }
 
 .slider__fill {
   position: absolute;
   top: 0;
   bottom: 0;
-  border-radius: 1px;
+  border-radius: 2px;
   background: var(--ink);
+}
+
+/* The upper bound of the single-handle slider is set by the fleet, not by the
+   shopper. It gets a terminal tick — plainly not a handle — so the control can
+   never read as a two-handle slider that lost one. */
+.slider__cap {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  width: 3px;
+  height: 16px;
+  border-radius: 1.5px;
+  background: var(--ink);
+  transform: translateX(1.5px);
 }
 
 .slider__input {
@@ -502,7 +485,7 @@
   left: 0;
   z-index: 3;
   width: 100%;
-  height: 20px;
+  height: 28px;
   margin: 0;
   padding: 0;
   background: transparent;
@@ -515,13 +498,13 @@
 }
 
 .slider__input::-webkit-slider-runnable-track {
-  height: 20px;
+  height: 28px;
   background: transparent;
   border: none;
 }
 
 .slider__input::-moz-range-track {
-  height: 20px;
+  height: 28px;
   background: transparent;
   border: none;
 }
@@ -529,36 +512,47 @@
 .slider__input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 15px;
-  height: 15px;
-  margin-top: 2.5px;
-  border: 1px solid var(--line);
+  width: 20px;
+  height: 20px;
+  /* Centres the 20px handle on the 4px track at top:12px. */
+  margin-top: 4px;
+  border: 2px solid var(--ink);
   border-radius: 50%;
   background: var(--bg);
-  box-shadow: var(--shadow-1);
+  box-shadow: 0 1px 2px var(--ink-08), 0 2px 6px var(--ink-08), var(--shadow-1);
   pointer-events: auto;
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out);
+  cursor: grab;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .slider__input::-moz-range-thumb {
-  width: 15px;
-  height: 15px;
-  border: 1px solid var(--line);
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ink);
   border-radius: 50%;
   background: var(--bg);
-  box-shadow: var(--shadow-1);
+  box-shadow: 0 1px 2px var(--ink-08), 0 2px 6px var(--ink-08), var(--shadow-1);
   pointer-events: auto;
-  cursor: pointer;
+  cursor: grab;
 }
 
-.slider__input:hover::-webkit-slider-thumb,
-.slider__input:active::-webkit-slider-thumb {
-  border-color: var(--ink);
+.slider__input:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 5px var(--ink-08), var(--shadow-1);
 }
 
 .slider__input:hover::-moz-range-thumb {
-  border-color: var(--ink);
+  box-shadow: 0 0 0 5px var(--ink-08), var(--shadow-1);
+}
+
+.slider__input:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  box-shadow: 0 0 0 7px var(--ink-08), var(--shadow-1);
+}
+
+.slider__input:active::-moz-range-thumb {
+  cursor: grabbing;
+  box-shadow: 0 0 0 7px var(--ink-08), var(--shadow-1);
 }
 
 .slider__input:focus-visible {
@@ -578,19 +572,16 @@
 /* ── Sheet (below 1024px) ───────────────────────────────────────────────────*/
 
 /* The sheet supplies its own "Filters" heading, so the rail drops its title and
-   keeps the row for the tally and the reset affordance. */
+   keeps the row for the reset affordance alone. */
 @media (max-width: 1023px) {
   .rail__title {
     display: none;
   }
 
-  .rail__top-row {
+  .rail__top {
     justify-content: flex-end;
     min-height: 0;
-  }
-
-  .rail__tally {
-    margin-top: 0;
+    padding-bottom: var(--s-2);
   }
 }
 
@@ -598,12 +589,12 @@
   .rail__chevron,
   .row__box,
   .row__box svg,
-  .swatch::after,
-  .wheel__plate {
+  .swatch__disc,
+  .wheel__plate,
+  .slider__input::-webkit-slider-thumb {
     transition: none;
   }
 
-  .rail__tally-num,
   .rail__reset {
     animation: none;
   }

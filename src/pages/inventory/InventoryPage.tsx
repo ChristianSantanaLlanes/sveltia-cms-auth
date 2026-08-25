@@ -263,11 +263,17 @@ export default function InventoryPage(): ReactElement {
           </p>
 
           {chips.length > 0 && !isEmpty ? (
+            /* One reset for the whole view. On desktop that is the rail's own
+               "Reset all"; the chips here remove a single filter each. Below
+               1024px the rail is behind the sheet, so the clear-all lives here
+               instead — it is never offered twice on one screen. */
             <div className="inv__active">
               {chipList('inv__chips')}
-              <button type="button" className="inv__clear" onClick={reset}>
-                Clear all
-              </button>
+              {isDesktop ? null : (
+                <button type="button" className="inv__clear" onClick={reset}>
+                  Clear all
+                </button>
+              )}
             </div>
           ) : null}
 

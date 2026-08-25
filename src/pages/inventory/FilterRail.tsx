@@ -12,7 +12,6 @@ import {
 import { miles, money, num } from '@/lib/format';
 import {
   CONDITION_OPTIONS,
-  INVENTORY_TOTAL,
   MODEL_OPTIONS,
   PAINT_OPTIONS,
   PRICE_BOUNDS,
@@ -20,7 +19,6 @@ import {
   TRIM_OPTIONS,
   WHEEL_OPTIONS,
   facetCounts,
-  matchCount,
   type FacetOption,
   type InventoryFilters,
   type MultiKey,
@@ -140,16 +138,19 @@ interface GroupProps {
   filters: InventoryFilters;
   toggleFilter: (key: MultiKey, id: string) => void;
   testIdPrefix?: string;
-  /** Two abreast for short labels; full width when a label needs the room. */
-  split?: boolean;
 }
 
-function CheckGroup({ dimension, options, filters, toggleFilter, testIdPrefix, split }: GroupProps): ReactElement {
+/**
+ * Every checkbox dimension renders through this one grid — a single column,
+ * one label column and one count column — so Model, Trim and Condition stack
+ * on one rhythm instead of competing for the rail's width.
+ */
+function CheckGroup({ dimension, options, filters, toggleFilter, testIdPrefix }: GroupProps): ReactElement {
   const counts = useMemo(() => facetCounts(filters, dimension), [filters, dimension]);
   const selected = filters[dimension] as string[];
 
   return (
-    <div className={split ? 'rail__rows rail__rows--split' : 'rail__rows'}>
+    <div className="rail__rows">
       {options.map((option) => (
         <CheckRow
           key={option.id}
@@ -171,19 +172,21 @@ interface CaptionProps {
   name: string | null;
   count: number | null;
   fallback: string;
+  domain: string;
 }
 
-function SwatchCaption({ name, count, fallback }: CaptionProps): ReactElement {
+/**
+ * The same two-part line every control in the rail reports itself with: what is
+ * selected on the left at 14px/500, the domain it was drawn from on the right
+ * at 12px muted.
+ */
+function SwatchCaption({ name, count, fallback, domain }: CaptionProps): ReactElement {
   return (
     <p className="swatches__caption" aria-hidden="true">
-      {name ? (
-        <>
-          <span className="swatches__name">{name}</span>
-          {count !== null ? <span className="swatches__stock">{num(count)} in stock</span> : null}
-        </>
-      ) : (
-        <span className="swatches__stock">{fallback}</span>
-      )}
+      <span className="swatches__name">{name ?? fallback}</span>
+      <span className="swatches__stock">
+        {name && count !== null ? `${num(count)} in stock` : domain}
+      </span>
     </p>
   );
 }
@@ -204,6 +207,20 @@ function useHint() {
 }
 
 /* ── Paint ──────────────────────────────────────────────────────────────────*/
+
+/**
+ * Relative luminance of a paint's base hex. Stellar White (#e8eaec) sits at
+ * ~1.06:1 against the rail's white ground, so a chip that only carried the
+ * 8%-ink hairline every other paint uses would read as an empty hole. Light
+ * paints get a drawn ring instead; everything darker keeps the hairline.
+ */
+function isLightPaint(hex: string): boolean {
+  const value = parseInt(hex.slice(1), 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.78;
+}
 
 function PaintGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 'toggleFilter'>): ReactElement {
   const counts = useMemo(() => facetCounts(filters, 'paint'), [filters]);
@@ -232,6 +249,7 @@ function PaintGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 
               style={
                 {
                   '--swatch-base': option.hex,
+                  '--swatch-ring': isLightPaint(option.hex) ? 'var(--text-tertiary)' : 'var(--ink-08)',
                 } as CSSProperties
               }
               onClick={() => toggleFilter('paint', option.id)}
@@ -242,7 +260,12 @@ function PaintGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 
           );
         })}
       </div>
-      <SwatchCaption name={paint?.name ?? null} count={paint ? counts[paint.id] ?? 0 : null} fallback={fallback} />
+      <SwatchCaption
+        name={paint?.name ?? null}
+        count={paint ? counts[paint.id] ?? 0 : null}
+        fallback={fallback}
+        domain={`of ${PAINT_OPTIONS.length} finishes`}
+      />
     </div>
   );
 }
@@ -358,7 +381,12 @@ function WheelGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 
           );
         })}
       </div>
-      <SwatchCaption name={wheel?.name ?? null} count={wheel ? counts[wheel.id] ?? 0 : null} fallback={fallback} />
+      <SwatchCaption
+        name={wheel?.name ?? null}
+        count={wheel ? counts[wheel.id] ?? 0 : null}
+        fallback={fallback}
+        domain={`of ${WHEEL_OPTIONS.length} sets`}
+      />
     </div>
   );
 }
@@ -449,16 +477,28 @@ function PriceSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
   const lowPct = ((draft.low - min) / span) * 100;
   const highPct = ((draft.high - min) / span) * 100;
 
+  const atLow = draft.low === min;
+  const atHigh = draft.high === max;
+  /* Ink means "this much of the domain survived the filter". At rest nothing
+     has been cut, so the track stays entirely in the remainder colour and the
+     two handles read as the untouched ends of the scale — the ink band only
+     exists once the shopper has actually narrowed something. */
+  const cut = !atLow || !atHigh;
+  const selection = atLow && atHigh
+    ? 'Any price'
+    : atLow
+      ? `Under ${money(draft.high)}`
+      : atHigh
+        ? `${money(draft.low)} and up`
+        : `${money(draft.low)} – ${money(draft.high)}`;
+
   return (
     <div className="slider">
-      <p className="slider__values">
-        <span className="slider__value">{money(draft.low)}</span>
-        <span className="slider__value">{draft.high === max ? `${money(max)}+` : money(draft.high)}</span>
-      </p>
-
       <div className="slider__control">
         <div className="slider__track" aria-hidden="true">
-          <span className="slider__fill" style={{ left: `${lowPct}%`, right: `${100 - highPct}%` }} />
+          {cut ? (
+            <span className="slider__fill" style={{ left: `${lowPct}%`, right: `${100 - highPct}%` }} />
+          ) : null}
         </div>
 
         <input
@@ -491,6 +531,13 @@ function PriceSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
           }
         />
       </div>
+
+      <p className="slider__caption" aria-hidden="true">
+        <span className="slider__value">{selection}</span>
+        <span className="slider__scale">
+          of {money(min)}–{money(max)}
+        </span>
+      </p>
     </div>
   );
 }
@@ -503,18 +550,19 @@ function RangeSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
   const release = releaseHandlers(flush);
 
   const pct = ((draft - min) / (max - min)) * 100;
+  const cut = draft !== min;
+  const selection = cut ? `${miles(draft)} or more` : 'Any range';
 
   return (
     <div className="slider slider--single">
-      <p className="slider__values">
-        <span className="slider__value">{miles(draft)} or more</span>
-        <span className="slider__value slider__value--muted">up to {miles(max)}</span>
-      </p>
-
       <div className="slider__control">
         <div className="slider__track" aria-hidden="true">
-          <span className="slider__fill" style={{ left: `${pct}%`, right: '0%' }} />
+          {cut ? <span className="slider__fill" style={{ left: `${pct}%`, right: '0%' }} /> : null}
         </div>
+        {/* The upper bound of a "minimum range" filter is fixed by the fleet,
+            not by the shopper: it is marked with a terminal tick so the control
+            can never be mistaken for a two-handle slider missing a handle. */}
+        <span className="slider__cap" aria-hidden="true" />
         <input
           {...release}
           type="range"
@@ -528,6 +576,13 @@ function RangeSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
           onChange={(event) => update(Number(event.target.value))}
         />
       </div>
+
+      <p className="slider__caption" aria-hidden="true">
+        <span className="slider__value">{selection}</span>
+        <span className="slider__scale">
+          of {num(min)}–{miles(max)}
+        </span>
+      </p>
     </div>
   );
 }
@@ -556,32 +611,30 @@ export function FilterRail({ filters, setFilter, toggleFilter, reset, activeCoun
   const priceActive = filters.minPrice !== PRICE_BOUNDS.min || filters.maxPrice !== PRICE_BOUNDS.max;
   const rangeActive = filters.minRange !== RANGE_BOUNDS.min;
 
-  const matched = useMemo(() => matchCount(filters), [filters]);
-
   return (
     <div className="rail">
+      {/* One tally on the page, and it is the results header's. The rail proves
+          it governs that number through the per-option counts and the section
+          badges, which move on the same frame as the click. */}
       <div className="rail__top">
-        <div className="rail__top-row">
-          <h2 className="rail__title">Filters</h2>
-          {activeCount > 0 ? (
-            <button type="button" className="rail__reset" onClick={reset}>
-              <span>Reset</span>
-              <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true" focusable="false">
-                <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
-            </button>
-          ) : null}
-        </div>
-        <p className="rail__tally">
-          <span className="rail__tally-num" key={matched}>
-            {num(matched)}
-          </span>
-          <span className="rail__tally-of">of {num(INVENTORY_TOTAL)} vehicles</span>
-        </p>
+        <h2 className="rail__title">Filters</h2>
+        {activeCount > 0 ? (
+          <button
+            type="button"
+            className="rail__reset"
+            onClick={reset}
+            aria-label={`Reset all ${activeCount} filters`}
+          >
+            <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true" focusable="false">
+              <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            </svg>
+            <span>Reset all</span>
+          </button>
+        ) : null}
       </div>
 
       <Section id="model" title="Model" open={open.model} onToggle={toggleSection} badge={badgeFor('model')} panelId={panelId('model')}>
-        <CheckGroup dimension="model" options={MODEL_OPTIONS} filters={filters} toggleFilter={toggleFilter} split />
+        <CheckGroup dimension="model" options={MODEL_OPTIONS} filters={filters} toggleFilter={toggleFilter} />
       </Section>
 
       <Section id="trim" title="Trim" open={open.trim} onToggle={toggleSection} badge={badgeFor('trim')} panelId={panelId('trim')}>

@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactElement } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+} from 'react';
 import CarRender, { type CarRenderProps } from '@/components/car/CarRender';
 import Button from '@/components/ui/Button';
 import { MODELS } from '@/data/models';
@@ -34,11 +43,12 @@ const SETTLE_ALL_MS = 900;
  *
  * Every section pairs a paint that reads against its own backdrop (dark bodies
  * on the light studio, light bodies on the dark one) with the halo wheel, the
- * way a launch photograph would be specced. It also books its own setup: the
- * lens angle, which way the car faces, how much of the frame it fills and where
- * it sits in it. No two consecutive chapters put the same silhouette in the same
- * pixels, which is the difference between four photographs and one template run
- * four times. Falls back to the model's stock combination if the catalogue moves.
+ * way a launch photograph would be specced, and books its own lens: the angle,
+ * and which way down the page the nose points. What it does *not* book is the
+ * framing — size and placement belong to the stage, which is the same stage in
+ * all four chapters (see "One stage, four cars" below). So no two consecutive
+ * sections put the same silhouette in the same pixels, and none of them moves
+ * the camera. Falls back to the model's stock combination if the catalogue moves.
  */
 interface HeroLook {
   paint: string;
@@ -47,29 +57,79 @@ interface HeroLook {
   view: CarView;
   /** Mirror the stage, so the nose points the other way down the page. */
   flip?: boolean;
-  /** Plate size as a multiple of the base frame width. */
-  scale: number;
-  /** Where the car sits in the frame, in px from the composed centre. */
-  shift: number;
 }
 
 type CarView = NonNullable<CarRenderProps['view']>;
 
 const HERO_LOOK: Record<ModelId, HeroLook> = {
   /* 0 — white room, three-quarter, nose left: the establishing shot. */
-  'vela-3': { paint: 'deep-blue', wheel: 'arachnid-20', view: 'front-3q', scale: 1.02, shift: 0 },
-  /* 1 — black box, the camera walks around to the other flank and steps back;
-     the tallest body on the page sits lowest in the frame. */
-  'vela-y': { paint: 'stellar-white', wheel: 'turbine-20', view: 'front-3q', flip: true, scale: 0.93, shift: 30 },
-  /* 2 — graphite room, flat profile: the long low sedan filling the frame edge
-     to edge, lifted so the roofline breathes under the headline. */
-  'vela-s': { paint: 'obsidian', wheel: 'sport-19', view: 'side', scale: 1, shift: -14 },
-  /* 3 — charcoal room, back to the three-quarter but closer and lower. */
-  'vela-x': { paint: 'quartz-grey', wheel: 'arachnid-22', view: 'front-3q', scale: 1.05, shift: 18 },
+  'vela-3': { paint: 'deep-blue', wheel: 'arachnid-20', view: 'front-3q' },
+  /* 1 — black box: the camera walks around to the other flank. */
+  'vela-y': { paint: 'stellar-white', wheel: 'turbine-20', view: 'front-3q', flip: true },
+  /* 2 — graphite room, flat profile: the long low sedan, side on. */
+  'vela-s': { paint: 'obsidian', wheel: 'sport-19', view: 'side' },
+  /* 3 — charcoal room, back to the three-quarter. */
+  'vela-x': { paint: 'quartz-grey', wheel: 'arachnid-22', view: 'front-3q' },
 };
 
-/** Optical centre of the painted car inside its own viewBox, per lens. */
-const VIEW_NUDGE: Record<CarView, number> = { 'front-3q': -2.7, side: -0.3 };
+/* ── One stage, four cars ───────────────────────────────────────────────────
+ *
+ * A wheel notch has to change the chapter without moving the studio. That is
+ * only true if the *painted* car — not the box it is drawn in — is the thing
+ * held constant: CarRender fits each silhouette into its own 1200 × 420 frame,
+ * and how much of that frame the paint actually covers depends on the body and
+ * the lens (a flat profile paints far wider than a three-quarter, an SUV far
+ * taller). Left alone, that hands every section a differently sized car.
+ *
+ * So the painted box is measured once per section, straight off the render,
+ * and the car is scaled and placed from that measurement: one width, one
+ * optical axis, one contact line, in all four rooms. Nothing is authored
+ * per model — there is no per-chapter scale or offset left to drift.
+ * -------------------------------------------------------------------------*/
+
+/** CarRender's own coordinate system. `.vm-hero__plate` is exactly this box. */
+const VIEW_W = 1200;
+const VIEW_H = 420;
+/** Painted car width as a fraction of the plate — ~60% of a 1440px section. */
+const CAR_WIDTH = 0.727;
+/** Where the tyres touch down, as a fraction of the plate height. */
+const HORIZON = 0.9;
+
+/** The camera move that puts this car on the shared stage. */
+interface Fit {
+  /** Scale applied to the render, so the paint lands at one fixed width. */
+  scale: number;
+  /** Offsets, as fractions of the plate, applied before that scale. */
+  x: number;
+  y: number;
+}
+
+/**
+ * Measure the painted car inside a rendered section and derive its fit.
+ *
+ * `#…-car` is the render's body group — every panel, glass and tyre, and none
+ * of the floor reflection or contact shadow, which have to travel with it
+ * rather than define it.
+ */
+function measureFit(plate: HTMLElement | null): Fit | null {
+  const car = plate?.querySelector<SVGGraphicsElement>('svg.car-render [id$="-car"]');
+  if (!car || typeof car.getBBox !== 'function') return null;
+
+  let box: DOMRect;
+  try {
+    box = car.getBBox();
+  } catch {
+    return null;
+  }
+  if (!(box.width > 0) || !(box.height > 0)) return null;
+
+  const scale = (CAR_WIDTH * VIEW_W) / box.width;
+  return {
+    scale,
+    x: (VIEW_W / 2 - scale * (box.x + box.width / 2)) / VIEW_W,
+    y: (HORIZON * VIEW_H - scale * (box.y + box.height)) / VIEW_H,
+  };
+}
 
 interface Cast {
   paint: PaintOption;
@@ -101,6 +161,8 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
   const reducedMotion = usePrefersReducedMotion();
   const titleId = useId();
 
+  const plateRef = useRef<HTMLDivElement | null>(null);
+  const [fit, setFit] = useState<Fit | null>(null);
   const [entered, setEntered] = useState(false);
   /* The first section is active before the observer has run, so its chevron is
      painted on the very first frame rather than fading in a beat late. */
@@ -109,16 +171,27 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
   const tone: 'light' | 'dark' = index % 2 === 0 ? 'light' : 'dark';
   const { paint, wheel, look } = useMemo(() => castLook(model), [model]);
 
-  /* The camera setup for this chapter, handed to CSS. The nudge that puts the
-     painted car's optical centre under the centred headline is a property of
-     the lens, and it changes sign when the stage is mirrored. */
+  /* The stage, handed to CSS. Only the mirror is a property of the chapter;
+     the horizon is a property of the page, and the fit is measured. */
   const stage = {
-    '--vm-car-scale': look.scale,
-    '--vm-car-shift': `${look.shift}px`,
     '--vm-car-flip': look.flip ? -1 : 1,
-    '--vm-car-nudge': VIEW_NUDGE[look.view] * (look.flip ? -1 : 1),
+    '--vm-horizon': `${HORIZON * 100}%`,
+    ...(fit
+      ? {
+          '--vm-fit-scale': fit.scale,
+          '--vm-fit-x': fit.x,
+          '--vm-fit-y': fit.y,
+        }
+      : null),
   } as CSSProperties;
   const next = MODELS[index + 1];
+
+  /* Measured before the browser paints, so the car is never seen at the size
+     the render happened to give it. It is a ratio of the plate, not a pixel
+     count, so it survives every resize without being taken again. */
+  useLayoutEffect(() => {
+    setFit(measureFit(plateRef.current));
+  }, [model.id, look.view, wheel.id]);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -178,19 +251,23 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
       </div>
 
       <div className="vm-hero__stage">
-        <div className="vm-hero__plate">
+        <div className="vm-hero__plate" ref={plateRef}>
           <div className="vm-hero__floor" aria-hidden="true" />
           <div className="vm-hero__pool" aria-hidden="true" />
-          <CarRender
-            body={model.body}
-            paint={paint}
-            wheel={wheel}
-            view={look.view}
-            className="vm-hero__car vm-hero__reveal"
-            label={`${model.name} in ${paint.name} on ${wheel.name}, ${
-              look.view === 'side' ? 'side profile' : 'front three-quarter view'
-            }`}
-          />
+          {/* The lens carries the entrance; the render inside it carries the
+              fit, so the settle can never disturb where the car is parked. */}
+          <div className="vm-hero__lens vm-hero__reveal">
+            <CarRender
+              body={model.body}
+              paint={paint}
+              wheel={wheel}
+              view={look.view}
+              className="vm-hero__car"
+              label={`${model.name} in ${paint.name} on ${wheel.name}, ${
+                look.view === 'side' ? 'side profile' : 'front three-quarter view'
+              }`}
+            />
+          </div>
         </div>
       </div>
 

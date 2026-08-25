@@ -18,9 +18,9 @@
  *      edges of the render together, so the frame reads as a single exposure
  *      instead of two stacked gradients.
  *
- * Layers 2 and 3 live inside `.vm-hero__plate`, which shrink-wraps the render,
- * so the horizon tracks the car at every viewport size instead of being pinned
- * to a percentage of the section. `data-tone` swaps the whole palette.
+ * Layers 2 and 3 live inside `.vm-hero__plate` — one box, one horizon, held
+ * identical in all four sections, with each car measured onto it rather than
+ * sized by it. `data-tone` swaps the whole palette.
  * -------------------------------------------------------------------------*/
 
 .vm-hero {
@@ -33,17 +33,14 @@
   height: 100dvh;
   min-height: 620px;
   padding-top: calc(var(--header-h) + clamp(18px, 3.8vh, 40px));
-  padding-bottom: clamp(24px, 4.2vh, 42px);
+  /* The band under the CTA block is reserved in *every* section, not only the
+     one that paints a chevron in it: the type below the car has to land on the
+     same pixel in all four chapters, or the snap moves the page furniture. */
+  padding-bottom: clamp(52px, 7vh, 72px);
   overflow: hidden;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   color: var(--vm-fg);
-}
-
-/* The chevron lives in the band under the CTA block, so the section that owns
-   one gives that band its own height rather than crowding the small print. */
-.vm-hero[data-chevron='true'] {
-  padding-bottom: clamp(58px, 8vh, 80px);
 }
 
 /* ── Wall + lights ──────────────────────────────────────────────────────── */
@@ -83,25 +80,30 @@
   z-index: 2;
 }
 
-/* Where the car sits in the frame is part of the chapter, not a constant: the
-   tall SUV drops, the long low sedan lifts. Set per section in HeroSection.tsx.
-   A transform, so nothing above or below it moves. */
+/* The stage is fixed for the whole page: same box, same horizon, every
+   chapter. Where a car sits in it is measured off the render, never authored
+   per section — see "One stage, four cars" in HeroSection.tsx. */
 .vm-hero__stage {
   position: relative;
   z-index: 0;
-  transform: translateY(var(--vm-car-shift, 0px));
 }
 
 /* ── Tones ──────────────────────────────────────────────────────────────── */
 
 .vm-hero[data-tone='light'] {
   --vm-fg: var(--text);
-  --vm-fg-2: var(--text-secondary);
+  /* A step darker than the stock secondary. Everything set in it here is 12–14px
+     sitting on a lit backdrop rather than on paper, and the dark rooms give the
+     same copy 10:1 — this is what keeps the light rooms in the same league. */
+  --vm-fg-2: color-mix(in srgb, var(--ink) 30%, var(--text-secondary));
   --vm-wall: color-mix(in srgb, var(--ink) 4%, var(--bg));
   --vm-key: var(--bg);
   --vm-strip: color-mix(in srgb, var(--bg) 92%, transparent);
-  --vm-vignette-mid: color-mix(in srgb, var(--ink) 9%, transparent);
-  --vm-vignette: color-mix(in srgb, var(--ink) 26%, transparent);
+  /* A light room is a near-flat plate. A falloff deep enough to be *seen* on
+     white is also deep enough to take 30 levels out of the ground under the
+     legal line, which is where the light chapters lost their fine print. */
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 3%, transparent);
+  --vm-vignette: color-mix(in srgb, var(--ink) 11%, transparent);
   --vm-floor-ao: color-mix(in srgb, var(--ink) 15%, transparent);
   --vm-floor-1: color-mix(in srgb, var(--ink) 4%, transparent);
   --vm-floor-2: color-mix(in srgb, var(--ink) 11%, transparent);
@@ -184,18 +186,19 @@
 /* 2 — graphite room. Still a light frame for the header and the type, but the
    wall drops two full steps so the obsidian body has something to sit against. */
 .vm-hero[data-hero-index='2'] {
-  /* The wall is two steps down, so the supporting type comes a step up to keep
-     the 12px small print comfortably legible against it. */
-  --vm-fg-2: color-mix(in srgb, var(--ink) 45%, var(--text-secondary));
-  --vm-wall: color-mix(in srgb, var(--ink) 15%, var(--surface));
-  --vm-key: color-mix(in srgb, var(--bg) 94%, var(--ink));
+  /* The wall is two full steps down from the white room — the chapter is a
+     grey one — so the supporting type comes up to match, and the flattened
+     falloff keeps the 12px legal line off the bottom of its range. */
+  --vm-fg-2: color-mix(in srgb, var(--ink) 70%, var(--text-secondary));
+  --vm-wall: color-mix(in srgb, var(--ink) 23%, var(--surface));
+  --vm-key: color-mix(in srgb, var(--bg) 88%, var(--ink));
   /* The widest, highest key on the page, pushed right: a full cyc wash behind a
      car shot flat in profile, which is nothing like the spotlight above it. */
-  --vm-key-shape: 92% 60% at 57% 34%;
+  --vm-key-shape: 86% 56% at 57% 33%;
   --vm-strip-shape: 66% 15% at 58% 25%;
   --vm-strip: color-mix(in srgb, var(--bg) 66%, transparent);
-  --vm-vignette-mid: color-mix(in srgb, var(--ink) 14%, transparent);
-  --vm-vignette: color-mix(in srgb, var(--ink) 36%, transparent);
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 4%, transparent);
+  --vm-vignette: color-mix(in srgb, var(--ink) 14%, transparent);
   --vm-floor-ao: color-mix(in srgb, var(--ink) 22%, transparent);
   --vm-floor-1: color-mix(in srgb, var(--ink) 6%, transparent);
   --vm-floor-2: color-mix(in srgb, var(--ink) 15%, transparent);
@@ -235,9 +238,12 @@
 }
 
 /* The car settles rather than slides: a hair of scale is what a camera pushing
-   in reads like, and it keeps the tyres on the floor line the whole time. */
-.vm-hero__car {
+   in reads like, pivoted on the contact patch so the tyres stay on the floor
+   line the whole way in. The entrance rides the lens, never the render, so it
+   cannot fight the measured fit underneath it. */
+.vm-hero__lens {
   transform: scale(1.012);
+  transform-origin: 50% var(--vm-horizon, 90%);
   transition-delay: 60ms;
 }
 
@@ -289,40 +295,46 @@
   padding-inline: var(--gutter);
 }
 
-/* The plate is exactly the render's box (1200 × 420), so everything anchored
-   to a percentage of it lines up with the car itself. Capping the width in
-   `vh` as well as `%` means the car shrinks on a short viewport rather than
-   being letterboxed inside its own frame, which would break that anchoring. */
+/* The plate is the stage: the render's own box (1200 × 420) at one size for
+   the whole page, so the floor, the pool and the horizon are in the same place
+   in every chapter and only the car changes. Capping the width in `vh` as well
+   as `%` keeps that box in proportion to the section on a short viewport.
+   `--vm-car-flip` turns the whole stage around, which is what makes one wheel
+   notch read as a different photograph rather than a recoloured one. */
 .vm-hero__plate {
   position: relative;
-  width: calc(min(100%, 132vh) * var(--vm-car-scale, 1));
+  width: min(88%, 1260px, 132vh);
   aspect-ratio: 1200 / 420;
-  /* Two lens corrections, in order. `--vm-car-nudge` is a bare number of
-     percent: the painted car sits off the centre of its own viewBox by that
-     much, so the nudge puts its optical centre under the centred headline —
-     and it changes sign when the stage is mirrored. `--vm-car-flip` turns the
-     car to face the other way, which is what makes one wheel notch read as a
-     different photograph rather than a recoloured one. */
-  transform: translateX(calc(var(--vm-car-nudge, -2.7) * 1%)) scaleX(var(--vm-car-flip, 1));
+  transform: scaleX(var(--vm-car-flip, 1));
 }
 
-.vm-hero__car {
-  position: relative;
+.vm-hero__lens {
+  position: absolute;
+  inset: 0;
   z-index: 1;
+}
+
+/* The measured fit, in one expression: place the painted box, then scale it.
+   Percentages resolve against the plate — the same box the numbers were taken
+   in — so one measurement holds at every viewport size. */
+.vm-hero__car {
   display: block;
   width: 100%;
   height: 100%;
+  transform: translate(calc(var(--vm-fit-x, 0) * 100%), calc(var(--vm-fit-y, 0) * 100%))
+    scale(var(--vm-fit-scale, 1));
+  transform-origin: 0 0;
 }
 
-/* Wall meets floor at 80.95% of the plate — FLOOR / VIEW_H in the render, the
-   y where the tyres contact. A real cyclorama has no seam there, so the floor
+/* Wall meets floor at the horizon — the y the tyres are fitted onto, shared by
+   all four sections. A real cyclorama has no seam there, so the floor
    blends up into the wall over a soft rise rather than starting on an edge. It
    bleeds the full viewport width and runs off the bottom of the section,
    passing behind the CTAs. The radial layer carries the wall's falloff across
    the floor so the two planes share one exposure. */
 .vm-hero__floor {
   position: absolute;
-  top: 80.95%;
+  top: var(--vm-horizon, 90%);
   left: 50%;
   z-index: 0;
   width: 150vw;
@@ -366,7 +378,7 @@
    bites into it. */
 .vm-hero__pool {
   position: absolute;
-  top: 80.95%;
+  top: var(--vm-horizon, 90%);
   left: 50%;
   z-index: 0;
   width: 112%;
@@ -381,11 +393,14 @@
 
 /* ── CTA block ──────────────────────────────────────────────────────────── */
 
+/* The band under the car. The gaps here are wider than the ones inside it, so
+   the stat row, the CTA pair and the legal line read as three things stacked
+   rather than four crowded into whatever the stage left over. */
 .vm-hero__foot {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(20px, 3.2vh, 32px);
+  gap: clamp(22px, 4.2vh, 40px);
   width: 100%;
   padding-inline: var(--gutter);
 }
@@ -434,7 +449,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--s-4);
+  gap: clamp(14px, 2.2vh, 20px);
   width: 100%;
 }
 
@@ -514,7 +529,7 @@
 
 .vm-hero__chevron {
   position: absolute;
-  bottom: clamp(10px, 2vh, 20px);
+  bottom: clamp(8px, 1.4vh, 14px);
   left: 50%;
   z-index: 3;
   display: grid;
@@ -566,11 +581,7 @@
 
 @media (min-width: 768px) {
   .vm-hero__plate {
-    /* ~61% of a 1440 frame ends up as painted car at scale 1, once the render's
-       own margins are taken off — the subject, not a motif. Each chapter scales
-       that between roughly 55% and 70%, so consecutive sections never hand the
-       car the same box. */
-    width: calc(min(88%, 1260px, 132vh) * var(--vm-car-scale, 1));
+    width: min(88%, 1260px, 132vh);
   }
 }
 
@@ -583,16 +594,11 @@
 
   .vm-hero__plate {
     /* Wider than the section: at 390px a plate held to the gutter leaves the
-       car reading as a thumbnail. This fills the frame edge to edge, and the
-       optical-centre nudge shrinks with it. The per-chapter scale is damped —
-       a phone frame has no room to give a section 12% more car. */
-    width: calc(min(130%, 78vh) * (0.72 + var(--vm-car-scale, 1) * 0.28));
-    transform: translateX(calc(var(--vm-car-nudge, -2.7) * 0.6%)) scaleX(var(--vm-car-flip, 1));
-  }
-
-  /* Same damping for where it sits: the vertical budget is far tighter here. */
-  .vm-hero__stage {
-    transform: translateY(calc(var(--vm-car-shift, 0px) * 0.5));
+       car reading as a thumbnail. The stage runs past both edges so the car
+       itself lands just wider than the frame, exactly as on desktop — the fit
+       inside it is the same measurement, so nothing about the composition
+       changes but its size. */
+    width: min(142%, 86vh);
   }
 
   .vm-hero__specs {
@@ -619,7 +625,7 @@
 
 @media (forced-colors: active) {
   .vm-hero__reveal { opacity: 1; transform: none; }
-  .vm-hero__car { transform: none; }
+  .vm-hero__lens { transform: none; }
   .vm-hero__backdrop,
   .vm-hero__vignette,
   .vm-hero__floor,
