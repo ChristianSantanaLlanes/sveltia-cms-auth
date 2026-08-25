@@ -147,6 +147,11 @@ async function main() {
     try {
       await page.goto(BASE + t.url, { waitUntil: 'networkidle', timeout: 45_000 });
       await page.waitForTimeout(t.wait ?? 700);
+      const overlay = await page.locator('vite-error-overlay').count();
+      if (overlay) {
+        const msg = await page.locator('vite-error-overlay').evaluate((el) => el.shadowRoot?.textContent?.slice(0, 400) ?? 'vite error');
+        throw new Error(`vite error overlay on screen — the app does not compile:\n${msg}`);
+      }
       if (t.prep) await t.prep(page);
       const file = path.join(OUT, `${name}.png`);
       await page.screenshot({ path: file, fullPage: Boolean(t.fullPage), animations: 'disabled' });
