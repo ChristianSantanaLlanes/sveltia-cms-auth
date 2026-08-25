@@ -1,0 +1,237 @@
+/* ── Order summary ───────────────────────────────────────────────────────
+   One component, three placements: the sticky desktop rail, the collapsible
+   strip that sits above the form on narrow viewports, and a static block on
+   the confirmation page.                                                    */
+
+.osum {
+  min-width: 0;
+  background-color: var(--bg);
+}
+
+.osum--rail,
+.osum--static {
+  padding: var(--s-6);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+}
+
+.osum--rail {
+  position: sticky;
+  top: calc(var(--header-h) + var(--s-6));
+}
+
+.osum--strip {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.osum__heading {
+  font-size: var(--fs-h3);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+  margin-bottom: var(--s-5);
+}
+
+/* ── Collapsible strip header ────────────────────────────────────────────── */
+
+.osum__strip {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-5);
+  text-align: left;
+  background-color: var(--surface);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.osum__strip:hover { background-color: var(--surface-2); }
+.osum__strip:focus-visible { outline-offset: -2px; }
+
+.osum__stripText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.osum__stripLabel {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.osum__stripHint {
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+}
+
+.osum__stripTotal {
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.osum__chev {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-right: 1.5px solid var(--text-secondary);
+  border-bottom: 1.5px solid var(--text-secondary);
+  transform: rotate(45deg);
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.osum--strip.is-open .osum__chev { transform: rotate(225deg); margin-top: 3px; }
+
+/* ── Panel ───────────────────────────────────────────────────────────────── */
+
+.osum__panel {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--dur) var(--ease-out);
+}
+
+.osum--strip .osum__panel { grid-template-rows: 0fr; }
+.osum--strip.is-open .osum__panel { grid-template-rows: 1fr; }
+
+.osum__clip { overflow: hidden; min-height: 0; }
+
+.osum--strip .osum__clip { padding: 0 var(--s-5); }
+.osum--strip.is-open .osum__clip { padding: var(--s-5); }
+
+/* ── Vehicle ─────────────────────────────────────────────────────────────── */
+
+.osum__vehicle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding-bottom: var(--s-5);
+}
+
+.osum__plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  background-color: var(--surface);
+}
+
+.osum__car { width: 100%; }
+
+.osum__ident { display: flex; flex-direction: column; gap: 2px; }
+
+.osum__model {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+}
+
+.osum__trim {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+/* ── Itemised lines ──────────────────────────────────────────────────────── */
+
+.osum__lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.osum__lines--fees { margin-top: var(--s-4); }
+
+.osum__line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+.osum__lineLabel { color: var(--text-secondary); }
+
+.osum__lineAmount {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.osum__line--sub .osum__lineLabel,
+.osum__line--sub .osum__lineAmount { color: var(--text); }
+
+.osum__line--credit .osum__lineAmount { color: var(--success); }
+
+/* ── Total ───────────────────────────────────────────────────────────────── */
+
+.osum__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+}
+
+.osum__totalLabel {
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+.osum__totalValue {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Payment line ────────────────────────────────────────────────────────── */
+
+.osum__pay {
+  margin-top: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-sm);
+  background-color: var(--surface);
+}
+
+.osum__payRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.osum__payValue { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.osum__payDetail {
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.osum__lead {
+  margin-top: var(--s-3);
+  font-size: var(--fs-xs);
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .osum__panel,
+  .osum__chev,
+  .osum__strip { transition: none; }
+}

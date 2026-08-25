@@ -89,8 +89,6 @@ interface Geometry {
 const VIEW_W = 1200;
 const VIEW_H = 420;
 const FLOOR = 340;
-/** Wheels are seen at 55° in the three-quarter views. */
-const SQUASH = 0.835;
 
 const SEDAN_SIDE: Geometry = {
   outline: [
@@ -106,8 +104,8 @@ const SEDAN_SIDE: Geometry = {
     'A 80 74 0 0 0 801,262',
     'C 762,272 430,276 361,268',
     'A 78 74 0 0 0 205,268',
-    'C 190,282 168,296 152,306',
-    'C 128,292 110,260 111,226',
+    'C 192,278 174,288 160,294',
+    'C 134,288 112,258 111,226',
     'C 114,196 126,178 146,170',
     'Z',
   ].join(' '),
@@ -138,7 +136,7 @@ const SEDAN_SIDE: Geometry = {
   taillight: 'M 1030,174 C 1050,177 1068,181 1082,186 L 1078,207 C 1064,201 1046,196 1026,193 Z',
   mirror: 'M 440,126 C 424,120 410,124 406,133 L 430,139 Z',
   trim: [
-    'M 152,288 C 172,278 192,272 208,269 L 210,280 C 194,284 172,292 156,300 Z',
+    'M 146,276 C 168,266 190,260 210,257 L 212,273 C 192,276 170,283 152,292 Z',
     'M 998,276 C 1016,281 1032,284 1044,284 L 1042,290 C 1028,291 1012,288 996,284 Z',
   ],
   gaps: ['M 214,192 C 206,226 200,252 196,268', 'M 1028,200 C 1032,234 1036,258 1040,274'],
@@ -163,8 +161,8 @@ const SUV_SIDE: Geometry = {
     'A 82 60 0 0 0 794,250',
     'C 752,262 430,264 392,250',
     'A 82 60 0 0 0 228,250',
-    'C 206,266 180,288 160,304',
-    'C 140,292 130,258 132,226',
+    'C 208,270 186,282 170,292',
+    'C 146,286 130,256 132,226',
     'C 136,192 148,168 168,154',
     'Z',
   ].join(' '),
@@ -198,7 +196,7 @@ const SUV_SIDE: Geometry = {
     'M 218,250 A 92 70 0 0 1 402,250 L 392,250 A 82 60 0 0 0 228,250 Z',
     'M 784,250 A 92 70 0 0 1 968,250 L 958,250 A 82 60 0 0 0 794,250 Z',
     'M 236,258 C 480,270 720,270 950,258 L 950,268 C 720,280 480,280 234,268 Z',
-    'M 160,282 C 184,270 206,262 222,258 L 226,268 C 208,272 186,282 164,294 Z',
+    'M 158,266 C 182,256 204,248 224,244 L 228,260 C 208,264 186,272 164,282 Z',
     'M 976,268 C 1000,276 1020,280 1034,281 L 1030,290 C 1014,289 994,284 970,276 Z',
   ],
   gaps: ['M 232,176 C 224,208 218,234 216,252', 'M 1000,178 C 1006,212 1010,238 1012,258'],
@@ -737,17 +735,19 @@ export default function CarRender({
         <path d={g.mirror} fill={`url(#${uid}-face)`} data-paint />
         <path d={g.mirror} fill="#000000" opacity="0.16" />
 
-        {/* Lower trim and bumper cuts */}
-        {g.trim?.map((d) => (
-          <path key={d} d={d} fill="#12151a" fillOpacity="0.82" />
-        ))}
-        {g.gaps && (
-          <g fill="none" stroke="#0a0d10" strokeOpacity="0.26" strokeWidth="1.4" strokeLinecap="round">
-            {g.gaps.map((d) => (
-              <path key={d} d={d} />
-            ))}
-          </g>
-        )}
+        {/* Lower trim and bumper cuts — clipped so nothing hangs off the body. */}
+        <g clipPath={`url(#${uid}-clip-body)`}>
+          {g.trim?.map((d) => (
+            <path key={d} d={d} fill="#12151a" fillOpacity="0.82" />
+          ))}
+          {g.gaps && (
+            <g fill="none" stroke="#0a0d10" strokeOpacity="0.26" strokeWidth="1.4" strokeLinecap="round">
+              {g.gaps.map((d) => (
+                <path key={d} d={d} />
+              ))}
+            </g>
+          )}
+        </g>
 
         {/* Lighting */}
         {g.intake && <path d={g.intake} fill="#0e1114" fillOpacity="0.88" />}

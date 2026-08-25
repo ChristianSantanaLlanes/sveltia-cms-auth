@@ -125,7 +125,10 @@ async function main() {
 
   if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
   const server = await ensureServer();
-  const browser = await chromium.launch({ args: ['--no-sandbox', '--font-render-hinting=none', '--force-color-profile=srgb'] });
+  const browser = await chromium.launch({
+    executablePath: process.env.PW_CHROME || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+    args: ['--no-sandbox', '--font-render-hinting=none', '--force-color-profile=srgb'],
+  });
 
   const results = [];
   for (const name of wanted) {

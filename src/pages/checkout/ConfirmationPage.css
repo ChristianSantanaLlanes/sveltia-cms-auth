@@ -1,0 +1,298 @@
+/* ── Order confirmation ──────────────────────────────────────────────────
+   Deliberately quiet: no confetti, no oversized checkmark. The reassurance
+   comes from the car, the order number and a clear next step.               */
+
+.conf {
+  padding: calc(var(--header-h) + var(--s-12)) var(--gutter) var(--s-24);
+}
+
+.conf__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ── Head ────────────────────────────────────────────────────────────────── */
+
+.conf__head { max-width: 720px; }
+
+.conf__eyebrow {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--success);
+  margin-bottom: var(--s-3);
+}
+
+.conf__title {
+  font-size: var(--fs-display);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+.conf__lede {
+  margin-top: var(--s-5);
+  font-size: var(--fs-lg);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.conf__nowrap { white-space: nowrap; color: var(--text); }
+
+.conf__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-6) var(--s-12);
+  margin-top: var(--s-8);
+  padding: var(--s-5) 0;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.conf__metaItem dt {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.conf__metaItem dd {
+  margin-top: var(--s-1);
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+.conf__orderNo {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+/* ── Stage ───────────────────────────────────────────────────────────────── */
+
+.conf__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--s-10);
+  padding: var(--s-6) var(--s-4);
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(120% 90% at 50% 42%, var(--bg) 0%, var(--surface) 62%, var(--surface-2) 100%);
+}
+
+.conf__car {
+  width: 100%;
+  max-width: 720px;
+}
+
+/* ── Body grid ───────────────────────────────────────────────────────────── */
+
+.conf__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-10);
+  margin-top: var(--s-12);
+}
+
+.conf__h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* ── Steps ───────────────────────────────────────────────────────────────── */
+
+.conf__steps {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--s-6);
+}
+
+.conf__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--s-4);
+  padding-bottom: var(--s-6);
+}
+
+.conf__step:last-child { padding-bottom: 0; }
+
+/* Connector between the markers. */
+.conf__step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 13.5px;
+  top: 30px;
+  bottom: 2px;
+  width: 1px;
+  background-color: var(--line);
+}
+
+.conf__stepMark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background-color: var(--bg);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+}
+
+.conf__step.is-current .conf__stepMark {
+  border-color: var(--ink);
+  background-color: var(--ink);
+  color: var(--on-dark);
+}
+
+.conf__stepBody { padding-top: 3px; }
+
+.conf__stepTitle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.conf__step.is-current .conf__stepTitle { color: var(--text); }
+
+.conf__stepNow {
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background-color: var(--surface);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.conf__stepText {
+  margin-top: var(--s-1);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 52ch;
+}
+
+/* ── Delivery callout ────────────────────────────────────────────────────── */
+
+.conf__delivery {
+  margin-top: var(--s-8);
+  padding: var(--s-5);
+  border-radius: var(--r-md);
+  background-color: var(--surface);
+}
+
+.conf__deliveryLabel {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.conf__deliveryValue {
+  margin-top: var(--s-1);
+  font-size: var(--fs-h3);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+}
+
+.conf__deliveryTo {
+  margin-top: 2px;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+/* ── Ordered spec ────────────────────────────────────────────────────────── */
+
+.conf__spec {
+  margin-top: var(--s-8);
+  border-top: 1px solid var(--line-soft);
+}
+
+.conf__specRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-1);
+  padding: var(--s-4) 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.conf__specRow dt {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.conf__specRow dd { font-size: var(--fs-sm); line-height: 1.5; }
+
+/* ── Links ───────────────────────────────────────────────────────────────── */
+
+.conf__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-8);
+  margin-top: var(--s-12);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--line-soft);
+}
+
+.conf__link {
+  position: relative;
+  padding-bottom: 2px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  box-shadow: inset 0 -1px 0 transparent;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.conf__link:hover { box-shadow: inset 0 -1px 0 currentColor; }
+
+/* ── Missing-order state ─────────────────────────────────────────────────── */
+
+.conf--missing .conf__inner { max-width: 640px; }
+.conf--missing .conf__title { font-size: var(--fs-h1); }
+.conf--missing .conf__links { border-top: 0; padding-top: 0; margin-top: var(--s-8); }
+
+/* ── Breakpoints ─────────────────────────────────────────────────────────── */
+
+@media (min-width: 768px) {
+  .conf__specRow {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: var(--s-6);
+    align-items: baseline;
+  }
+  .conf__specRow dt { padding-top: 2px; }
+}
+
+@media (min-width: 1024px) {
+  .conf { padding-top: calc(var(--header-h) + var(--s-16)); }
+
+  .conf__stage { padding: var(--s-8) var(--s-10); }
+
+  .conf__grid {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: var(--s-16);
+    align-items: start;
+  }
+
+  .conf__specRow { grid-template-columns: 200px minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conf__link { transition: none; }
+}
