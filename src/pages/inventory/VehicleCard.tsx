@@ -130,7 +130,7 @@ export function VehicleCard({ vehicle }: VehicleCardProps): ReactElement {
 
           <Button
             to={`/design/${vehicle.config.modelId}`}
-            variant="primary"
+            variant="secondary"
             fullWidth
             className="vcard__cta"
             aria-label={cta}

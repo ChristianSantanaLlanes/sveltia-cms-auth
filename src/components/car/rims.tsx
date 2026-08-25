@@ -61,10 +61,12 @@ export function tyreRadius(size: number): number {
   return 0.3425 + (clamped - 18) * 0.0022;
 }
 
-/** Rim face radius as a fraction of the tyre radius — real section heights. */
+/** Rim face radius as a fraction of the tyre radius. Photographed low-profile
+ *  performance tyres show far less sidewall than the raw section height implies,
+ *  so the ratio is lifted toward what a 255/35R20 reads as on camera. */
 export function rimRatio(size: number): number {
   const clamped = Math.min(22, Math.max(17, size));
-  return (clamped * INCH) / 2 / tyreRadius(clamped);
+  return Math.min(0.88, ((clamped * INCH) / 2 / tyreRadius(clamped)) * 1.17);
 }
 
 /* ── Shared paint ────────────────────────────────────────────────────────── */
@@ -265,24 +267,21 @@ export function Wheel({ uid, style, size, cx, cy, ax, ay, by, r = 1, shade = 0 }
   const mB = ay ?? 0;
   const mD = by ?? r;
   const rim = rimRatio(size);
-  const tread = 0.975;
-  const dash = ((Math.PI * 2 * tread) / 52).toFixed(4);
   const solid = style !== 'aero';
 
   return (
     <g transform={`matrix(${mA.toFixed(3)} ${mB.toFixed(3)} 0 ${mD.toFixed(3)} ${cx.toFixed(2)} ${cy.toFixed(2)})`}>
       <circle r="1" fill={`url(#${uid}-tyre)`} />
-      <circle
-        r={tread}
-        fill="none"
-        stroke="#000000"
-        strokeOpacity="0.45"
-        strokeWidth="0.055"
-        strokeDasharray={`${dash} ${dash}`}
+      {/* The arch throws shade across the top of the tyre; without it the tyre
+          reads as a flat disc pasted behind the body. */}
+      <path
+        d="M -0.995 -0.10 A 1 1 0 0 1 0.995 -0.10 L 0.855 -0.10 A 0.86 0.86 0 0 0 -0.855 -0.10 Z"
+        fill="#05070a"
+        fillOpacity="0.45"
       />
-      <circle r="0.94" fill={`url(#${uid}-tyre)`} />
-      <circle r="0.94" fill={`url(#${uid}-tyre-in)`} />
-      <circle r={(rim + 0.94) / 2} fill="none" stroke="#ffffff" strokeOpacity="0.07" strokeWidth="0.018" />
+      <circle r="0.965" fill={`url(#${uid}-tyre)`} />
+      <circle r="0.965" fill={`url(#${uid}-tyre-in)`} />
+      <circle r={(rim + 0.965) / 2} fill="none" stroke="#ffffff" strokeOpacity="0.07" strokeWidth="0.018" />
 
       <g transform={`scale(${rim.toFixed(4)})`}>
         {/* Outer lip, then the barrel the spokes float over. */}

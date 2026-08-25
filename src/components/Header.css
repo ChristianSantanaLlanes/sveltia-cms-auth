@@ -5,6 +5,9 @@
   top: var(--s-2);
   left: var(--s-2);
   z-index: calc(var(--z-modal) + 1);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: var(--s-2) var(--s-4);
   border-radius: var(--r-sm);
   background: var(--ink);
@@ -141,12 +144,43 @@
   .vm-header__centre {
     display: none;
   }
+
+  /* The centre nav is the grid's second child, so hiding it lets the account
+     nav auto-place into the middle column — the Menu affordance ends up
+     floating in the centre of the header instead of sitting under the thumb.
+     Pin it to the last column so it stays on the right edge at every width. */
+  .vm-header__end {
+    grid-column: 3;
+  }
 }
 
 @media (max-width: 767px) {
   .vm-header__shop,
   .vm-header__account {
     display: none;
+  }
+
+  /* Touch: the header is 56px, so 44px targets fit inside it with 6px of
+     clearance top and bottom. Only the Menu affordance survives at this width,
+     so growing the chip costs the header nothing. */
+  .vm-nav__link {
+    height: 44px;
+    padding-inline: var(--s-4);
+  }
+
+  .vm-header__wordmark {
+    height: 44px;
+  }
+
+  .vm-drawer__close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .vm-drawer__link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 

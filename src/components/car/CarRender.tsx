@@ -122,7 +122,6 @@ interface Spec {
   intake: { y: [number, number]; inset: number };
   vent: { y: [number, number]; w: number };
   mirror: { x: number; y: number; w: number; h: number; out: number };
-  tailLamp: P2[];
   deckCutX: number;
 }
 
@@ -219,26 +218,18 @@ const SEDAN: Spec = {
   deckEndX: 4.512,
   cowl: [1.35, 0.918],
   crown: 0.045,
-  lamp: { y: [0.598, 0.652], inset: 0.13 },
+  lamp: { y: [0.548, 0.606], inset: 0.13 },
   lampSide: [
-    [0.104, 0.606],
-    [0.22, 0.638],
-    [0.35, 0.662],
-    [0.356, 0.626],
-    [0.23, 0.602],
-    [0.116, 0.568],
+    [0.098, 0.609],
+    [0.185, 0.628],
+    [0.272, 0.643],
+    [0.274, 0.638],
+    [0.19, 0.612],
+    [0.1, 0.58],
   ],
-  intake: { y: [0.316, 0.446], inset: 0.38 },
+  intake: { y: [0.352, 0.462], inset: 0.38 },
   vent: { y: [0.34, 0.56], w: 0.14 },
   mirror: { x: 1.72, y: 0.985, w: 0.2, h: 0.085, out: 0.17 },
-  tailLamp: [
-    [4.28, 1.016],
-    [4.44, 0.99],
-    [4.548, 0.936],
-    [4.536, 0.9],
-    [4.43, 0.952],
-    [4.28, 0.978],
-  ],
   deckCutX: 4.05,
 };
 
@@ -336,26 +327,18 @@ const SUV: Spec = {
   deckEndX: 4.53,
   cowl: [1.42, 1.068],
   crown: 0.05,
-  lamp: { y: [0.688, 0.752], inset: 0.14 },
+  lamp: { y: [0.63, 0.694], inset: 0.14 },
   lampSide: [
-    [0.116, 0.702],
-    [0.24, 0.74],
-    [0.37, 0.766],
-    [0.376, 0.728],
-    [0.25, 0.702],
-    [0.128, 0.662],
+    [0.11, 0.696],
+    [0.202, 0.717],
+    [0.294, 0.733],
+    [0.296, 0.728],
+    [0.208, 0.7],
+    [0.112, 0.665],
   ],
-  intake: { y: [0.396, 0.546], inset: 0.4 },
+  intake: { y: [0.428, 0.556], inset: 0.4 },
   vent: { y: [0.42, 0.65], w: 0.15 },
   mirror: { x: 1.78, y: 1.135, w: 0.21, h: 0.09, out: 0.18 },
-  tailLamp: [
-    [4.32, 1.264],
-    [4.46, 1.19],
-    [4.522, 1.086],
-    [4.508, 1.046],
-    [4.43, 1.15],
-    [4.32, 1.226],
-  ],
   deckCutX: 4.18,
 };
 
@@ -468,16 +451,25 @@ interface Geo {
   faceVert: [Pt, Pt];
   faceSplit: string;
   faceLip: string;
+  faceCorner: string;
   intake: string;
+  intakeMouth: string;
+  intakeBlade: string;
+  valance: string;
+  bumperShelf: string;
+  faceUnder: string;
   vents: string[];
+  lampHousing: string;
+  lampBrow: string;
+  lampLens: string;
   lampBar: string;
   lampCore: string;
-  lampRecess: string;
   lampFar: string;
   lampFarCore: string;
   faceGleam: string;
   splitter: string;
   lampSide: string;
+  lampSideCore: string;
   windscreen: string;
   wsGlare: string;
   wsGlareAxis: [Pt, Pt];
@@ -496,6 +488,8 @@ interface Geo {
   archOutline: string[];
   archPocket: string[];
   archLip: string[];
+  archRollIn: string[];
+  archRollOut: string[];
   haunch: { cx: number; cy: number; rx: number; ry: number }[];
   doorCuts: string[];
   hoodCut: string;
@@ -508,6 +502,11 @@ interface Geo {
   mirrorFar: string;
   mirrorGlass: string;
   tailLamp: string;
+  tailHousing: string;
+  tailCore: string;
+  tailChin: string;
+  tailAxis: [Pt, Pt];
+  tailVert: [Pt, Pt];
   under: string;
   underAxis: [Pt, Pt];
   farGap: string;
@@ -544,7 +543,10 @@ function build(raw: Spec, view: View, size: number): Geo {
       ...proj(archPts(spec.axleR), wheelZ),
       ...proj(spec.rocker, nearZ),
       ...proj(archPts(spec.axleF), wheelZ),
-      ...proj(spec.frontLower, nearZ),
+      /* frontLower ends on outlineTop's first point. Closed, the spline had a
+         zero-length segment to round at the bumper's bottom corner and looped
+         past it, hanging a flat lit wedge of paint under the fascia. */
+      ...proj(spec.frontLower.slice(0, -1), nearZ),
     ],
     true
   );
@@ -556,77 +558,148 @@ function build(raw: Spec, view: View, size: number): Geo {
   const yLo = nose[0][1];
   const yHi = nose[nose.length - 1][1];
 
-  /* Top surfaces — hood, roof and deck are one lofted shell swept from the
-     near shoulder to the far one, crowned along the centreline. Because the
-     camera sits a hair above the roof, the hood opens up and the roof stays a
-     sliver, exactly as it does in a studio frame. */
-  const topProfile = spec.outlineTop.filter(
-    ([x]) => x >= spec.hoodFrontX - 0.001 && x <= spec.deckEndX + 0.001
-  );
-  const shellPt = (i: number, z: number): Pt => {
-    const [x, y] = topProfile[i];
-    const t = Math.max(0, (1.05 - x) / (1.05 - spec.hoodFrontX));
-    const taper = x < spec.cowl[0] ? 1 : x > spec.deckEndX - 0.6 ? 0.8 : 0.5;
-    const rise = spec.crown * taper * Math.sin((Math.PI * z) / W);
-    return p(x - bulge(z) * t, y + rise, z);
-  };
-  const shellEdge = (z: number) => topProfile.map((_, i) => shellPt(i, z));
-  const shell = [ribbon(shellEdge(W / 2), shellEdge(0)), ribbon(shellEdge(W), shellEdge(W / 2))];
-  const crease = curve(shellEdge(W / 2));
-  const shellAxis: [Pt, Pt] = [shellPt(2, 0), shellPt(2, W)];
-
-  /* Front fascia: the nose profile swept across the car. */
-  const faceZ = samples(0, W, 16);
+  /* The fascia's plan sweep. The hood's leading edge shares it, so the two
+     panels meet on one line instead of the hood overhanging the bumper. */
   const faceX = (y: number, z: number) => {
     const t = 1 - Math.max(0, Math.min(1, (y - yLo) / (yHi - yLo))) * 0.25;
     /* The far corner tucks back along the car, so the fascia rounds off there
        instead of ending on a ruled vertical edge. */
     return -bulge(z) * t + 0.11 * (z / W) ** 4;
   };
+
+  /* Top surfaces — hood, roof and deck are one lofted shell swept from the
+     near shoulder to the far one, crowned along the centreline. Because the
+     camera sits a hair above the roof, the hood opens up and the roof stays a
+     sliver, exactly as it does in a studio frame. */
+  /* Only the profile above the nose corner is hood, roof and deck. The
+     silhouette's first vertex is the bumper's bottom corner, and it passes the
+     x test — lofted, it hung a flat lit quadrilateral off the bottom of the
+     fascia, which is what read as a plastic shim taped under the bumper. */
+  const topProfile = spec.outlineTop.filter(
+    ([x]) => x >= spec.hoodFrontX - 0.001 && x <= spec.deckEndX + 0.001
+  );
+  const shellPt = (i: number, z: number, sink = 0): Pt => {
+    /* The profile's leading vertex is the fascia's own bottom corner, so it is
+       swept on the fascia's plan line, not the hood's. Lofted on the hood's it
+       ran a hair wide of the bumper and left a flat lit wedge of shell hanging
+       below the fascia's bottom edge — the shim under the nose. */
+    if (i === 0) {
+      const [fx, fy] = topProfile[0];
+      return p(fx + faceX(fy, z), fy, z);
+    }
+    const [x, y] = topProfile[i];
+    const t = Math.max(0, (1.05 - x) / (1.05 - spec.hoodFrontX));
+    const taper = x < spec.cowl[0] ? 1 : x > spec.deckEndX - 0.6 ? 0.8 : 0.5;
+    const rise = spec.crown * taper * Math.sin((Math.PI * z) / W);
+    return p(x - bulge(z) * t, y + rise - sink, z);
+  };
+  /* The shell's near edge is tucked a shade below the shoulder. It is the same
+     line as the flank's top edge, but the two are splined through different
+     neighbours, so left flush they parted over the front wing and let the page
+     show through as a bright chip. The flank is painted over it either way. */
+  const shellEdge = (z: number, sink = 0) => topProfile.map((_, i) => shellPt(i, z, sink));
+  const shell = [ribbon(shellEdge(W / 2), shellEdge(0, 0.035)), ribbon(shellEdge(W), shellEdge(W / 2))];
+  const crease = curve(shellEdge(W / 2));
+  const shellAxis: [Pt, Pt] = [shellPt(2, 0), shellPt(2, W)];
+
+  /* Front fascia: the nose profile swept across the car. */
+  const faceZ = samples(0, W, 16);
   const faceTop = faceZ.map((z) => p(nose[3][0] + faceX(yHi, z), yHi, z));
   const faceFarEdge = [...nose].reverse().map(([x, y]) => p(x + faceX(y, W), y, W));
   const faceBottom = [...faceZ].reverse().map((z) => p(nose[0][0] + faceX(yLo, z), yLo, z));
   const faceNear = nose.map(([x, y]) => p(x, y, 0));
-  const face = curve([...faceNear, ...faceTop.slice(1), ...faceFarEdge.slice(1), ...faceBottom.slice(1)], true);
+  /* faceBottom ends on the very point faceNear starts from. Left in, the
+     closed spline had a zero-length segment to round and threw a flat lit
+     wedge off the bumper's near bottom corner — the loose plastic shim. */
+  const face = curve(
+    [...faceNear, ...faceTop.slice(1), ...faceFarEdge.slice(1), ...faceBottom.slice(1, -1)],
+    true
+  );
   const faceAxis: [Pt, Pt] = [p(0.15, 0.55, 0), p(0.15 - spec.bulgeF, 0.55, W)];
   const faceVert: [Pt, Pt] = [p(0.14 - spec.bulgeF, yHi, W / 2), p(0.14 - spec.bulgeF, yLo - 0.03, W / 2)];
   const sweep = (y: number, inset = 0, n = 12, far = W - inset) =>
     samples(inset, far, n).map((z) => p(nose[0][0] + faceX(y, z), y, z));
-  const splitY = (spec.lamp.y[0] + spec.intake.y[1]) / 2;
-  const faceSplit = curve(sweep(splitY));
-  const faceLip = curve(sweep(yLo + 0.028));
-
   const bandFace = (y0: number, y1: number, inset: number, far = W - inset) =>
     `${curve(sweep(y1, inset, 12, far))} ${curve([...sweep(y0, inset, 12, far)].reverse()).replace('M', 'L')} Z`;
+
+  /* An aperture in the fascia, with its ends rounded off in the plane of the
+     swept face. A mouth or a lamp housing is a moulding in a surface, not a
+     rectangle cut with scissors — square ends were most of why the lower nose
+     read as one flat slab. */
+  const lozenge = (y0: number, y1: number, z0: number, z1: number, round = 0.2) => {
+    const yc = (y0 + y1) / 2;
+    const h = (y1 - y0) / 2;
+    const r = Math.max(0.02, round);
+    const side = (dir: number) =>
+      samples(0, 1, 20).map((f) => {
+        const s = Math.sin((Math.PI / 2) * Math.min(1, Math.min(f, 1 - f) / r));
+        const y = yc + dir * h * s;
+        const z = z0 + (z1 - z0) * f;
+        return p(nose[0][0] + faceX(y, z), y, z);
+      });
+    return `${curve(side(1))} ${curve(side(-1).reverse()).replace('M', 'L')} Z`;
+  };
+
+  /* The lamp: a housing sunk into the fascia, a projector lens low in it and a
+     DRL blade across its top — not a bar floating on paint. */
+  const lampMid = (spec.lamp.y[0] + spec.lamp.y[1]) / 2;
+  const lampH = (spec.lamp.y[1] - spec.lamp.y[0]) / 2;
+  const lampBot = lampMid - lampH * 1.75;
+  const lampTop = lampMid + lampH * 1.3;
+  const lampZ1 = W - spec.lamp.inset;
+  const lampHousing = lozenge(lampBot, lampTop, 0.008, lampZ1 + 0.012, 0.13);
+  const lampBrow = curve(sweep(lampTop - 0.004, 0.03, 12, lampZ1));
+  const lampLens = lozenge(lampBot + 0.009, lampMid - lampH * 0.22, 0.05, lampZ1 - 0.05, 0.3);
+  const lampBar = lozenge(lampMid + lampH * 0.12, lampMid + lampH * 1.02, 0.03, lampZ1 - 0.028, 0.2);
+  const lampCore = curve(sweep(lampMid + lampH * 0.62, 0.05, 12, lampZ1 - 0.05));
+
+  const splitY = (lampBot + spec.intake.y[1]) / 2;
+  const faceSplit = curve(sweep(splitY));
+  const faceLip = curve(sweep(yLo + 0.028));
+  /* The near corner, where the fascia turns away to the wing: a catch light on
+     the crease itself, so the two panels part instead of merging. */
+  const faceCorner = curve(nose.map(([x, y]) => p(x, y, 0)));
 
   /* The far flank, as one dark mass. Nothing of it is lit, but it has to be
      there or the far wheels show straight through the car. */
   const farBody = curve(
-    [...spec.outlineTop, ...spec.rearLower, ...spec.rocker, ...spec.frontLower].map(([x, y]) =>
-      p(x, y, W - 0.02)
+    [...spec.outlineTop, ...spec.rearLower, ...spec.rocker, ...spec.frontLower].map(([x, y], i) =>
+      p(x, y + (i < spec.outlineTop.length ? 0.024 : 0), W - 0.02)
     ),
     true
   );
 
-  const intake = bandFace(spec.intake.y[0], spec.intake.y[1], spec.intake.inset);
+  const iy = spec.intake;
+  const intake = lozenge(iy.y[0], iy.y[1], iy.inset, W - iy.inset, 0.22);
+  /* the mouth is deep: an inner opening set back inside the moulding */
+  const intakeMouth = lozenge(iy.y[0] + 0.02, iy.y[1] - 0.026, iy.inset + 0.1, W - iy.inset - 0.1, 0.26);
+  const intakeBlade = lozenge(
+    (iy.y[0] + iy.y[1]) / 2 - 0.011,
+    (iy.y[0] + iy.y[1]) / 2 + 0.011,
+    iy.inset + 0.055,
+    W - iy.inset - 0.055,
+    0.3
+  );
+  /* the two shelves that give the lower nose its section: a lit valance under
+     the mouth, and the bumper's top plane between the mouth and the lamps */
+  const valance = bandFace(yLo + 0.012, iy.y[0] - 0.014, Math.max(0.03, iy.inset - 0.17));
+  const bumperShelf = bandFace(iy.y[1] + 0.014, splitY - 0.008, 0.05);
+  /* the very bottom of the fascia rolls under to the floor, so the bumper does
+     not end on a lit flange hanging in the air */
+  const faceUnder = bandFace(yLo - 0.02, yLo + 0.062, 0);
   const ventAt = (z0: number, z1: number) =>
     `${curve(samples(z0, z1, 4).map((z) => p(nose[0][0] + faceX(spec.vent.y[1], z), spec.vent.y[1], z)))} ${curve(
       samples(z1, z0, 4).map((z) => p(nose[0][0] + faceX(spec.vent.y[0], z), spec.vent.y[0], z))
     ).replace('M', 'L')} Z`;
   const vents = [ventAt(0.045, 0.045 + spec.vent.w), ventAt(W - 0.045 - spec.vent.w, W - 0.045)];
 
-  const lampBar = bandFace(spec.lamp.y[0], spec.lamp.y[1], 0.012, W - spec.lamp.inset);
-  const lampCore = curve(sweep((spec.lamp.y[0] + spec.lamp.y[1]) / 2 + 0.006, 0.03, 12, W - spec.lamp.inset - 0.02));
-  const lampRecess = bandFace(spec.lamp.y[0] - 0.02, spec.lamp.y[1] + 0.02, 0, W - spec.lamp.inset + 0.02);
-  /* The outboard end of the bar on the wrapped face reads as a lamp unit in its
+  /* The outboard end of the unit on the wrapped face reads as a lamp in its
      own right, so the nose is symmetrical instead of trailing off at the far
      corner. */
-  const farLampZ0 = W - spec.lamp.inset - 0.2;
-  const farLampZ1 = W - spec.lamp.inset + 0.015;
-  const lampFar = bandFace(spec.lamp.y[0] - 0.026, spec.lamp.y[1] + 0.026, farLampZ0, farLampZ1);
-  const lampFarCore = curve(
-    sweep((spec.lamp.y[0] + spec.lamp.y[1]) / 2 + 0.004, farLampZ0 + 0.03, 6, farLampZ1 - 0.02)
-  );
+  const farLampZ0 = lampZ1 - 0.22;
+  const farLampZ1 = lampZ1 + 0.008;
+  const lampFar = lozenge(lampBot + 0.008, lampTop - 0.004, farLampZ0, farLampZ1, 0.3);
+  const lampFarCore = curve(sweep(lampMid + lampH * 0.5, farLampZ0 + 0.03, 6, farLampZ1 - 0.02));
   const faceGleam = `${curve(
     samples(0.26, 0.5, 5).map((f) => p(nose[0][0] + faceX(yHi, W * f), yHi - 0.01, W * f))
   )} ${curve(samples(0.5, 0.26, 5).map((f) => p(nose[0][0] + faceX(yLo, W * f), yLo + 0.02, W * f))).replace(
@@ -635,6 +708,9 @@ function build(raw: Spec, view: View, size: number): Geo {
   )} Z`;
   const splitter = curve(sweep(yLo + 0.052, spec.intake.inset - 0.1));
   const lampSide = curve(spec.lampSide.map(([x, y]) => p(x, y, nearZ)), true);
+  const lampSideCore = curve(
+    [spec.lampSide[0], spec.lampSide[1], spec.lampSide[2]].map(([x, y]) => p(x, y - 0.012, nearZ))
+  );
 
   /* Glass. */
   /* The header rail: the screen stops a hair short of the roof edge so no part
@@ -730,8 +806,19 @@ function build(raw: Spec, view: View, size: number): Geo {
       p(cx + a * 0.99, spec.rockerY - 0.012, wheelZ)
     )} Z`;
   });
+  /* The fender does not stop at the arch — it rolls under. Two bands of
+     shadow on the body side of the cut, tight and dark against the edge then
+     wide and faint out onto the panel, give that roll its section; the lit lip
+     is then only the sliver of rolled edge the ceiling still reaches, over the
+     crown of the arch, instead of a hairline ruled all the way round. */
+  const archRollIn = [spec.axleF, spec.axleR].map((cx) =>
+    ribbon(proj(archPts(cx, 0.052), wheelZ), proj(archPts(cx, 0), wheelZ))
+  );
+  const archRollOut = [spec.axleF, spec.axleR].map((cx) =>
+    ribbon(proj(archPts(cx, 0.135), wheelZ), proj(archPts(cx, 0.045), wheelZ))
+  );
   const archLip = [spec.axleF, spec.axleR].map((cx) =>
-    curve(proj(archPts(cx, 0.014).slice(4, 12), wheelZ))
+    curve(proj(archPts(cx, 0.02).slice(5, 11), wheelZ))
   );
   const haunch = [spec.axleF, spec.axleR].map((cx) => {
     const c = p(cx + (cx === spec.axleF ? 0.1 : -0.1), R + a * 1.02, nearZ);
@@ -806,7 +893,38 @@ function build(raw: Spec, view: View, size: number): Geo {
     true
   );
 
-  const tailLamp = curve(spec.tailLamp.map(([x, y]) => p(x, y, nearZ)), true);
+  /* The tail lamp is not an appliqué. Its upper edge IS the character line, so
+     the crease running back along the quarter panel ends in the lens; the unit
+     starts as a hairline at the deck cut and swells to a full lamp at the tail,
+     where the body clip wraps it round the corner. */
+  const tlx0 = spec.deckCutX + 0.02;
+  const tlx1 = bx1 + 0.25;
+  /* mixY rides a polyline, so sampled raw the shoulder's vertices would kink
+     the lens. Three-point smoothing rounds them the way the crease is rounded. */
+  const tlY = (f: number) => {
+    const x = tlx0 + (tlx1 - tlx0) * f;
+    return (mixY(x - 0.07, 0.95) + 2 * mixY(x, 0.95) + mixY(x + 0.07, 0.95)) / 4;
+  };
+  const tlX = (f: number) => tlx0 + (tlx1 - tlx0) * f;
+  /* The lens has a real inboard end at the deck shut — it does not thin away
+     to nothing, which is what left a black spear lying on bare quarter panel
+     ahead of it. And the housing keeps its section the whole way, so the unit
+     is bordered in shadow at both ends. */
+  const tlDrop = (f: number) => 0.155 * (0.2 + 0.8 * f * f);
+  const tailBand = (grow: number) =>
+    `${curve(samples(0, 1, 18).map((f) => p(tlX(f), tlY(f) + grow * (0.6 + 0.4 * f) * 0.5, nearZ)))} ${curve(
+      samples(1, 0, 18).map((f) => p(tlX(f), tlY(f) - tlDrop(f) - grow * (0.6 + 0.4 * f), nearZ))
+    ).replace('M', 'L')} Z`;
+  const tailLamp = tailBand(0);
+  const tailHousing = tailBand(0.036);
+  /* the lit element inside the lens, and the shadowed chin below it */
+  const tailCore = curve(samples(0.06, 1, 16).map((f) => p(tlX(f), tlY(f) - tlDrop(f) * 0.3, nearZ)));
+  const tailChin = curve(samples(0.06, 1, 16).map((f) => p(tlX(f), tlY(f) - tlDrop(f) * 0.86, nearZ)));
+  const tailAxis: [Pt, Pt] = [p(tlx0, tlY(0), nearZ), p(tlx1, tlY(1), nearZ)];
+  const tailVert: [Pt, Pt] = [
+    p(tlX(0.82), tlY(0.82), nearZ),
+    p(tlX(0.82), tlY(0.82) - tlDrop(0.82), nearZ),
+  ];
 
   /* Everything under the sill reads as one soft dark mass that tucks in at
      the floor, so it never squares off into a slab. */
@@ -845,26 +963,14 @@ function build(raw: Spec, view: View, size: number): Geo {
     const dn = p(axle, 0, z);
     return { cx: c[0], cy: c[1], ax: ex[0] - c[0], ay: ex[1] - c[1], by: dn[1] - c[1], far, shade };
   };
-  /* The far pair stand on the same floor as the near pair — their contact
-     patches are just further from the lens — but they are seen almost edge-on
-     past the body, so they are squashed to a sliver of their rolling width and
-     clipped to the silhouette. Nothing of them may reach past sheet metal. */
-  const farSquash = 0.4;
+  /* The far pair are not drawn at all. At this angle the rocker leaves only a
+     couple of degrees of daylight, and any arc that fits in it is too short to
+     carry a sidewall, a rim face or a contact patch — so it stopped reading as
+     a wheel and started reading as a dome punched through the floorpan. An
+     unbroken dark valance under an unbroken rocker line is the truer note, and
+     it is what the reference frames show of the far side anyway. */
   const wheels: Wheel3[] = [];
   const contacts: Geo['contacts'] = [];
-  if (q3) {
-    for (const [axle, shade] of [
-      [spec.axleF, 0.44],
-      [spec.axleR, 0.48],
-    ] as const) {
-      const w = mk(axle, W - 0.11, true, shade);
-      const far = { ...w, ax: w.ax * farSquash, ay: w.ay * farSquash };
-      /* The patch is the width of the tyre that actually stands there, so it
-         cannot smear out from under the car as a stray oval. */
-      contacts.push({ x: far.cx, y: far.cy + far.by, r: Math.abs(far.ax), far: true });
-      wheels.push(far);
-    }
-  }
   wheels.push(mk(spec.axleR, wheelZ, false, q3 ? 0.1 : 0.06));
   wheels.push(mk(spec.axleF, wheelZ, false, 0));
 
@@ -891,16 +997,25 @@ function build(raw: Spec, view: View, size: number): Geo {
     faceVert,
     faceSplit,
     faceLip,
+    faceCorner,
     intake,
+    intakeMouth,
+    intakeBlade,
+    valance,
+    bumperShelf,
+    faceUnder,
     vents,
+    lampHousing,
+    lampBrow,
+    lampLens,
     lampBar,
     lampCore,
-    lampRecess,
     lampFar,
     lampFarCore,
     faceGleam,
     splitter,
     lampSide,
+    lampSideCore,
     windscreen,
     wsGlare,
     wsGlareAxis,
@@ -919,6 +1034,8 @@ function build(raw: Spec, view: View, size: number): Geo {
     archOutline,
     archPocket,
     archLip,
+    archRollIn,
+    archRollOut,
     haunch,
     doorCuts,
     hoodCut,
@@ -931,6 +1048,11 @@ function build(raw: Spec, view: View, size: number): Geo {
     mirrorFar,
     mirrorGlass,
     tailLamp,
+    tailHousing,
+    tailCore,
+    tailChin,
+    tailAxis,
+    tailVert,
     under,
     underAxis,
     farGap,
@@ -971,6 +1093,8 @@ export default function CarRender({
   const [wa, wb] = g.wsGlareAxis;
   const [pa, pb] = g.pillarAxis;
   const [ua, ub] = g.underAxis;
+  const [ta, tb] = g.tailAxis;
+  const [tva, tvb] = g.tailVert;
   const gr = g.ground;
   const flip = `translate(${gr.cx.toFixed(1)} ${gr.cy.toFixed(1)}) rotate(${gr.angle.toFixed(2)})`;
 
@@ -1103,10 +1227,49 @@ export default function CarRender({
           <stop offset="0.8" stopColor="#dce7f6" />
           <stop offset="1" stopColor="#8fa4c0" />
         </linearGradient>
-        <linearGradient id={`${uid}-tail`} gradientUnits="userSpaceOnUse" x1={ab[0]} y1={ab[1]} x2={aa[0]} y2={aa[1]}>
-          <stop offset="0" stopColor="#ff8a6a" />
-          <stop offset="0.35" stopColor="#d8241d" />
-          <stop offset="1" stopColor="#7d0d12" />
+        {/* The lens runs its own length: near black where it leaves the crease,
+            full red across the body, hot only where it wraps the tail. */}
+        <linearGradient id={`${uid}-tail`} gradientUnits="userSpaceOnUse" x1={ta[0]} y1={ta[1]} x2={tb[0]} y2={tb[1]}>
+          <stop offset="0" stopColor="#1c0306" />
+          <stop offset="0.26" stopColor="#5d0a0e" />
+          <stop offset="0.58" stopColor="#d8291b" />
+          <stop offset="0.84" stopColor="#ff6a30" />
+          <stop offset="1" stopColor="#8f1412" />
+        </linearGradient>
+        {/* …and across its depth, so the lens is a curved solid, not a decal */}
+        <linearGradient id={`${uid}-tailFace`} gradientUnits="userSpaceOnUse" x1={tva[0]} y1={tva[1]} x2={tvb[0]} y2={tvb[1]}>
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.26" />
+          <stop offset="0.22" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="0.62" stopColor="#05070a" stopOpacity="0.26" />
+          <stop offset="1" stopColor="#05070a" stopOpacity="0.62" />
+        </linearGradient>
+        {/* The side marker is the outboard tip of the headlamp coming round the
+            corner: hottest at the crease, gone by the wheel arch. */}
+        <linearGradient id={`${uid}-ledSide`} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
+          <stop offset="0" stopColor="#dfe8f5" />
+          <stop offset="0.016" stopColor="#93a3b8" />
+          <stop offset="0.032" stopColor="#4a5563" />
+          <stop offset="0.05" stopColor="#2c343d" />
+        </linearGradient>
+        {/* Inside the mouth: black at the roof of the opening, a touch of floor
+            bounce at its lower lip. */}
+        <linearGradient id={`${uid}-mouth`} gradientUnits="userSpaceOnUse" x1={va[0]} y1={va[1]} x2={vb[0]} y2={vb[1]}>
+          <stop offset="0" stopColor="#000000" stopOpacity="0.5" />
+          <stop offset="0.55" stopColor="#05070a" stopOpacity="0.85" />
+          <stop offset="1" stopColor="#2a3138" stopOpacity="0.9" />
+        </linearGradient>
+        {/* The projector lens: cool glass with a hot spot low in the housing. */}
+        <linearGradient id={`${uid}-lens`} gradientUnits="userSpaceOnUse" x1={va[0]} y1={va[1]} x2={vb[0]} y2={vb[1]}>
+          <stop offset="0" stopColor="#93a6bd" />
+          <stop offset="0.35" stopColor="#4a5766" />
+          <stop offset="0.72" stopColor="#c9d8ea" />
+          <stop offset="1" stopColor="#39434f" />
+        </linearGradient>
+        {/* A moulded shelf: lit on its top plane, shaded where it turns down. */}
+        <linearGradient id={`${uid}-shelf`} gradientUnits="userSpaceOnUse" x1={va[0]} y1={va[1]} x2={vb[0]} y2={vb[1]}>
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.16" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.03" />
+          <stop offset="1" stopColor="#05070a" stopOpacity="0.3" />
         </linearGradient>
 
         <linearGradient id={`${uid}-faceShade`} gradientUnits="userSpaceOnUse" x1={va[0]} y1={va[1]} x2={vb[0]} y2={vb[1]}>
@@ -1183,12 +1346,10 @@ export default function CarRender({
           {q3 && <path d={g.face} />}
           {q3 && g.shell.map((d) => <path key={d} d={d} />)}
         </clipPath>
-        {/* The far pair may only ever show through the car's own silhouette or
-            the daylight gap under the rocker — never past the fascia. */}
+        {/* Kept for anything that must stay inside the car's own silhouette. */}
         <clipPath id={`${uid}-clipFar`}>
           <path d={g.outline} />
           {q3 && <path d={g.face} />}
-          {q3 && <path d={g.farGap} />}
         </clipPath>
         <clipPath id={`${uid}-clipWs`}>
           <path d={g.windscreen} />
@@ -1284,35 +1445,6 @@ export default function CarRender({
           <path key={d} d={d} fill={`url(#${uid}-well)`} />
         ))}
 
-        {/* The far pair: same tyre, seen almost edge-on, so it squashes to a
-            sliver. Only the daylight under the rocker lets any of it through —
-            the valance and the fascia take the rest. */}
-        {q3 && (
-          <g clipPath={`url(#${uid}-clipFar)`}>
-            {g.wheels
-              .filter((w) => w.far)
-              .map((w) => (
-                <g
-                  key={`f${w.cx.toFixed(1)}`}
-                  transform={`matrix(${w.ax.toFixed(3)} ${w.ay.toFixed(3)} 0 ${w.by.toFixed(3)} ${w.cx.toFixed(
-                    2
-                  )} ${w.cy.toFixed(2)})`}
-                >
-                  <circle r="1" fill={`url(#${uid}-farTyre)`} />
-                  <circle r={rimRatio(wheel.size)} fill={`url(#${uid}-farRim)`} />
-                  <circle
-                    r={rimRatio(wheel.size) * 0.34}
-                    fill="#0a0d11"
-                    stroke="#ffffff"
-                    strokeOpacity="0.1"
-                    strokeWidth="0.04"
-                  />
-                  <circle r="1" fill="#05070a" fillOpacity={w.shade * 0.7} />
-                </g>
-              ))}
-          </g>
-        )}
-
         {g.wheels
           .filter((w) => !w.far)
           .map((w) => (
@@ -1337,7 +1469,7 @@ export default function CarRender({
         <path d={g.outline} fill={`url(#${uid}-flank)`} data-paint />
         <g clipPath={`url(#${uid}-clipBody)`}>
           {/* 1 · the shoulder turn-over takes the sky */}
-          <path d={g.band(0.86, 1.06)} fill={`url(#${uid}-skyband)`} filter={`url(#${uid}-mid)`} />
+          <path d={g.band(0.86, 1.0)} fill={`url(#${uid}-skyband)`} filter={`url(#${uid}-mid)`} />
           {/* 2 · dark immediately under the character line — the tightest step */}
           <path d={g.band(0.6, 0.95)} fill={`url(#${uid}-underCrease)`} filter={`url(#${uid}-tight)`} />
           {/* 3 · the flank mirrors the floor: a soft horizon sweep, then dark to the sill */}
@@ -1366,6 +1498,17 @@ export default function CarRender({
           {/* 5 · arches and sill hold the darkest values on the car */}
           {g.archOutline.map((d) => (
             <path
+              key={`t${d}`}
+              d={d}
+              fill="none"
+              stroke="#05070a"
+              strokeOpacity="0.34"
+              strokeWidth={g.fadePx * 0.4}
+              filter={`url(#${uid}-mid)`}
+            />
+          ))}
+          {g.archOutline.map((d) => (
+            <path
               key={d}
               d={d}
               fill="none"
@@ -1375,8 +1518,14 @@ export default function CarRender({
               filter={`url(#${uid}-tight)`}
             />
           ))}
+          {g.archRollOut.map((d) => (
+            <path key={d} d={d} fill="#05070a" fillOpacity="0.12" filter={`url(#${uid}-mid)`} />
+          ))}
+          {g.archRollIn.map((d) => (
+            <path key={d} d={d} fill="#05070a" fillOpacity="0.3" filter={`url(#${uid}-tight)`} />
+          ))}
           {g.archLip.map((d) => (
-            <path key={d} d={d} fill="none" stroke="#ffffff" strokeOpacity="0.15" strokeWidth="1" />
+            <path key={d} d={d} fill="none" stroke="#ffffff" strokeOpacity="0.13" strokeWidth="0.9" filter={`url(#${uid}-hair)`} />
           ))}
           {/* the character line: a bright hairline with dark right beneath it */}
           <path d={g.line(0.95)} fill="none" stroke={`url(#${uid}-horizon)`} strokeWidth="3.4" filter={`url(#${uid}-hair)`} />
@@ -1413,7 +1562,7 @@ export default function CarRender({
           </g>
           {/* …and carries its own value, a shade under the wing behind it */}
           <path
-            d={g.band(-0.1, 1.08, undefined, g.wingCutX)}
+            d={g.band(-0.1, 1.0, undefined, g.wingCutX)}
             fill="#05070a"
             fillOpacity="0.13"
             filter={`url(#${uid}-tight)`}
@@ -1426,21 +1575,36 @@ export default function CarRender({
             </g>
           ))}
 
-          <path d={g.tailLamp} fill="#0b0e12" />
-          <path d={g.tailLamp} fill={`url(#${uid}-tail)`} transform="translate(0 1)" opacity="0.95" />
-          <path d={g.tailLamp} fill="none" stroke="#05070a" strokeOpacity="0.5" strokeWidth="0.9" />
+          <path
+            d={g.tailHousing}
+            fill="#05070a"
+            fillOpacity="0.5"
+            transform="translate(0 2.2)"
+            filter={`url(#${uid}-tight)`}
+          />
+          <path d={g.tailHousing} fill="#05070a" />
+          <path d={g.tailLamp} fill={`url(#${uid}-tail)`} />
+          <path d={g.tailLamp} fill={`url(#${uid}-tailFace)`} />
+          {/* the lens is a solid: a shadowed chin, then the lit element above it */}
+          <path d={g.tailChin} fill="none" stroke="#2a0407" strokeOpacity="0.55" strokeWidth="2" filter={`url(#${uid}-hair)`} />
+          <path d={g.tailCore} fill="none" stroke="#ffd0ac" strokeOpacity="0.5" strokeWidth="3" filter={`url(#${uid}-hair)`} />
+          <path d={g.tailCore} fill="none" stroke="#fff3e4" strokeOpacity="0.85" strokeWidth="1.1" />
+          {/* the housing borders the unit in shadow at every paint colour */}
+          <path d={g.tailHousing} fill="none" stroke="#05070a" strokeOpacity="0.85" strokeWidth="1.6" />
+          <path d={g.tailLamp} fill="#ff5a2e" fillOpacity="0.2" filter={`url(#${uid}-mid)`} />
 
           {/* the side marker sits in a housing, not on the paint */}
           <path
             d={g.lampSide}
             fill="#05070a"
-            fillOpacity="0.5"
-            transform="translate(0 1.8)"
+            fillOpacity="0.32"
+            transform="translate(0 1.4)"
             filter={`url(#${uid}-tight)`}
           />
-          <path d={g.lampSide} fill="#0b0e12" fillOpacity="0.9" />
-          <path d={g.lampSide} fill={`url(#${uid}-led)`} transform="translate(0 0.7)" opacity="0.82" />
-          <path d={g.lampSide} fill="none" stroke="#05070a" strokeOpacity="0.45" strokeWidth="0.9" />
+          <path d={g.lampSide} fill="#0b0e12" />
+          <path d={g.lampSide} fill={`url(#${uid}-ledSide)`} />
+          <path d={g.lampSideCore} fill="none" stroke="#ffffff" strokeOpacity="0.26" strokeWidth="0.8" filter={`url(#${uid}-hair)`} />
+          <path d={g.lampSide} fill="none" stroke="#05070a" strokeOpacity="0.3" strokeWidth="0.8" />
         </g>
 
         {/* ── Glass ── */}
@@ -1505,13 +1669,21 @@ export default function CarRender({
               <path d={g.face} fill={`url(#${uid}-faceShade)`} />
               {/* the convex nose gathers a soft vertical gleam off the ceiling */}
               <path d={g.faceGleam} fill="#ffffff" fillOpacity="0.1" filter={`url(#${uid}-soft)`} />
-              {/* bumper crease */}
-              <path d={g.faceSplit} fill="none" stroke="#05070a" strokeOpacity="0.16" strokeWidth="1.1" />
-              <path d={g.faceSplit} fill="none" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1" transform="translate(0 1.8)" />
-              {/* lower intake, air curtains, splitter */}
-              <path d={g.intake} fill="#0a0d11" fillOpacity="0.94" />
-              <path d={g.intake} fill="none" stroke="#05070a" strokeOpacity="0.5" strokeWidth="2.4" filter={`url(#${uid}-hair)`} />
-              <path d={g.intake} fill="none" stroke="#ffffff" strokeOpacity="0.13" strokeWidth="1.2" transform="translate(0 -2)" />
+              {/* The bumper's top plane, and the crease that closes it off — the
+                  fascia is stacked mouldings, not one dark slab. */}
+              <path d={g.bumperShelf} fill={`url(#${uid}-shelf)`} filter={`url(#${uid}-mid)`} />
+              <path d={g.faceSplit} fill="none" stroke="#05070a" strokeOpacity="0.3" strokeWidth="2.2" filter={`url(#${uid}-hair)`} />
+              <path d={g.faceSplit} fill="none" stroke="#ffffff" strokeOpacity="0.18" strokeWidth="1" transform="translate(0 1.8)" />
+              {/* the mouth: a moulding, the opening set back inside it, a blade
+                  across the opening, and the lit valance under the whole thing */}
+              <path d={g.valance} fill={`url(#${uid}-shelf)`} filter={`url(#${uid}-mid)`} />
+              <path d={g.intake} fill="#12171d" />
+              <path d={g.intake} fill="none" stroke="#05070a" strokeOpacity="0.55" strokeWidth="3" filter={`url(#${uid}-hair)`} />
+              <path d={g.intakeMouth} fill={`url(#${uid}-mouth)`} />
+              <path d={g.intakeMouth} fill="none" stroke="#05070a" strokeOpacity="0.6" strokeWidth="2" filter={`url(#${uid}-hair)`} />
+              <path d={g.intakeBlade} fill="#232a32" />
+              <path d={g.intakeBlade} fill="none" stroke="#ffffff" strokeOpacity="0.16" strokeWidth="0.8" transform="translate(0 -0.8)" />
+              <path d={g.intake} fill="none" stroke="#ffffff" strokeOpacity="0.16" strokeWidth="1.2" transform="translate(0 -2.2)" />
               {g.vents.map((d) => (
                 <g key={d}>
                   <path d={d} fill="#0a0d11" fillOpacity="0.8" />
@@ -1519,18 +1691,35 @@ export default function CarRender({
                 </g>
               ))}
               <path d={g.splitter} fill="none" stroke="#ffffff" strokeOpacity="0.16" strokeWidth="1.6" filter={`url(#${uid}-hair)`} />
-              <path d={g.faceLip} fill="none" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="2.4" filter={`url(#${uid}-hair)`} />
-              {/* LED signature: a recess, the blade, a warm core */}
-              <path d={g.lampRecess} fill="#080b0f" fillOpacity="0.85" filter={`url(#${uid}-hair)`} />
+              <path d={g.faceUnder} fill="#05070a" fillOpacity="0.62" filter={`url(#${uid}-mid)`} />
+              <path d={g.faceLip} fill="none" stroke="#ffffff" strokeOpacity="0.24" strokeWidth="2.2" filter={`url(#${uid}-hair)`} />
+              {/* The lamp unit: a shadow the housing casts on the fascia, the
+                  housing itself, a brow along its top, a projector lens low in
+                  it and the DRL blade across the top of the aperture. */}
+              <path
+                d={g.lampHousing}
+                fill="#05070a"
+                fillOpacity="0.45"
+                transform="translate(0 2.6)"
+                filter={`url(#${uid}-tight)`}
+              />
+              <path d={g.lampHousing} fill="#0c1015" />
+              <path d={g.lampHousing} fill={`url(#${uid}-mouth)`} opacity="0.55" />
+              <path d={g.lampBrow} fill="none" stroke="#ffffff" strokeOpacity="0.22" strokeWidth="1.2" filter={`url(#${uid}-hair)`} />
+              <path d={g.lampLens} fill={`url(#${uid}-lens)`} />
+              <path d={g.lampLens} fill="none" stroke="#05070a" strokeOpacity="0.5" strokeWidth="1" />
               <path d={g.lampBar} fill={`url(#${uid}-led)`} />
-              <path d={g.lampCore} fill="none" stroke="#fff4e0" strokeOpacity="0.95" strokeWidth="1.6" filter={`url(#${uid}-hair)`} />
+              <path d={g.lampCore} fill="none" stroke="#fff4e0" strokeOpacity="0.8" strokeWidth="1.1" filter={`url(#${uid}-hair)`} />
               <path d={g.lampBar} fill="none" stroke="#05070a" strokeOpacity="0.45" strokeWidth="0.8" />
-              <path d={g.lampBar} fill="#ffffff" fillOpacity="0.3" filter={`url(#${uid}-mid)`} />
+              <path d={g.lampBar} fill="#ffffff" fillOpacity="0.26" filter={`url(#${uid}-mid)`} />
+              <path d={g.lampHousing} fill="none" stroke="#05070a" strokeOpacity="0.6" strokeWidth="1.1" />
               {/* the far corner carries the same lamp, so the nose is symmetrical */}
               <path d={g.lampFar} fill="#080b0f" fillOpacity="0.8" filter={`url(#${uid}-hair)`} />
-              <path d={g.lampFar} fill={`url(#${uid}-led)`} opacity="0.7" />
+              <path d={g.lampFar} fill={`url(#${uid}-led)`} opacity="0.62" />
               <path d={g.lampFarCore} fill="none" stroke="#fff4e0" strokeOpacity="0.8" strokeWidth="1.3" filter={`url(#${uid}-hair)`} />
               <path d={g.lampFar} fill="none" stroke="#05070a" strokeOpacity="0.4" strokeWidth="0.8" />
+              {/* the corner the fascia turns on, so it parts from the wing */}
+              <path d={g.faceCorner} fill="none" stroke="#ffffff" strokeOpacity="0.22" strokeWidth="1.8" filter={`url(#${uid}-hair)`} />
             </g>
           </>
         )}

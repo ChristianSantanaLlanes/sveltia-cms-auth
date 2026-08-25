@@ -353,6 +353,7 @@ export default function CheckoutPage(): ReactElement {
             {/* ── 1. Your Vehicle ───────────────────────────────────────── */}
             <section className="co-sec" aria-labelledby="co-sec-vehicle">
               <h2 className="co-secTitle" id="co-sec-vehicle">
+                <span className="co-secTitle__n" aria-hidden="true">01</span>
                 Your Vehicle
               </h2>
 
@@ -409,6 +410,7 @@ export default function CheckoutPage(): ReactElement {
             {/* ── 2. Payment Method ─────────────────────────────────────── */}
             <section className="co-sec" aria-labelledby="co-sec-method">
               <h2 className="co-secTitle" id="co-sec-method">
+                <span className="co-secTitle__n" aria-hidden="true">02</span>
                 Payment Method
               </h2>
 
@@ -460,6 +462,7 @@ export default function CheckoutPage(): ReactElement {
             {/* ── 3. Contact ────────────────────────────────────────────── */}
             <section className="co-sec" aria-labelledby="co-sec-contact">
               <h2 className="co-secTitle" id="co-sec-contact">
+                <span className="co-secTitle__n" aria-hidden="true">03</span>
                 Contact
               </h2>
 
@@ -517,6 +520,7 @@ export default function CheckoutPage(): ReactElement {
             {/* ── 4. Registration ───────────────────────────────────────── */}
             <section className="co-sec" aria-labelledby="co-sec-registration">
               <h2 className="co-secTitle" id="co-sec-registration">
+                <span className="co-secTitle__n" aria-hidden="true">04</span>
                 Registration
               </h2>
               <p className="co-secNote">
@@ -594,6 +598,7 @@ export default function CheckoutPage(): ReactElement {
             <section className="co-sec" aria-labelledby="co-sec-payment">
               <div className="co-secHead">
                 <h2 className="co-secTitle" id="co-sec-payment">
+                  <span className="co-secTitle__n" aria-hidden="true">05</span>
                   Card Details
                 </h2>
                 <ul className={`co-marks${brand ? ' has-brand' : ''}`} aria-label="Cards accepted">
@@ -670,6 +675,7 @@ export default function CheckoutPage(): ReactElement {
             {/* ── 6. Order agreement ────────────────────────────────────── */}
             <section className="co-sec co-sec--agree" aria-labelledby="co-sec-agreement">
               <h2 className="co-secTitle" id="co-sec-agreement">
+                <span className="co-secTitle__n" aria-hidden="true">06</span>
                 Order Agreement
               </h2>
 
@@ -714,6 +720,7 @@ export default function CheckoutPage(): ReactElement {
               <Button
                 type="submit"
                 data-testid="place-order"
+                className="co-submit"
                 size="lg"
                 fullWidth
                 loading={submitting}

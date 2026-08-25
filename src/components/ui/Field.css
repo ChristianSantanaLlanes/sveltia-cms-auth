@@ -101,7 +101,7 @@
 
 .field__msg {
   min-height: 16px;
-  margin-top: var(--s-2);
+  margin-top: 5px;
   padding-left: 1px;
   font-size: var(--fs-xs);
   line-height: 16px;
@@ -114,16 +114,18 @@
   animation: field-msg-in var(--dur) var(--ease-out) both;
 }
 
-/* A quiet marker instead of a red box: the field keeps a hairline, the
-   message carries the signal. */
+/* A real alert glyph, not a bullet: at 12px red text the mark is what the
+   eye catches first when it scans a column of fields. */
 .field__msg--error::before {
   content: '';
   display: inline-block;
-  width: 4px;
-  height: 4px;
-  margin: 0 7px 3px 0;
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: -2px;
   background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%2012'%3E%3Cpath%20d='M6%200a6%206%200%201%200%200%2012A6%206%200%200%200%206%200Zm0%202.5a.8.8%200%200%201%20.8.86l-.22%202.9a.58.58%200%200%201-1.16%200l-.22-2.9A.8.8%200%200%201%206%202.5Zm0%205.4a.85.85%200%201%201%200%201.7.85.85%200%200%201%200-1.7Z'%20fill='%23000'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%2012'%3E%3Cpath%20d='M6%200a6%206%200%201%200%200%2012A6%206%200%200%200%206%200Zm0%202.5a.8.8%200%200%201%20.8.86l-.22%202.9a.58.58%200%200%201-1.16%200l-.22-2.9A.8.8%200%200%201%206%202.5Zm0%205.4a.85.85%200%201%201%200%201.7.85.85%200%200%201%200-1.7Z'%20fill='%23000'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
 }
 
 @keyframes field-msg-in {
@@ -132,15 +134,25 @@
 }
 
 /* ── Error state ───────────────────────────────────────────────────────── */
-/* Muted, not a red wash: a warmer hairline, no fill, no glow. */
+/* No red wash and no red fill — the border carries it. It stays red through
+   hover and focus so a field that is wrong never briefly looks fine. */
 .field--error .field__box {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 55%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 78%, var(--line));
 }
 .field--error .field__box:hover {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 80%, var(--line));
+  box-shadow: inset 0 0 0 1px var(--danger);
 }
-/* Focus stays blue even on an invalid field: once the shopper is in the box
-   they are fixing it, and a red cage around the caret is not help. */
+.field--error .field__box:focus-within,
+.field--error .field__box:focus-within:hover {
+  box-shadow: inset 0 0 0 2px var(--danger);
+}
+.field--error .field__box:has(.field__input:focus-visible),
+.field--error .field__box:has(.field__input:focus-visible):hover {
+  box-shadow:
+    inset 0 0 0 2px var(--danger),
+    0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
+}
+.field--error .field__input:focus + .field__label { color: var(--danger); }
 
 .field__input:disabled { color: var(--text-tertiary); }
 .field__box:has(.field__input:disabled) {

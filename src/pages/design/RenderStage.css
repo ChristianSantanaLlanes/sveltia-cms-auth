@@ -161,6 +161,49 @@
   .stage__angleArt {
     width: 76px;
   }
+
+  /* Touch: the angle chips are the only control inside the pinned plate, and
+     they sit right where the render meets the option sheet — 44px keeps them
+     off the sheet's edge as well as under the finger. */
+  .stage__angle {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+/* ── Phone ──────────────────────────────────────────────────────────────────
+   The frame is locked to the car's own 1200 × 420, so on a 390px column it can
+   only ever be 136px tall — a third of the plate it is pinned inside, with the
+   rest left as empty gradient. On a phone that dead band is the most expensive
+   space on the page: it is what the options have to scroll past to get started.
+   So the plate runs past both edges of the column, exactly as the hero does,
+   and the car is measured onto the height that is actually there. */
+@media (max-width: 767px) {
+  .stage {
+    --stage-pad-x: 16px;
+    --stage-pad-y: 12px;
+
+    /* The option sheet pulls itself 16px up over the foot of the plate to get
+       its rounded lip, so the angle chips are held clear of that overlap
+       rather than being sliced by it. */
+    padding-bottom: 30px;
+  }
+
+  .stage__car {
+    /* The plate is already full-bleed by the padding it gives back; this takes
+       it wider than the column so the subject, not the floor, fills the band. */
+    margin-inline: -22px;
+  }
+
+  .stage__frame {
+    width: 100%;
+    max-width: none;
+  }
+
+  .stage__angles {
+    padding-top: var(--s-2);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

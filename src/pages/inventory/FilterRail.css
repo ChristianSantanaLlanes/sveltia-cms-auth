@@ -272,14 +272,15 @@
 }
 
 .swatches__grid--paint {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
 }
 
 /* Six across, on the same column rhythm as the paint row above it: the two
    grids read as one appearance module rather than two unrelated widgets. */
 .swatches__grid--wheel {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--s-2);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
 }
 
 /* Shared with .slider__caption below: selection left at 14px/500, the domain it
@@ -322,11 +323,12 @@
 
 .swatch {
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   width: 100%;
-  aspect-ratio: 1;
   padding: 0;
-  border-radius: 50%;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
@@ -335,8 +337,9 @@
 }
 
 .swatch__disc {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
   border-radius: 50%;
   background: var(--swatch-base);
   /* --swatch-ring is set per option: light paints get a drawn ring so Stellar
@@ -356,8 +359,7 @@
 .swatch:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  /* base.css rounds every focus ring to --r-sm; a paint chip stays a circle. */
-  border-radius: 50%;
+  border-radius: var(--r-sm);
 }
 
 /* Wheel tiles */
@@ -402,6 +404,26 @@
 .wheel[aria-pressed='true'] .wheel__plate {
   background: var(--bg);
   box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+/* Paint and wheel tiles carry their name because the fleet repeats colours a hex
+   apart and sizes twice over; the disc alone cannot tell them apart. */
+.swatch__name,
+.wheel__name {
+  display: block;
+  max-width: 100%;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+  text-wrap: balance;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.swatch[aria-pressed='true'] .swatch__name,
+.wheel[aria-pressed='true'] .wheel__name {
+  color: var(--text);
+  font-weight: 500;
 }
 
 .wheel__size {

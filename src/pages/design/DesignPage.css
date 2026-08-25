@@ -21,6 +21,18 @@
   min-height: 220px;
 }
 
+/* On a phone 45dvh is 380px, and the render inside it can only draw a 136px
+   car — the plate spends more than half its height on empty floor while the
+   option stack starts below the fold. The plate is cut to what the car and its
+   two angle chips actually occupy, which hands ~80px back to the options. */
+@media (max-width: 767px) {
+  .design__render {
+    height: 34dvh;
+    min-height: 250px;
+    max-height: 300px;
+  }
+}
+
 /* ── Option column ──────────────────────────────────────────────────────────*/
 
 .design__panel {

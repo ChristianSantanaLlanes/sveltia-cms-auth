@@ -33,7 +33,9 @@
   flex: none;
   align-items: center;
   gap: var(--s-2);
-  height: 40px;
+  /* Touch: the two controls in this bar are the only way into filtering and
+     sorting on a phone, so both are held at 44px. */
+  height: 44px;
   padding: 0 var(--s-5);
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
@@ -66,6 +68,10 @@
   min-width: 0;
   max-width: 220px;
   margin-left: auto;
+}
+
+.inv__bar .select__control {
+  min-height: 44px;
 }
 
 @media (min-width: 1024px) {

@@ -65,18 +65,33 @@
 
 .co-sec { min-width: 0; }
 
+/* Sections are separated by air first and a hairline second — the rule is a
+   confirmation of the break, not the thing that makes it. */
 .co-sec + .co-sec {
-  margin-top: var(--s-12);
-  padding-top: var(--s-12);
+  margin-top: var(--s-10);
+  padding-top: var(--s-10);
   border-top: 1px solid var(--line-soft);
 }
 
 .co-secTitle {
+  position: relative;
   font-size: 1.5rem;
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: var(--tracking-tight);
   margin-bottom: var(--s-6);
+}
+
+/* Step index. It hangs in the page margin from 1024px up so the section
+   order is legible at a glance without indenting the column; below that it
+   rides inline ahead of the title. */
+.co-secTitle__n {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  margin-right: var(--s-3);
 }
 
 .co-secHead {
@@ -114,6 +129,7 @@
 }
 
 .co-link {
+  position: relative;
   display: inline-block;
   margin-top: var(--s-5);
   font-size: var(--fs-sm);
@@ -126,23 +142,57 @@
 
 .co-link:hover { box-shadow: inset 0 -1px 0 currentColor; }
 
+/* Touch: "Edit your design" is a 21px line of type and the one way back out of
+   checkout. The hit box is grown around it with a pseudo-element rather than
+   with padding, so the underline stays on the baseline where it belongs. */
+.co-link::before {
+  content: '';
+  position: absolute;
+  inset: -12px -8px;
+}
+
 /* ── 1. Your Vehicle ─────────────────────────────────────────────────────── */
 
 .co-vehicle { min-width: 0; }
 
+/* The car sits in a pool of light, not in a box. The stage is painted by a
+   pseudo-element whose gradients dissolve to nothing before they reach any
+   edge, so there is no rectangle and no square end for the eye to catch. */
 .co-vehicle__plate {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--s-6) var(--s-8) var(--s-5);
-  border-radius: var(--r-md);
+  padding: var(--s-5) 0 var(--s-3);
+}
+
+.co-vehicle__plate::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -6% -4% -10%;
   background:
-    radial-gradient(115% 120% at 50% 44%, var(--bg) 0%, var(--surface) 62%, var(--surface-2) 100%);
+    /* contact pool under the wheels */
+    radial-gradient(
+      46% 26% at 50% 74%,
+      color-mix(in srgb, var(--ink) 8%, transparent) 0%,
+      color-mix(in srgb, var(--ink) 3%, transparent) 46%,
+      transparent 72%
+    ),
+    /* the light the car stands in */
+    radial-gradient(
+      66% 70% at 50% 46%,
+      var(--surface-2) 0%,
+      var(--surface-2) 24%,
+      color-mix(in srgb, var(--surface-2) 62%, transparent) 52%,
+      transparent 80%
+    );
 }
 
 .co-vehicle__car {
-  width: 94%;
-  max-width: 580px;
+  width: 100%;
+  max-width: 660px;
 }
 
 .co-vehicle__bar {
@@ -304,7 +354,9 @@
 
 .co-seg__label {
   display: block;
+  /* 44px: 22px of line between 11px of padding. */
   padding: 11px var(--s-2);
+  min-height: 44px;
   border-radius: var(--r-pill);
   font-size: var(--fs-sm);
   font-weight: 500;
@@ -376,7 +428,9 @@
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   column-gap: var(--s-4);
-  row-gap: var(--s-3);
+  /* The message belongs to the field above it, so it sits close to its own
+     box and well clear of the next one. */
+  row-gap: var(--s-4);
 }
 
 .co-grid > * { grid-column: 1 / -1; }
@@ -392,7 +446,7 @@
 .co-state {
   position: relative;
   gap: 0;
-  padding-bottom: 24px;
+  padding-bottom: 21px;
 }
 
 .co-state .select__label {
@@ -429,17 +483,19 @@
 }
 
 .co-state.select--error .select__control {
-  border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
+  border-color: color-mix(in srgb, var(--danger) 78%, var(--line));
 }
 
 .co-state .select__msg--error::before {
   content: '';
   display: inline-block;
-  width: 4px;
-  height: 4px;
-  margin: 0 7px 3px 0;
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: -2px;
   background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%2012'%3E%3Cpath%20d='M6%200a6%206%200%201%200%200%2012A6%206%200%200%200%206%200Zm0%202.5a.8.8%200%200%201%20.8.86l-.22%202.9a.58.58%200%200%201-1.16%200l-.22-2.9A.8.8%200%200%201%206%202.5Zm0%205.4a.85.85%200%201%201%200%201.7.85.85%200%200%201%200-1.7Z'%20fill='%23000'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%2012'%3E%3Cpath%20d='M6%200a6%206%200%201%200%200%2012A6%206%200%200%200%206%200Zm0%202.5a.8.8%200%200%201%20.8.86l-.22%202.9a.58.58%200%200%201-1.16%200l-.22-2.9A.8.8%200%200%201%206%202.5Zm0%205.4a.85.85%200%201%201%200%201.7.85.85%200%200%201%200-1.7Z'%20fill='%23000'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
 }
 
 /* ── 5. Accepted cards ───────────────────────────────────────────────────── */
@@ -514,6 +570,20 @@
 
 .co-check__input:hover { border-color: var(--text-tertiary); }
 
+/* Touch: the box paints at 20px because that is the size a checkbox reads at
+   next to 14px type — but 20px is not a target. The pseudo-element is absolute,
+   so it leaves the grid that centres the tick alone and only lends the input a
+   44px hit box concentric with it. */
+.co-check__input {
+  position: relative;
+}
+
+.co-check__input::before {
+  content: '';
+  position: absolute;
+  inset: -13px;
+}
+
 .co-check__input::after {
   content: '';
   width: 10px;
@@ -539,7 +609,7 @@
 }
 
 .co-check.is-error .co-check__input {
-  border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
+  border-color: color-mix(in srgb, var(--danger) 78%, var(--line));
 }
 
 .co-check__label {
@@ -561,11 +631,13 @@
 .co-check__error::before {
   content: '';
   display: inline-block;
-  width: 4px;
-  height: 4px;
-  margin: 0 7px 3px 0;
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: -2px;
   background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%2012'%3E%3Cpath%20d='M6%200a6%206%200%201%200%200%2012A6%206%200%200%200%206%200Zm0%202.5a.8.8%200%200%201%20.8.86l-.22%202.9a.58.58%200%200%201-1.16%200l-.22-2.9A.8.8%200%200%201%206%202.5Zm0%205.4a.85.85%200%201%201%200%201.7.85.85%200%200%201%200-1.7Z'%20fill='%23000'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%2012'%3E%3Cpath%20d='M6%200a6%206%200%201%200%200%2012A6%206%200%200%200%206%200Zm0%202.5a.8.8%200%200%201%20.8.86l-.22%202.9a.58.58%200%200%201-1.16%200l-.22-2.9A.8.8%200%200%201%206%202.5Zm0%205.4a.85.85%200%201%201%200%201.7.85.85%200%200%201%200-1.7Z'%20fill='%23000'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
 }
 
 .co-live {
@@ -654,7 +726,7 @@
     align-items: center;
   }
 
-  .co-vehicle__plate { padding: var(--s-8) var(--s-10) var(--s-6); }
+  .co-vehicle__plate { padding: var(--s-6) 0 var(--s-4); }
 }
 
 @media (min-width: 1024px) {
@@ -691,6 +763,13 @@
     display: block;
     margin-top: var(--s-10);
   }
+
+  .co-secTitle__n {
+    position: absolute;
+    top: 0.5em;
+    right: calc(100% + var(--s-5));
+    margin-right: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -699,4 +778,21 @@
   .co-check__input::after,
   .co-marks__item,
   .co-link { transition: none; }
+}
+
+/* The commit button answers to the form, not to the marketing pages: every field,
+   select and summary card on this page is a 4px rectangle, so a pill here would be
+   the only one on screen. Same height, same column width, one accent hue. */
+.co-submit {
+  border-radius: var(--r-sm);
+  background-color: var(--accent-press);
+  letter-spacing: 0.01em;
+}
+
+.co-submit:hover:not(:disabled) {
+  background-color: #23409f;
+}
+
+.co-submit:focus-visible {
+  border-radius: var(--r-sm);
 }

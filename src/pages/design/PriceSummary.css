@@ -385,6 +385,34 @@
   }
 }
 
+/* ── Touch ──────────────────────────────────────────────────────────────────
+   Every control in the mobile bar is reached with a thumb at the very bottom
+   of the screen — the least accurate corner of the phone — so the bar's three
+   controls are all held at 44px. The handle already clears it (a 12px label
+   over a 40px figure); the segmented control and the details toggle do not,
+   and both grow by padding so the pill and the type stay where they were. */
+@media (max-width: 1023px) {
+  .ps--bar .ps__segOpt {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .ps--bar .ps__segLabel {
+    width: 100%;
+    padding-block: 12px;
+  }
+
+  .ps--bar .ps__toggle {
+    min-height: 44px;
+    padding-block: var(--s-2);
+  }
+
+  .ps--bar .ps__handle {
+    min-height: 44px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ps__segThumb,
   .ps__panel,

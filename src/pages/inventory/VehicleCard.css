@@ -12,10 +12,12 @@
 /* ── Image plate ────────────────────────────────────────────────────────────
    The car is the subject, and it is the three-quarter studio render — the same
    camera the configurator uses — so the sheet metal is modelled rather than
-   flat. In that projection the body occupies the middle ~74% of the 1200 × 420
-   viewBox, so the render is set slightly wider than the plate and the empty
-   bands above and below are cropped by the plate. The body then spans ~82% of
-   the plate: product photography, not a thumbnail. */
+   flat. In that projection the body spans ~81% of the 1200 × 420 viewBox, so
+   the render is set a little wider than the plate and the empty bands above and
+   below are cropped away. The scale is chosen so the body lands at ~89% of the
+   plate width: a studio shot keeps a margin of floor on both sides — a car that
+   runs out of its own frame is a crop, and a crop reads as stock imagery
+   dropped into a template rather than photography commissioned for the car. */
 
 .vcard__plate {
   position: relative;
@@ -23,17 +25,27 @@
   place-items: center;
   aspect-ratio: 19 / 10;
   border-radius: var(--r-md);
-  background: var(--surface);
+  /* A cyclorama, not a swatch. The colour layer is the one that animates on
+     hover; over it sits a fixed top-light / floor-shade gradient, so the car
+     stands on a studio floor that falls away behind it instead of floating on
+     a flat grey rectangle. Both layers are token-derived — no loose hex. */
+  background-color: var(--surface);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg) 40%, transparent) 0%,
+    transparent 46%,
+    color-mix(in srgb, var(--ink) 6%, transparent) 100%
+  );
   overflow: hidden;
   transition: background-color var(--dur) var(--ease-out);
 }
 
 .vcard__car {
   position: relative;
-  width: 118%;
+  width: 110%;
   /* The projection lifts the far side, so the mass sits a hair above the
      viewBox centre; nudge it back to optical centre. */
-  transform: translateY(6%);
+  transform: translateY(4%);
   transform-origin: 50% 68%;
   transition: transform var(--dur) var(--ease-out);
 }
@@ -53,14 +65,14 @@
   z-index: -1;
   left: 49.5%;
   top: 77%;
-  width: 50%;
-  height: 13px;
+  width: 56%;
+  height: 12px;
   /* The camera's 9° elevation tilts the ground plane, so the ellipse follows it
      rather than lying flat against the card. */
   transform: translate(-50%, -50%) rotate(-4.2deg);
   border-radius: 50%;
   background: radial-gradient(closest-side, var(--ink), transparent);
-  opacity: 0.19;
+  opacity: 0.17;
 }
 
 /* The plate already fixes the geometry, so the loading state simply fills it:
@@ -88,6 +100,9 @@
   height: 24px;
   border-radius: var(--r-sm);
   background: var(--bg);
+  /* The plate's top band is nearly white, so a plain white chip loses its
+     edges there. An inset hairline keeps it a chip without changing its box. */
+  box-shadow: inset 0 0 0 1px var(--line-soft);
   font-size: var(--fs-xs);
   line-height: 1;
   white-space: nowrap;
@@ -185,16 +200,20 @@
 }
 
 /* ── Spec row ───────────────────────────────────────────────────────────────
-   One hairline above, three even columns, no cell rules — a rail of figures,
-   not a table. */
+   Three even columns between two hairlines and no cell rules — a rail of
+   figures, not a table. The rule below matters as much as the one above: it
+   closes the band, so the three specs read as the car's fixed numbers and the
+   lines under it read as this particular car's logistics. With only a rule on
+   top the figures leaked into the location line and the card lost its spine. */
 
 .vcard__specs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s-3);
   margin-top: var(--s-5);
-  padding-top: var(--s-4);
+  padding: var(--s-4) 0;
   border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .vcard__spec {
@@ -247,11 +266,28 @@
   letter-spacing: 0.01em;
 }
 
-/* ── Call to action ─────────────────────────────────────────────────────────*/
+/* ── Call to action ─────────────────────────────────────────────────────────
+   Outline, not blue. Nine saturated blue slabs stacked down a results page is
+   how a marketplace shouts at a shopper; a manufacturer showing its own stock
+   states the car and lets one quiet pill per card carry the click. The single
+   blue is held back for the actions that commit — Order Now, Place Order — so
+   that when it does appear it still means something. The pill fills to
+   near-black on card hover, which is also how the grid says which card the
+   pointer is on. */
 
 .vcard .vcard__cta,
 .vcard__cta-skeleton {
   margin-top: var(--s-5);
+}
+
+/* Touch: one-up cards put the pill at the full width of the phone, and it is
+   the row's only control — so it is given the 48px of the large size rather
+   than the 40px the grid uses where a pointer is doing the aiming. */
+@media (max-width: 767px) {
+  .vcard .vcard__cta,
+  .vcard__cta-skeleton {
+    min-height: 48px;
+  }
 }
 
 .vcard__cta-skeleton {
@@ -279,7 +315,13 @@
   }
 
   .vcard:hover .vcard__car {
-    transform: translateY(6%) scale(1.035);
+    transform: translateY(4%) scale(1.03);
+  }
+
+  .vcard:hover .vcard__cta {
+    background-color: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-dark);
   }
 }
 
@@ -294,6 +336,6 @@
   }
 
   .vcard:hover .vcard__car {
-    transform: translateY(6%);
+    transform: translateY(4%);
   }
 }
