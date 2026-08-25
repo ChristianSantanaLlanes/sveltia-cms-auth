@@ -236,7 +236,7 @@ export default function InventoryPage(): ReactElement {
               {/* The count is computed on the click, not after the fetch, so it
                   never lags the rail and never leaves a grey bar where a number
                   belongs. */}
-              <p className="inv__count">
+              <p className="inv__count" data-testid="result-count">
                 <span className="inv__count-value" key={pendingCount}>
                   {plural(pendingCount)}
                 </span>
