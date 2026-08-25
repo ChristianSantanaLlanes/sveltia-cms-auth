@@ -219,7 +219,7 @@ const SEDAN: Spec = {
     [4.24, 0.976],
   ],
   intake: { y: [0.305, 0.44], t: 0.82 },
-  eye: 1.02,
+  eye: 1.38,
 };
 
 const SUV: Spec = {
@@ -328,7 +328,7 @@ const SUV: Spec = {
     [4.16, 1.144],
   ],
   intake: { y: [0.385, 0.55], t: 0.84 },
-  eye: 1.18,
+  eye: 1.66,
 };
 
 const SPECS: Record<BodyStyle, Spec> = { sedan: SEDAN, suv: SUV };
@@ -343,13 +343,12 @@ const SPECS: Record<BodyStyle, Spec> = { sedan: SEDAN, suv: SUV };
  */
 interface Rig {
   yaw: number;
-  elev: number;
   dist: number;
 }
 
 const RIGS: Record<View, Rig> = {
-  'front-3q': { yaw: 32, elev: 6.4, dist: 16 },
-  side: { yaw: 0, elev: 0, dist: 1e7 },
+  'front-3q': { yaw: 32, dist: 15 },
+  side: { yaw: 0, dist: 1e7 },
 };
 
 function planAt(plan: Pt[], x: number): number {
@@ -379,21 +378,20 @@ function projector(spec: Spec, view: View, s: number, ox: number, oy: number): P
   const rig = RIGS[view];
   const q3 = view === 'front-3q';
   const a = (rig.yaw * Math.PI) / 180;
-  const e = (rig.elev * Math.PI) / 180;
   const ca = Math.cos(a);
   const sa = Math.sin(a);
-  const ce = Math.cos(e);
-  const se = Math.sin(e);
   const L = spec.upper[spec.upper.length - 1][0];
   const uRef = (L / 2) * ca;
   const wRef = (L / 2) * sa;
-  const yRef = -spec.eye * ce - wRef * se;
 
+  /* A pinhole at eye height looking level down the studio: everything
+     converges on one horizon, so the ground line rises toward the tail while
+     the roofline drops toward it — the car never tips as a whole. */
   const raw = (X: number, Y: number, Z: number): Pt => {
     const u = X * ca - Z * sa;
     const w = X * sa + Z * ca;
     const f = rig.dist / (rig.dist + w - wRef);
-    return [ox + s * f * (u - uRef), oy + s * f * (-Y * ce - w * se - yRef)];
+    return [ox + s * f * (u - uRef), oy + s * f * (spec.eye - Y)];
   };
 
   const n = (node: Node, side = -1): Pt =>

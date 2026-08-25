@@ -1,4 +1,12 @@
-import { useId, type CSSProperties, type ReactElement, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { RimDefs, Wheel } from '@/components/car/rims';
 import { money, num, signedMoney } from '@/lib/format';
 import { useOrder } from '@/store/OrderContext';
@@ -146,6 +154,57 @@ export default function OptionPanel(): ReactElement {
   const { model, trim, paint, wheel, interior, seating } = resolved;
   const uid = `op${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
+  /* ≥1024px the stack is a viewport-tall scroller holding seven sections, so
+     roughly a quarter of the build is on screen at once. Overlay scrollbars
+     draw nothing until you already scrolled, which is exactly when the cue is
+     no longer needed — so the rail is drawn here instead: length is the share
+     of the stack on screen, position is how far down it you are. Decorative
+     only; the scroller itself is what the keyboard and the platform drive. */
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const thumbRef = useRef<HTMLSpanElement>(null);
+
+  const syncRail = useCallback(() => {
+    const el = scrollRef.current;
+    const thumb = thumbRef.current;
+    if (!el || !thumb) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const overflow = scrollHeight - clientHeight;
+    if (overflow < 8) {
+      thumb.style.opacity = '0';
+      return;
+    }
+    const height = Math.max(32, Math.round((clientHeight / scrollHeight) * clientHeight));
+    const travel = clientHeight - height;
+    thumb.style.opacity = '1';
+    thumb.style.height = `${height}px`;
+    thumb.style.transform = `translateY(${Math.round((scrollTop / overflow) * travel)}px)`;
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let frame = 0;
+    const onScroll = (): void => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        syncRail();
+      });
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    const observer = new ResizeObserver(onScroll);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      observer.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [syncRail]);
+
+  /* Content height moves with the model and with a note that rewraps, so the
+     rail is re-measured after every commit, not just on scroll. */
+  useEffect(syncRail);
+
   const baseTrimPrice = model.trims[0].price;
   const seatingOptions = model.seating.filter(
     (option) => !option.availableOn || option.availableOn.includes(model.id),
@@ -157,7 +216,11 @@ export default function OptionPanel(): ReactElement {
   const accessoryTotal = activeAccessories.reduce((sum, option) => sum + option.price, 0);
 
   return (
-    <div className="op-panel">
+    <div className="op-panel" ref={scrollRef}>
+      <div className="op-rail" aria-hidden="true">
+        <span className="op-rail__thumb" ref={thumbRef} />
+      </div>
+
       {/* ── Build header: the vehicle as currently specified ─────────────── */}
       <header className="op-head">
         <p className="op-head__eyebrow">Design your own</p>

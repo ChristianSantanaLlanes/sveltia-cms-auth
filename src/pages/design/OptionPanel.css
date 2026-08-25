@@ -18,27 +18,39 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: var(--s-4) var(--panel-pad) var(--s-12);
+    padding: var(--s-3) var(--panel-pad) var(--s-12);
     -webkit-mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 24px), transparent);
     mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 24px), transparent);
   }
 
-  /* A slim, always-present rail: the one honest signal that the stack runs on
-     past the fade. */
-  .op-panel::-webkit-scrollbar {
-    width: 10px;
+  /* The rail. Sticky at the scroller's top edge with no height of its own, so
+     the thumb it carries is measured against the window, not the stack. */
+  .op-rail {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    height: 0;
   }
 
-  .op-panel::-webkit-scrollbar-thumb {
-    border: 3px solid var(--bg);
+  .op-rail__thumb {
+    position: absolute;
+    top: 0;
+    right: calc(var(--panel-pad) * -1 + 12px);
+    width: 3px;
     border-radius: var(--r-pill);
     background: var(--line);
-    background-clip: padding-box;
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease-out);
   }
+}
 
-  .op-panel::-webkit-scrollbar-thumb:hover {
-    background: var(--text-tertiary);
-    background-clip: padding-box;
+.op-rail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .op-rail {
+    display: block;
   }
 }
 
@@ -648,9 +660,11 @@
     display: none;
   }
 
+  /* Same 2rem as a section heading: the panel reads as one type scale from the
+     vehicle name down, and nothing in it out-ranks the build itself. */
   .op-head__title {
-    font-size: 1.75rem;
-    line-height: 1.08;
+    font-size: 2rem;
+    line-height: 1.06;
   }
 
   .op-sec {

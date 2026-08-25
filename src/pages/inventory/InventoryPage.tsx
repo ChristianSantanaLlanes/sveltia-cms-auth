@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactElement } from 'react';
 import Button from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
 import Select from '@/components/ui/Select';
 import Sheet from '@/components/ui/Sheet';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { num } from '@/lib/format';
 import { useOrder } from '@/store/OrderContext';
 import FilterRail from './FilterRail';
-import VehicleCard, { VehicleCardSkeleton } from './VehicleCard';
+import VehicleCard from './VehicleCard';
 import {
   PRICE_BOUNDS,
   RANGE_BOUNDS,
@@ -20,6 +21,75 @@ import './InventoryPage.css';
 
 /** Two full rows at the 3-up breakpoint: enough to fill the fold, never a wall. */
 const SKELETON_COUNT = 6;
+
+/* ── Loading card ───────────────────────────────────────────────────────────
+   The placeholder is the real card with its content withheld, so it is built
+   from the card's own classes: the plate keeps its 19:10 aspect and radius, the
+   hairline above the spec row stays, the button keeps its pill and its height.
+   Every bar is set to the measured width and line-height of the type it stands
+   in for — a title is 112px because "2024 Vela 3" is 112px — so nothing grows,
+   shrinks or reflows at the moment the data lands. Widths are uniform across
+   the six cards on purpose: a grid of identical placeholders reads as a system
+   waiting, while randomised ones read as content that arrived wrong. */
+
+function LoadingCard(): ReactElement {
+  return (
+    <article className="vcard vcard--skeleton" aria-hidden="true">
+      <div className="vcard__plate">
+        <Skeleton className="vcard__plate-skeleton" radius="var(--r-md)" />
+      </div>
+
+      <div className="vcard__body">
+        <div className="vcard__top">
+          <div className="vcard__head">
+            <p className="vcard__title">
+              <Skeleton w={112} h={24} />
+            </p>
+            <p className="vcard__trim">
+              <Skeleton w={138} h={19} />
+            </p>
+          </div>
+
+          <div className="vcard__price">
+            <p className="vcard__amount">
+              <Skeleton w={136} h={32} />
+            </p>
+            <p className="vcard__monthly">
+              <Skeleton w={196} h={19} />
+            </p>
+          </div>
+
+          <div className="vcard__specs">
+            {SPEC_BARS.map(([label, value], index) => (
+              <div className="vcard__spec" key={index}>
+                <Skeleton w={label} h={13} />
+                <Skeleton w={value} h={20} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="vcard__foot">
+          <p className="vcard__meta">
+            <Skeleton w={198} h={20} />
+          </p>
+          <p className="vcard__meta vcard__meta--delivery">
+            <Skeleton w={166} h={17} />
+          </p>
+
+          <Skeleton w="100%" h={40} radius="var(--r-pill)" className="vcard__cta-skeleton" />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/** Measured from the live row: RANGE / 231 mi, 0–60 MPH / 5.8 s, DRIVE / AWD. */
+const SPEC_BARS: [number, number][] = [
+  [44, 58],
+  [62, 46],
+  [38, 42],
+];
 
 const plural = (n: number) => `${num(n)} ${n === 1 ? 'result' : 'results'}`;
 
@@ -208,7 +278,7 @@ export default function InventoryPage(): ReactElement {
           ) : (
             <div className="inv__grid" data-fading={fading || undefined} aria-busy={isLoading || undefined}>
               {showSkeletons
-                ? Array.from({ length: SKELETON_COUNT }, (_, index) => <VehicleCardSkeleton key={index} />)
+                ? Array.from({ length: SKELETON_COUNT }, (_, index) => <LoadingCard key={index} />)
                 : results.map((vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} />)}
             </div>
           )}
