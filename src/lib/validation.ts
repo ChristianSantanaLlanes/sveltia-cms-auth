@@ -114,12 +114,16 @@ export function formatCardNumber(value: string): string {
 }
 
 /**
- * `1226` → `12/26`. A single digit above 1 is padded to a month (`5` → `05`).
+ * `1226` → `12/26`, and an autofilled `122026` → `12/26`. A single leading
+ * digit above 1 is padded to a month (`5` → `05`).
  * The slash only appears once a third digit exists, so backspacing never traps
  * the caret on a separator the formatter would immediately re-insert.
  */
 export function formatExpiry(value: string): string {
-  let d = digitsOnly(value).slice(0, 4);
+  let d = digitsOnly(value);
+  // Browser autofill hands back `MM/YYYY`; keep the century off the field.
+  if (d.length > 4) d = d.slice(0, 2) + d.slice(-2);
+  d = d.slice(0, 4);
   if (d.length === 1 && d > '1') d = `0${d}`;
   if (d.length >= 3) return `${d.slice(0, 2)}/${d.slice(2)}`;
   return d;

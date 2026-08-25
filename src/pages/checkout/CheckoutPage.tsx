@@ -550,7 +550,7 @@ export default function CheckoutPage(): ReactElement {
                   name="expiry"
                   autoComplete="cc-exp"
                   inputMode="numeric"
-                  maxLength={5}
+                  maxLength={7}
                   value={values.expiry}
                   error={errors.expiry}
                   onChange={(event) => setValue('expiry', formatExpiry(event.target.value))}

@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useId, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactElement } from 'react';
 import CarRender from '@/components/car/CarRender';
 import Button from '@/components/ui/Button';
 import { MODELS } from '@/data/models';
 import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
 import { money } from '@/lib/format';
-import type { CarModel } from '@/types';
+import type { CarModel, ModelId, PaintOption, WheelOption } from '@/types';
 import './HeroSection.css';
 
 export interface HeroSectionProps {
@@ -20,9 +20,33 @@ const ENTER_RATIO = 0.35;
 const ACTIVE_RATIO = 0.55;
 
 /**
+ * The hero car is cast, not defaulted. Every section pairs a paint that reads
+ * against its own backdrop — dark bodies on the light studio, light bodies on
+ * the dark one — with the halo wheel, the way a launch photograph would be
+ * specced. Falls back to the model's stock combination if the catalogue moves.
+ */
+const HERO_LOOK: Record<ModelId, { paint: string; wheel: string }> = {
+  'vela-3': { paint: 'deep-blue', wheel: 'arachnid-20' },
+  'vela-y': { paint: 'stellar-white', wheel: 'turbine-20' },
+  'vela-s': { paint: 'obsidian', wheel: 'sport-19' },
+  'vela-x': { paint: 'quartz-grey', wheel: 'arachnid-22' },
+};
+
+function castLook(model: CarModel): { paint: PaintOption; wheel: WheelOption } {
+  const look = HERO_LOOK[model.id];
+  return {
+    paint: model.paints.find((p) => p.id === look?.paint) ?? model.paints[0],
+    wheel: model.wheels.find((w) => w.id === look?.wheel) ?? model.wheels[0],
+  };
+}
+
+/**
  * One full-viewport marketing section: headline, the vehicle, the CTA block.
- * Backdrops alternate light/dark so no two consecutive sections read the same;
- * `data-tone` drives both the studio gradient and the on-dark type/button flip.
+ *
+ * The backdrop is a CSS cyc wall — key light behind the car, a horizon line and
+ * a pool of floor light anchored to the exact y where the tyres touch down, so
+ * the render sits in a studio instead of floating on a gradient. Tones
+ * alternate light/dark down the page; `data-tone` drives the whole palette.
  */
 export default function HeroSection({ model, index, isFirst }: HeroSectionProps): ReactElement {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -35,8 +59,7 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
   const [active, setActive] = useState(isFirst);
 
   const tone: 'light' | 'dark' = index % 2 === 0 ? 'light' : 'dark';
-  const paint = model.paints[0];
-  const wheel = model.wheels[0];
+  const { paint, wheel } = useMemo(() => castLook(model), [model]);
   const next = MODELS[index + 1];
 
   useEffect(() => {
@@ -81,26 +104,32 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
       data-chevron={showChevron ? 'true' : undefined}
       aria-labelledby={titleId}
     >
+      <div className="vm-hero__backdrop" aria-hidden="true" />
+
       <div className="vm-hero__head vm-hero__reveal">
         <h2 className="vm-hero__title" id={titleId}>
-          {model.name}
+          {model.heroHeadline || model.name}
         </h2>
         <p className="vm-hero__sub">{model.heroSub}</p>
       </div>
 
-      <div className="vm-hero__stage vm-hero__reveal">
-        <CarRender
-          body={model.body}
-          paint={paint}
-          wheel={wheel}
-          view="front-3q"
-          className="vm-hero__car"
-          label={`${model.name} in ${paint.name} with ${wheel.name}`}
-        />
+      <div className="vm-hero__stage">
+        <div className="vm-hero__plate">
+          <div className="vm-hero__floor" aria-hidden="true" />
+          <div className="vm-hero__pool" aria-hidden="true" />
+          <CarRender
+            body={model.body}
+            paint={paint}
+            wheel={wheel}
+            view="front-3q"
+            className="vm-hero__car vm-hero__reveal"
+            label={`${model.name} in ${paint.name} on ${wheel.name}`}
+          />
+        </div>
       </div>
 
-      <div className="vm-hero__foot vm-hero__reveal">
-        <ul className="vm-hero__specs">
+      <div className="vm-hero__foot">
+        <ul className="vm-hero__specs vm-hero__reveal">
           {model.highlights.slice(0, 4).map((highlight) => (
             <li className="vm-hero__spec" key={highlight.label}>
               <span className="vm-hero__specValue">
@@ -112,30 +141,32 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
           ))}
         </ul>
 
-        <div className="vm-hero__ctas">
-          <Button
-            to={`/design/${model.id}`}
-            size="lg"
-            variant={tone === 'dark' ? 'onImageLight' : 'onImageDark'}
-            className="vm-hero__cta vm-hero__cta--primary"
-            aria-label={`Order Now — ${model.name}`}
-          >
-            Order Now
-          </Button>
-          <Button
-            to="/inventory"
-            size="lg"
-            variant={tone === 'dark' ? 'onImageDark' : 'onImageLight'}
-            className="vm-hero__cta vm-hero__cta--secondary"
-            aria-label={`Demo Drive — ${model.name}`}
-          >
-            Demo Drive
-          </Button>
-        </div>
+        <div className="vm-hero__actions vm-hero__reveal">
+          <div className="vm-hero__ctas">
+            <Button
+              to={`/design/${model.id}`}
+              size="lg"
+              variant={tone === 'dark' ? 'onImageLight' : 'onImageDark'}
+              className="vm-hero__cta vm-hero__cta--primary"
+              aria-label={`Order Now — ${model.name}`}
+            >
+              Order Now
+            </Button>
+            <Button
+              to="/inventory"
+              size="lg"
+              variant={tone === 'dark' ? 'onImageDark' : 'onImageLight'}
+              className="vm-hero__cta vm-hero__cta--secondary"
+              aria-label={`Demo Drive — ${model.name}`}
+            >
+              Demo Drive
+            </Button>
+          </div>
 
-        <p className="vm-hero__fine">
-          {model.leadTime} · From {money(model.startingPrice)} before est. incentives
-        </p>
+          <p className="vm-hero__fine">
+            {model.leadTime} · From {money(model.startingPrice)} before est. incentives
+          </p>
+        </div>
       </div>
 
       {showChevron ? (

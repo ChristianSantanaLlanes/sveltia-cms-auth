@@ -103,12 +103,10 @@
   font-size: var(--fs-xs);
   line-height: 1.55;
   color: var(--text-tertiary);
-  max-width: 62ch;
 }
 
 .co-fine--center {
   margin-top: var(--s-4);
-  max-width: none;
   text-align: center;
 }
 
@@ -322,9 +320,10 @@
 
 /* ── State select: matched to the 56px floating-label fields ─────────────── */
 
-.co-state { gap: 0; }
-
-.co-state .select__box { position: relative; }
+.co-state {
+  position: relative;
+  gap: 0;
+}
 
 .co-state .select__label {
   position: absolute;
@@ -365,7 +364,7 @@
   border-radius: 3px;
   background-color: var(--bg);
   overflow: hidden;
-  opacity: 0.6;
+  opacity: 0.65;
   transition:
     opacity var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out);
@@ -407,15 +406,15 @@
 .co-card--mastercard::after { left: 16px; opacity: 0.45; }
 
 .co-card--amex::before {
-  inset: 5px 8px;
-  background-color: transparent;
-  border: 1.5px solid var(--text-secondary);
+  inset: 4px;
+  border-radius: 2px;
 }
 .co-card--amex::after {
   top: 10px;
-  left: 12px;
-  width: 9px;
-  height: 1.5px;
+  left: 9px;
+  width: 14px;
+  height: 2px;
+  background-color: var(--bg);
 }
 
 .co-card--discover::before {
@@ -513,8 +512,9 @@
 .co-live[data-tone='error'] { color: var(--danger); }
 .co-live[data-tone='ok'] { color: var(--text-secondary); }
 
-.co-live + .btn { margin-top: var(--s-4); }
-.co-fine + .btn { margin-top: var(--s-6); }
+/* The live region collapses when empty, so the button owns its own spacing
+   rather than inheriting it from a sibling that may not be rendered. */
+.co-sec--agree .btn { margin-top: var(--s-6); }
 
 /* ── Breakpoints ─────────────────────────────────────────────────────────── */
 

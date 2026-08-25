@@ -67,6 +67,26 @@ export default function InventoryPage(): ReactElement {
     </div>
   );
 
+  const chipList = (className: string) => (
+    <ul className={className}>
+      {chips.map((chip) => (
+        <li key={`${chip.key}-${chip.id}`}>
+          <button
+            type="button"
+            className="inv__chip"
+            onClick={() => removeChip(chip)}
+            aria-label={`Remove filter: ${chip.label}`}
+          >
+            <span>{chip.label}</span>
+            <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false">
+              <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+
   const sortSelect = (
     <Select
       label="Sort by"
@@ -119,17 +139,31 @@ export default function InventoryPage(): ReactElement {
             <div className="inv__headline">
               <p className="inv__count" role="status" aria-live="polite">
                 {showSkeletons ? (
-                  <Skeleton w={128} h={28} />
+                  <Skeleton w={150} h={32} />
                 ) : (
                   `${num(results.length)} ${results.length === 1 ? 'result' : 'results'}`
                 )}
               </p>
               <p className="inv__location">
-                Within {num(SEARCH_RADIUS)} miles of {zip}
+                <span className="inv__location-wide">
+                  New and pre-owned Vela vehicles within {num(SEARCH_RADIUS)} miles of {zip}
+                </span>
+                <span className="inv__location-narrow">
+                  Within {num(SEARCH_RADIUS)} miles of {zip}
+                </span>
               </p>
             </div>
             {isDesktop ? <div className="inv__header-sort">{sortSelect}</div> : null}
           </header>
+
+          {chips.length > 0 && results.length > 0 ? (
+            <div className="inv__active">
+              {chipList('inv__chips')}
+              <button type="button" className="inv__clear" onClick={reset}>
+                Clear all
+              </button>
+            </div>
+          ) : null}
 
           {!showSkeletons && results.length === 0 ? (
             <div className="inv__empty">
@@ -137,31 +171,7 @@ export default function InventoryPage(): ReactElement {
               <p className="inv__empty-body">
                 Widen your price range or clear a filter to see everything we have in stock.
               </p>
-              {chips.length > 0 ? (
-                <ul className="inv__chips">
-                  {chips.map((chip) => (
-                    <li key={`${chip.key}-${chip.id}`}>
-                      <button
-                        type="button"
-                        className="inv__chip"
-                        onClick={() => removeChip(chip)}
-                        aria-label={`Remove filter: ${chip.label}`}
-                      >
-                        <span>{chip.label}</span>
-                        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false">
-                          <path
-                            d="M4 4l8 8M12 4l-8 8"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+              {chips.length > 0 ? chipList('inv__chips inv__chips--empty') : null}
               <Button variant="secondary" onClick={reset} className="inv__empty-reset">
                 Reset filters
               </Button>
