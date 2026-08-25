@@ -1,0 +1,15 @@
+/* ── Vehicle render A ─────────────────────────────────────────────────────
+   Layout-neutral extras only: the shared behaviour (paint cross-fade, sizing)
+   comes from CarRender.css, which this file never overrides.               */
+
+.car-render-a {
+  /* Hairline panel gaps must stay hairlines when the render is scaled into a
+     card, so their strokes do not scale with the viewBox. */
+  isolation: isolate;
+}
+
+.car-render-a [stroke-width='0.9'],
+.car-render-a [stroke-width='1'],
+.car-render-a [stroke-width='1.1'] {
+  vector-effect: non-scaling-stroke;
+}

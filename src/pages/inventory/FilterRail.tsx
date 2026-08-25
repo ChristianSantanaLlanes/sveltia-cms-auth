@@ -12,6 +12,7 @@ import {
 import { miles, money, num } from '@/lib/format';
 import {
   CONDITION_OPTIONS,
+  INVENTORY_TOTAL,
   MODEL_OPTIONS,
   PAINT_OPTIONS,
   PRICE_BOUNDS,
@@ -19,11 +20,13 @@ import {
   TRIM_OPTIONS,
   WHEEL_OPTIONS,
   facetCounts,
+  matchCount,
   type FacetOption,
   type InventoryFilters,
   type MultiKey,
   type SetFilter,
 } from './useInventoryFilters';
+import type { WheelOption } from '@/types';
 import './FilterRail.css';
 
 export interface FilterRailProps {
@@ -41,12 +44,12 @@ const isDesktopNow = () =>
     ? window.matchMedia(DESKTOP).matches
     : true;
 
-type SectionId = 'model' | 'condition' | 'trim' | 'paint' | 'wheel' | 'price' | 'range';
+type SectionId = 'model' | 'condition' | 'price' | 'range' | 'paint' | 'wheel' | 'trim';
 
 function Chevron(): ReactElement {
   return (
-    <svg className="rail__chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-      <path d="M3.5 6 8 10.5 12.5 6" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    <svg className="rail__chevron" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+      <path d="M3.5 6 8 10.5 12.5 6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -59,19 +62,24 @@ function Check(): ReactElement {
   );
 }
 
+/* ── Section shell ──────────────────────────────────────────────────────────*/
+
 interface SectionProps {
   id: SectionId;
   title: string;
   open: boolean;
   onToggle: (id: SectionId) => void;
-  summary?: string;
+  /** Number of active choices in this dimension; a bare dot when 0 but active. */
+  badge?: number;
+  dot?: boolean;
   panelId: string;
   children: ReactNode;
 }
 
-function Section({ id, title, open, onToggle, summary, panelId, children }: SectionProps): ReactElement {
+function Section({ id, title, open, onToggle, badge, dot, panelId, children }: SectionProps): ReactElement {
+  const marked = (badge ?? 0) > 0 || dot;
   return (
-    <section className="rail__section" data-open={open || undefined}>
+    <section className="rail__section" data-open={open || undefined} data-marked={marked || undefined}>
       <h3 className="rail__heading">
         <button
           type="button"
@@ -80,8 +88,12 @@ function Section({ id, title, open, onToggle, summary, panelId, children }: Sect
           aria-controls={panelId}
           onClick={() => onToggle(id)}
         >
-          <span className="rail__toggle-text">{title}</span>
-          {!open && summary ? <span className="rail__summary">{summary}</span> : null}
+          <span className="rail__label">{title}</span>
+          {badge ? (
+            <span className="rail__badge">{badge}</span>
+          ) : dot ? (
+            <span className="rail__dot" aria-hidden="true" />
+          ) : null}
           <Chevron />
         </button>
       </h3>
@@ -91,6 +103,8 @@ function Section({ id, title, open, onToggle, summary, panelId, children }: Sect
     </section>
   );
 }
+
+/* ── Checkbox rows ──────────────────────────────────────────────────────────*/
 
 interface CheckRowProps {
   id: string;
@@ -149,51 +163,205 @@ function CheckGroup({ dimension, options, filters, toggleFilter, testIdPrefix }:
   );
 }
 
+/* ── Live caption shared by both swatch grids ───────────────────────────────*/
+
+interface CaptionProps {
+  name: string | null;
+  count: number | null;
+  fallback: string;
+}
+
+function SwatchCaption({ name, count, fallback }: CaptionProps): ReactElement {
+  return (
+    <p className="swatches__caption" aria-hidden="true">
+      {name ? (
+        <>
+          <span className="swatches__name">{name}</span>
+          {count !== null ? <span className="swatches__stock">{num(count)} in stock</span> : null}
+        </>
+      ) : (
+        <span className="swatches__stock">{fallback}</span>
+      )}
+    </p>
+  );
+}
+
+/** Tracks whichever option the pointer or focus ring is currently on. */
+function useHint() {
+  const [hint, setHint] = useState<string | null>(null);
+  const handlers = useCallback(
+    (id: string) => ({
+      onPointerEnter: () => setHint(id),
+      onPointerLeave: () => setHint((prev) => (prev === id ? null : prev)),
+      onFocus: () => setHint(id),
+      onBlur: () => setHint((prev) => (prev === id ? null : prev)),
+    }),
+    [],
+  );
+  return { hint, handlers };
+}
+
+/* ── Paint ──────────────────────────────────────────────────────────────────*/
+
 function PaintGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 'toggleFilter'>): ReactElement {
   const counts = useMemo(() => facetCounts(filters, 'paint'), [filters]);
-  const [hint, setHint] = useState<string | null>(null);
+  const { hint, handlers } = useHint();
   const selected = filters.paint;
 
-  const caption = hint ?? (selected.length === 0 ? 'Any paint' : `${selected.length} selected`);
+  const focus = hint ?? (selected.length === 1 ? selected[0] : null);
+  const paint = focus ? PAINT_OPTIONS.find((p) => p.id === focus) ?? null : null;
+  const fallback = selected.length > 1 ? `${selected.length} paints selected` : 'Any paint';
 
   return (
     <div className="swatches">
-      <div className="swatches__grid">
-        {PAINT_OPTIONS.map((paint) => {
-          const count = counts[paint.id] ?? 0;
-          const active = selected.includes(paint.id);
+      <div className="swatches__grid swatches__grid--paint">
+        {PAINT_OPTIONS.map((option) => {
+          const count = counts[option.id] ?? 0;
+          const active = selected.includes(option.id);
           return (
             <button
-              key={paint.id}
+              key={option.id}
               type="button"
               className="swatch"
-              data-testid={`paint-${paint.id}`}
+              data-testid={`paint-${option.id}`}
+              data-empty={!active && count === 0 ? '' : undefined}
               aria-pressed={active}
-              aria-label={`${paint.name}, ${count} available`}
+              aria-label={`${option.name}, ${count} available`}
               style={
                 {
-                  '--swatch-base': paint.hex,
-                  '--swatch-sheen': paint.sheen,
-                  '--swatch-shade': paint.shade,
+                  '--swatch-base': option.hex,
                 } as CSSProperties
               }
-              onClick={() => toggleFilter('paint', paint.id)}
-              onPointerEnter={() => setHint(paint.name)}
-              onPointerLeave={() => setHint(null)}
-              onFocus={() => setHint(paint.name)}
-              onBlur={() => setHint(null)}
+              onClick={() => toggleFilter('paint', option.id)}
+              {...handlers(option.id)}
             >
               <span className="swatch__disc" aria-hidden="true" />
             </button>
           );
         })}
       </div>
-      <p className="swatches__caption" aria-hidden="true">
-        {caption}
-      </p>
+      <SwatchCaption name={paint?.name ?? null} count={paint ? counts[paint.id] ?? 0 : null} fallback={fallback} />
     </div>
   );
 }
+
+/* ── Wheels ─────────────────────────────────────────────────────────────────*/
+
+/** Polar helper for the rim glyphs: 48×48 box, centre 24,24, 0° at twelve o'clock. */
+function polar(r: number, deg: number): string {
+  const a = ((deg - 90) * Math.PI) / 180;
+  return `${(24 + r * Math.cos(a)).toFixed(2)} ${(24 + r * Math.sin(a)).toFixed(2)}`;
+}
+
+/**
+ * The glyphs are drawn to scale: the tyre is a fixed 21r and the rim grows with
+ * the wheel size, so an 18" aero and a 19" aero differ by their sidewall the way
+ * the real wheels do — the row never shows the same picture twice.
+ */
+const rimRadius = (size: number) => 13.4 + (size - 18) * 0.95;
+
+interface RimSpec {
+  paths: string[];
+  width: number;
+  opacity: number;
+  face?: boolean;
+}
+
+function rimSpec(style: WheelOption['style'], rim: number): RimSpec {
+  const spread = (n: number, fn: (deg: number) => string) =>
+    Array.from({ length: n }, (_, i) => fn((360 / n) * i));
+  const hub = 5.4;
+  const tip = rim - 1.2;
+
+  switch (style) {
+    case 'aero':
+      return {
+        face: true,
+        width: 4.8,
+        opacity: 0.26,
+        paths: spread(5, (d) => `M${polar(hub + 1, d)} L${polar(tip - 0.6, d)}`),
+      };
+    case 'sport':
+      return {
+        width: 1.9,
+        opacity: 0.42,
+        paths: spread(5, (d) => `M${polar(hub, d - 7)} L${polar(tip, d - 7)} M${polar(hub, d + 7)} L${polar(tip, d + 7)}`),
+      };
+    case 'turbine':
+      return {
+        width: 2.3,
+        opacity: 0.38,
+        paths: spread(9, (d) => `M${polar(hub, d)} Q${polar((hub + tip) / 2, d + 10)} ${polar(tip, d + 20)}`),
+      };
+    case 'arachnid':
+    default:
+      return {
+        width: 1.2,
+        opacity: 0.5,
+        paths: spread(10, (d) => `M${polar(hub - 0.4, d)} L${polar(tip, d + 5)}`),
+      };
+  }
+}
+
+function RimGlyph({ style, size }: { style: WheelOption['style']; size: number }): ReactElement {
+  const rim = rimRadius(size);
+  const spec = rimSpec(style, rim);
+  return (
+    <svg className="wheel__art" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+      <circle cx="24" cy="24" r={21 - 1.7} fill="none" stroke="currentColor" strokeWidth="3.4" strokeOpacity="0.15" />
+      {spec.face ? <circle cx="24" cy="24" r={rim} fill="currentColor" fillOpacity="0.06" /> : null}
+      <circle cx="24" cy="24" r={rim} fill="none" stroke="currentColor" strokeWidth="1.1" strokeOpacity="0.28" />
+      <g stroke="currentColor" strokeWidth={spec.width} strokeOpacity={spec.opacity} strokeLinecap="round" fill="none">
+        {spec.paths.map((d) => (
+          <path key={d} d={d} />
+        ))}
+      </g>
+      <circle cx="24" cy="24" r="3" fill="currentColor" fillOpacity="0.4" />
+    </svg>
+  );
+}
+
+function WheelGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 'toggleFilter'>): ReactElement {
+  const counts = useMemo(() => facetCounts(filters, 'wheel'), [filters]);
+  const { hint, handlers } = useHint();
+  const selected = filters.wheel;
+
+  const focus = hint ?? (selected.length === 1 ? selected[0] : null);
+  const wheel = focus ? WHEEL_OPTIONS.find((w) => w.id === focus) ?? null : null;
+  const fallback = selected.length > 1 ? `${selected.length} wheels selected` : 'Any wheel';
+
+  return (
+    <div className="swatches">
+      <div className="swatches__grid swatches__grid--wheel">
+        {WHEEL_OPTIONS.map((option) => {
+          const count = counts[option.id] ?? 0;
+          const active = selected.includes(option.id);
+          return (
+            <button
+              key={option.id}
+              type="button"
+              className="wheel"
+              data-testid={`wheel-${option.id}`}
+              data-empty={!active && count === 0 ? '' : undefined}
+              aria-pressed={active}
+              aria-label={`${option.name}, ${count} available`}
+              onClick={() => toggleFilter('wheel', option.id)}
+              {...handlers(option.id)}
+            >
+              <span className="wheel__plate" aria-hidden="true">
+                <RimGlyph style={option.style} size={option.size} />
+              </span>
+              <span className="wheel__size">{option.size}&Prime;</span>
+            </button>
+          );
+        })}
+      </div>
+      <SwatchCaption name={wheel?.name ?? null} count={wheel ? counts[wheel.id] ?? 0 : null} fallback={fallback} />
+    </div>
+  );
+}
+
+/* ── Sliders ────────────────────────────────────────────────────────────────*/
 
 /**
  * Sliders paint from a local draft and only write the URL when the thumb is
@@ -281,44 +449,46 @@ function PriceSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
 
   return (
     <div className="slider">
-      <div className="slider__track" aria-hidden="true">
-        <span className="slider__fill" style={{ left: `${lowPct}%`, right: `${100 - highPct}%` }} />
-      </div>
-
-      <input
-        {...release}
-        type="range"
-        className="slider__input slider__input--low"
-        min={min}
-        max={max}
-        step={step}
-        value={draft.low}
-        aria-label="Minimum price"
-        aria-valuetext={money(draft.low)}
-        style={{ zIndex: lowPct > 88 ? 4 : 3 }}
-        onChange={(event) =>
-          update({ ...draft, low: Math.min(Number(event.target.value), draft.high - step) })
-        }
-      />
-      <input
-        {...release}
-        type="range"
-        className="slider__input slider__input--high"
-        min={min}
-        max={max}
-        step={step}
-        value={draft.high}
-        aria-label="Maximum price"
-        aria-valuetext={draft.high === max ? `${money(max)} or more` : money(draft.high)}
-        onChange={(event) =>
-          update({ ...draft, high: Math.max(Number(event.target.value), draft.low + step) })
-        }
-      />
-
-      <p className="slider__readout">
-        <span>{money(draft.low)}</span>
-        <span>{draft.high === max ? `${money(max)}+` : money(draft.high)}</span>
+      <p className="slider__values">
+        <span className="slider__value">{money(draft.low)}</span>
+        <span className="slider__value">{draft.high === max ? `${money(max)}+` : money(draft.high)}</span>
       </p>
+
+      <div className="slider__control">
+        <div className="slider__track" aria-hidden="true">
+          <span className="slider__fill" style={{ left: `${lowPct}%`, right: `${100 - highPct}%` }} />
+        </div>
+
+        <input
+          {...release}
+          type="range"
+          className="slider__input slider__input--low"
+          min={min}
+          max={max}
+          step={step}
+          value={draft.low}
+          aria-label="Minimum price"
+          aria-valuetext={money(draft.low)}
+          style={{ zIndex: lowPct > 88 ? 4 : 3 }}
+          onChange={(event) =>
+            update({ ...draft, low: Math.min(Number(event.target.value), draft.high - step) })
+          }
+        />
+        <input
+          {...release}
+          type="range"
+          className="slider__input slider__input--high"
+          min={min}
+          max={max}
+          step={step}
+          value={draft.high}
+          aria-label="Maximum price"
+          aria-valuetext={draft.high === max ? `${money(max)} or more` : money(draft.high)}
+          onChange={(event) =>
+            update({ ...draft, high: Math.max(Number(event.target.value), draft.low + step) })
+          }
+        />
+      </div>
     </div>
   );
 }
@@ -334,28 +504,33 @@ function RangeSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
 
   return (
     <div className="slider slider--single">
-      <div className="slider__track" aria-hidden="true">
-        <span className="slider__fill" style={{ left: `${pct}%`, right: '0%' }} />
-      </div>
-      <input
-        {...release}
-        type="range"
-        className="slider__input"
-        min={min}
-        max={max}
-        step={step}
-        value={draft}
-        aria-label="Minimum range"
-        aria-valuetext={`${miles(draft)} or more`}
-        onChange={(event) => update(Number(event.target.value))}
-      />
-      <p className="slider__readout">
-        <span>{miles(draft)} or more</span>
-        <span>{miles(max)}</span>
+      <p className="slider__values">
+        <span className="slider__value">{miles(draft)} or more</span>
+        <span className="slider__value slider__value--muted">up to {miles(max)}</span>
       </p>
+
+      <div className="slider__control">
+        <div className="slider__track" aria-hidden="true">
+          <span className="slider__fill" style={{ left: `${pct}%`, right: '0%' }} />
+        </div>
+        <input
+          {...release}
+          type="range"
+          className="slider__input"
+          min={min}
+          max={max}
+          step={step}
+          value={draft}
+          aria-label="Minimum range"
+          aria-valuetext={`${miles(draft)} or more`}
+          onChange={(event) => update(Number(event.target.value))}
+        />
+      </div>
     </div>
   );
 }
+
+/* ── Rail ───────────────────────────────────────────────────────────────────*/
 
 export function FilterRail({ filters, setFilter, toggleFilter, reset, activeCount }: FilterRailProps): ReactElement {
   const uid = useId();
@@ -364,72 +539,71 @@ export function FilterRail({ filters, setFilter, toggleFilter, reset, activeCoun
     return {
       model: true,
       condition: true,
-      trim: desktop,
+      price: true,
+      range: desktop,
       paint: desktop,
       wheel: desktop,
-      price: desktop,
-      range: desktop,
+      trim: desktop,
     };
   });
 
   const toggleSection = (id: SectionId) => setOpen((prev) => ({ ...prev, [id]: !prev[id] }));
   const panelId = (id: SectionId) => `${uid}-${id}`;
+  const badgeFor = (key: MultiKey) => (filters[key] as string[]).length || undefined;
 
-  const summaryFor = (key: MultiKey) => {
-    const count = (filters[key] as string[]).length;
-    return count ? `${count} selected` : undefined;
-  };
+  const priceActive = filters.minPrice !== PRICE_BOUNDS.min || filters.maxPrice !== PRICE_BOUNDS.max;
+  const rangeActive = filters.minRange !== RANGE_BOUNDS.min;
 
-  const priceSummary =
-    filters.minPrice !== PRICE_BOUNDS.min || filters.maxPrice !== PRICE_BOUNDS.max
-      ? `${money(filters.minPrice)} – ${filters.maxPrice === PRICE_BOUNDS.max ? `${money(PRICE_BOUNDS.max)}+` : money(filters.maxPrice)}`
-      : undefined;
-
-  const rangeSummary = filters.minRange !== RANGE_BOUNDS.min ? `${miles(filters.minRange)}+` : undefined;
+  const matched = useMemo(() => matchCount(filters), [filters]);
 
   return (
     <div className="rail">
       <div className="rail__top">
-        <h2 className="rail__title">Filters</h2>
-        {activeCount > 0 ? (
-          <button type="button" className="rail__reset" onClick={reset}>
-            Reset all
-          </button>
-        ) : null}
+        <div className="rail__top-row">
+          <h2 className="rail__title">Filters</h2>
+          {activeCount > 0 ? (
+            <button type="button" className="rail__reset" onClick={reset}>
+              <span>Reset</span>
+              <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true" focusable="false">
+                <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+          ) : null}
+        </div>
+        <p className="rail__tally">
+          <span className="rail__tally-num" key={matched}>
+            {num(matched)}
+          </span>
+          <span className="rail__tally-of">of {num(INVENTORY_TOTAL)} vehicles</span>
+        </p>
       </div>
 
-      <Section id="model" title="Model" open={open.model} onToggle={toggleSection} summary={summaryFor('model')} panelId={panelId('model')}>
+      <Section id="model" title="Model" open={open.model} onToggle={toggleSection} badge={badgeFor('model')} panelId={panelId('model')}>
         <CheckGroup dimension="model" options={MODEL_OPTIONS} filters={filters} toggleFilter={toggleFilter} />
       </Section>
 
-      <Section id="condition" title="Condition" open={open.condition} onToggle={toggleSection} summary={summaryFor('condition')} panelId={panelId('condition')}>
+      <Section id="condition" title="Condition" open={open.condition} onToggle={toggleSection} badge={badgeFor('condition')} panelId={panelId('condition')}>
         <CheckGroup dimension="condition" options={CONDITION_OPTIONS} filters={filters} toggleFilter={toggleFilter} />
       </Section>
 
-      <Section id="trim" title="Trim" open={open.trim} onToggle={toggleSection} summary={summaryFor('trim')} panelId={panelId('trim')}>
-        <CheckGroup dimension="trim" options={TRIM_OPTIONS} filters={filters} toggleFilter={toggleFilter} testIdPrefix="trim-" />
-      </Section>
-
-      <Section id="paint" title="Paint" open={open.paint} onToggle={toggleSection} summary={summaryFor('paint')} panelId={panelId('paint')}>
-        <PaintGrid filters={filters} toggleFilter={toggleFilter} />
-      </Section>
-
-      <Section id="wheel" title="Wheels" open={open.wheel} onToggle={toggleSection} summary={summaryFor('wheel')} panelId={panelId('wheel')}>
-        <CheckGroup
-          dimension="wheel"
-          options={WHEEL_OPTIONS.map((w) => ({ id: w.id, label: w.name }))}
-          filters={filters}
-          toggleFilter={toggleFilter}
-          testIdPrefix="wheel-"
-        />
-      </Section>
-
-      <Section id="price" title="Price" open={open.price} onToggle={toggleSection} summary={priceSummary} panelId={panelId('price')}>
+      <Section id="price" title="Price" open={open.price} onToggle={toggleSection} dot={priceActive} panelId={panelId('price')}>
         <PriceSlider filters={filters} setFilter={setFilter} />
       </Section>
 
-      <Section id="range" title="Range" open={open.range} onToggle={toggleSection} summary={rangeSummary} panelId={panelId('range')}>
+      <Section id="range" title="Range" open={open.range} onToggle={toggleSection} dot={rangeActive} panelId={panelId('range')}>
         <RangeSlider filters={filters} setFilter={setFilter} />
+      </Section>
+
+      <Section id="paint" title="Paint" open={open.paint} onToggle={toggleSection} badge={badgeFor('paint')} panelId={panelId('paint')}>
+        <PaintGrid filters={filters} toggleFilter={toggleFilter} />
+      </Section>
+
+      <Section id="wheel" title="Wheels" open={open.wheel} onToggle={toggleSection} badge={badgeFor('wheel')} panelId={panelId('wheel')}>
+        <WheelGrid filters={filters} toggleFilter={toggleFilter} />
+      </Section>
+
+      <Section id="trim" title="Trim" open={open.trim} onToggle={toggleSection} badge={badgeFor('trim')} panelId={panelId('trim')}>
+        <CheckGroup dimension="trim" options={TRIM_OPTIONS} filters={filters} toggleFilter={toggleFilter} testIdPrefix="trim-" />
       </Section>
     </div>
   );

@@ -1,26 +1,103 @@
 /* ── Option panel ───────────────────────────────────────────────────────────
    Every control is a native <input type="radio|checkbox"> behind a <label>, so
    arrow-key roving, grouping and the accessible name come from the platform.
-   The input stays focusable and its focus ring is drawn on the visible part.  */
+   The input stays focusable and its focus ring is drawn on the visible part.
 
-.opanel {
+   Every class here is `op-` prefixed on purpose: page CSS in this app is global,
+   and the inventory filter rail owns bare `.swatch` / `.wheel__art`.          */
+
+.op-panel {
   flex: 1 1 auto;
 }
 
-.osec {
-  padding: var(--s-10) 0;
+/* ── Build header ───────────────────────────────────────────────────────────
+   The vehicle as currently specified: name, delivery window, and the three
+   numbers that move when the trim or the wheels change.                      */
+
+.op-head {
+  padding-bottom: var(--s-6);
+}
+
+.op-head__eyebrow {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.op-head__title {
+  margin-top: var(--s-3);
+  font-size: var(--fs-h1);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+.op-head__lead {
+  margin-top: var(--s-3);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.op-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--s-5);
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.op-stat {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  padding: var(--s-3) var(--s-4) var(--s-3) 0;
+}
+
+.op-stat + .op-stat {
+  padding-left: var(--s-4);
+  border-left: 1px solid var(--line-soft);
+}
+
+.op-stat__value {
+  font-size: var(--fs-h3);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.op-stat__unit {
+  margin-left: 3px;
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.op-stat__label {
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  color: var(--text-tertiary);
+}
+
+/* ── Sections ───────────────────────────────────────────────────────────────
+   Hairlines run edge to edge of the panel; the content keeps the gutter.     */
+
+.op-sec {
+  margin-inline: calc(var(--panel-pad) * -1);
+  padding: var(--s-10) var(--panel-pad);
   scroll-margin-top: calc(var(--header-h) + var(--s-6));
 }
 
-.osec:first-child {
-  padding-top: 0;
-}
-
-.osec + .osec {
+.op-sec + .op-sec,
+.op-head + .op-sec {
   border-top: 1px solid var(--line-soft);
 }
 
-.osec__title {
+.op-sec__title {
   margin-bottom: var(--s-5);
   font-size: 2rem;
   font-weight: 500;
@@ -28,7 +105,9 @@
   letter-spacing: var(--tracking-tight);
 }
 
-.osec__echo {
+/* ── The echo: what is selected, what it costs, what it does ────────────────*/
+
+.op-echo {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -39,15 +118,17 @@
   line-height: 1.35;
 }
 
-.osec__echoDelta {
+.op-echo__delta {
   flex: none;
   color: var(--text-secondary);
   font-weight: 400;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.osec__note {
-  margin-top: var(--s-1);
+.op-echo__note {
+  max-width: 46ch;
+  margin-top: var(--s-2);
   font-size: var(--fs-sm);
   line-height: 1.5;
   color: var(--text-secondary);
@@ -55,7 +136,7 @@
 
 /* The real control: invisible, but stretched over its label so a pointer or a
    programmatic click lands on the input itself rather than on decoration. */
-.ohidden {
+.op-input {
   appearance: none;
   position: absolute;
   z-index: 2;
@@ -70,80 +151,99 @@
 
 /* ── Trim rows ──────────────────────────────────────────────────────────────*/
 
-.ogroup--rows {
+.op-group--rows {
   display: grid;
   gap: var(--s-3);
 }
 
-.trim,
-.orow {
+.op-trim,
+.op-row {
   position: relative;
   display: block;
   cursor: pointer;
 }
 
-.trim__box {
+.op-trim__box {
   display: grid;
-  gap: var(--s-2);
+  gap: var(--s-3);
   padding: var(--s-4) var(--s-5);
   border-radius: var(--r-md);
   background: var(--bg);
   box-shadow: inset 0 0 0 1px var(--line);
-  transition: box-shadow var(--dur-fast) var(--ease-out);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
 }
 
-.trim:hover .trim__box {
+.op-trim:hover .op-trim__box {
   box-shadow: inset 0 0 0 1px var(--ink-60);
 }
 
-.trim.is-on .trim__box {
-  box-shadow: inset 0 0 0 2px var(--ink);
+.op-trim.is-on .op-trim__box {
+  box-shadow:
+    inset 0 0 0 1.5px var(--ink),
+    var(--shadow-1);
 }
 
-.trim__head {
+.op-trim__head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s-4);
 }
 
-.trim__name {
+.op-trim__name {
   font-size: var(--fs-body);
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
-.trim__price {
+.op-trim__price {
   flex: none;
   font-size: var(--fs-body);
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.trim__specs {
+/* A spec strip, not a sentence: three aligned columns of number over label. */
+.op-trim__specs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line-soft);
+}
+
+.op-trim__spec {
   display: flex;
-  flex-wrap: wrap;
-  column-gap: var(--s-3);
-  row-gap: 2px;
-  font-size: var(--fs-sm);
-  line-height: 1.4;
-  color: var(--text-secondary);
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
-.trim__spec + .trim__spec::before {
-  content: '·';
-  margin-right: var(--s-3);
-  color: var(--text-tertiary);
-}
-
-.trim__num {
-  color: var(--text);
+.op-trim__num {
+  font-size: var(--fs-body);
   font-weight: 500;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.op-trim__unit {
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.op-trim.is-on .op-trim__unit {
+  color: var(--text-secondary);
 }
 
 /* ── Simple rows (seating) ──────────────────────────────────────────────────*/
 
-.orow__box {
+.op-row__box {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -155,144 +255,211 @@
   transition: box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.orow:hover .orow__box {
+.op-row:hover .op-row__box {
   box-shadow: inset 0 0 0 1px var(--ink-60);
 }
 
-.orow.is-on .orow__box {
-  box-shadow: inset 0 0 0 2px var(--ink);
+.op-row.is-on .op-row__box {
+  box-shadow:
+    inset 0 0 0 1.5px var(--ink),
+    var(--shadow-1);
 }
 
-.orow__name {
+.op-row__name {
   font-size: var(--fs-body);
   font-weight: 500;
 }
 
-.orow__price {
+.op-row__price {
   flex: none;
   font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
-/* ── Swatch groups ──────────────────────────────────────────────────────────*/
+/* ── Paint chips ────────────────────────────────────────────────────────────
+   A lit sphere inside a selection ring — sheen and shade come from the
+   catalogue, so the chip matches the body render exactly.                    */
 
-.ogroup--swatches,
-.ogroup--wheels {
+.op-group--chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s-5);
+  gap: var(--s-3);
 }
 
-.swatch {
+.op-chip {
   position: relative;
   display: block;
   line-height: 0;
   cursor: pointer;
 }
 
-/* Paint: a lit sphere, not a flat disc — the sheen and shade come from the
-   catalogue so the swatch matches the body render exactly. */
-.swatch__dot {
+.op-chip__ring {
   display: block;
-  width: 48px;
-  height: 48px;
+  padding: 5px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px transparent;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.op-chip__dot {
+  display: block;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: radial-gradient(
-    circle at 33% 27%,
+    circle at 33% 26%,
     var(--sw-sheen) 0%,
-    var(--sw-hex) 46%,
-    var(--sw-shade) 100%
+    var(--sw-hex) 42%,
+    var(--sw-shade) 106%
   );
-  box-shadow: inset 0 0 0 1px var(--ink-08);
-  transition: box-shadow var(--dur-fast) var(--ease-out);
-}
-
-.swatch:hover .swatch__dot {
   box-shadow:
     inset 0 0 0 1px var(--ink-08),
-    0 0 0 3px var(--bg),
-    0 0 0 4px var(--line);
+    var(--shadow-1);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
-.swatch.is-on .swatch__dot {
-  box-shadow:
-    inset 0 0 0 1px var(--ink-08),
-    0 0 0 3px var(--bg),
-    0 0 0 5px var(--ink);
+.op-chip:hover .op-chip__ring {
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.swatch__wheel {
-  display: block;
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  transition: box-shadow var(--dur-fast) var(--ease-out);
+.op-chip:hover .op-chip__dot {
+  transform: scale(1.05);
 }
 
-.wheel__art {
-  display: block;
+.op-chip.is-on .op-chip__ring {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+/* ── Thumbnail tiles (wheels, interior) ─────────────────────────────────────*/
+
+.op-group--tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+.op-tile {
+  position: relative;
+  display: grid;
+  gap: var(--s-2);
+  cursor: pointer;
+}
+
+.op-tile__plate {
+  display: grid;
+  place-items: center;
   width: 100%;
-  height: 100%;
-}
-
-.swatch:hover .swatch__wheel {
-  box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--line);
-}
-
-.swatch.is-on .swatch__wheel {
-  box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink);
-}
-
-.swatch__interior {
-  display: block;
-  width: 92px;
-  height: 58px;
   border-radius: var(--r-md);
-  background: linear-gradient(112deg, var(--sw-a) 0 46%, var(--sw-b) 46% 100%);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px transparent;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.op-wheel .op-tile__plate {
+  aspect-ratio: 1;
+}
+
+.op-tile:hover .op-tile__plate {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.op-tile.is-on .op-tile__plate {
+  box-shadow:
+    inset 0 0 0 1.5px var(--ink),
+    var(--shadow-1);
+}
+
+.op-wheel.is-on .op-tile__plate {
+  background: var(--bg);
+}
+
+.op-wheel__art {
+  width: 74%;
+  height: auto;
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.op-wheel:hover .op-wheel__art {
+  transform: scale(1.04);
+}
+
+.op-tile__caption {
+  font-size: var(--fs-xs);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  text-align: center;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.op-tile.is-on .op-tile__caption {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.op-int__plate {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background:
+    linear-gradient(148deg, var(--sw-a) 0 54%, var(--sw-b) 54% 100%);
   box-shadow: inset 0 0 0 1px var(--ink-08);
-  transition: box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.swatch:hover .swatch__interior {
-  box-shadow:
-    inset 0 0 0 1px var(--ink-08),
-    0 0 0 3px var(--bg),
-    0 0 0 4px var(--line);
+/* A material sample, not a colour block: one soft light raking across the
+   seat colour and a seam where the two materials meet. */
+.op-int__plate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(158deg, var(--btn-light) 0%, transparent 46%);
+  opacity: 0.3;
 }
 
-.swatch.is-on .swatch__interior {
+.op-int:hover .op-int__plate {
   box-shadow:
     inset 0 0 0 1px var(--ink-08),
-    0 0 0 3px var(--bg),
-    0 0 0 5px var(--ink);
+    0 0 0 1px var(--line);
+}
+
+.op-int.is-on .op-int__plate {
+  box-shadow:
+    inset 0 0 0 1px var(--ink-08),
+    0 0 0 1.5px var(--ink),
+    var(--shadow-1);
 }
 
 /* ── Add-on cards ───────────────────────────────────────────────────────────*/
 
-.ogroup--cards {
+.op-group--cards {
   display: grid;
   gap: var(--s-3);
 }
 
-.addon {
+.op-card {
   position: relative;
-  padding: var(--s-4) var(--s-5) var(--s-5);
+  padding: var(--s-5);
   border-radius: var(--r-md);
   background: var(--bg);
   box-shadow: inset 0 0 0 1px var(--line);
   transition: box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.addon:hover {
+.op-card:hover {
   box-shadow: inset 0 0 0 1px var(--ink-60);
 }
 
-.addon.is-on {
-  box-shadow: inset 0 0 0 2px var(--ink);
+.op-card.is-on {
+  box-shadow:
+    inset 0 0 0 1.5px var(--ink),
+    var(--shadow-1);
 }
 
-.addon__input {
+.op-card__input {
   appearance: none;
   position: absolute;
   z-index: 2;
@@ -305,7 +472,7 @@
   cursor: pointer;
 }
 
-.addon__label {
+.op-card__label {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -315,7 +482,7 @@
 
 /* Carries the card-wide focus ring. The stretched input underneath takes the
    clicks, so this must never intercept them. */
-.addon__label::after {
+.op-card__label::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -323,7 +490,7 @@
   pointer-events: none;
 }
 
-.addon__control {
+.op-card__control {
   position: relative;
   width: 20px;
   height: 20px;
@@ -334,16 +501,16 @@
     background-color var(--dur-fast) var(--ease-out);
 }
 
-.addon__input[type='checkbox'] + .addon__label .addon__control {
+.op-card__input[type='checkbox'] + .op-card__label .op-card__control {
   border-radius: 5px;
 }
 
-.addon__input:checked + .addon__label .addon__control {
+.op-card__input:checked + .op-card__label .op-card__control {
   background: var(--ink);
   box-shadow: inset 0 0 0 1.5px var(--ink);
 }
 
-.addon__input[type='radio']:checked + .addon__label .addon__control::after {
+.op-card__input[type='radio']:checked + .op-card__label .op-card__control::after {
   content: '';
   position: absolute;
   inset: 5.5px;
@@ -351,7 +518,7 @@
   background: var(--bg);
 }
 
-.addon__input[type='checkbox']:checked + .addon__label .addon__control::after {
+.op-card__input[type='checkbox']:checked + .op-card__label .op-card__control::after {
   content: '';
   position: absolute;
   left: 6.5px;
@@ -363,86 +530,82 @@
   transform: rotate(43deg);
 }
 
-.addon__name {
+.op-card__name {
   font-size: var(--fs-body);
   font-weight: 500;
   line-height: 1.3;
 }
 
-.addon__price {
+.op-card__price {
   flex: none;
   font-size: var(--fs-body);
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.addon__desc {
-  margin-top: var(--s-2);
+.op-card__desc {
+  margin-top: var(--s-3);
   padding-left: calc(20px + var(--s-3));
 }
 
-.addon__summary {
+.op-card__summary {
   font-size: var(--fs-sm);
   line-height: 1.5;
   color: var(--text-secondary);
 }
 
-.addon__bullets {
+.op-card__bullets {
   display: grid;
   gap: 4px;
-  margin-top: var(--s-2);
+  margin-top: var(--s-3);
   font-size: var(--fs-sm);
   line-height: 1.45;
   color: var(--text-secondary);
 }
 
-.addon__bullets li {
+.op-card__bullets li {
   position: relative;
   padding-left: var(--s-4);
 }
 
-.addon__bullets li::before {
+.op-card__bullets li::before {
   content: '';
   position: absolute;
-  left: 2px;
-  top: 0.6em;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
+  left: 1px;
+  top: 0.62em;
+  width: 5px;
+  height: 1px;
   background: var(--text-tertiary);
 }
 
 /* ── Focus ──────────────────────────────────────────────────────────────────*/
 
-.ohidden:focus-visible + .trim__box,
-.ohidden:focus-visible + .orow__box {
+.op-input:focus-visible + .op-trim__box,
+.op-input:focus-visible + .op-row__box,
+.op-input:focus-visible + .op-tile__plate {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
-.ohidden:focus-visible + .swatch__dot,
-.ohidden:focus-visible + .swatch__wheel {
+.op-input:focus-visible + .op-chip__ring {
   outline: 2px solid var(--accent);
-  outline-offset: 7px;
+  outline-offset: 2px;
   border-radius: 50%;
 }
 
-.ohidden:focus-visible + .swatch__interior {
-  outline: 2px solid var(--accent);
-  outline-offset: 7px;
-}
-
-.addon__input:focus-visible + .addon__label::after {
+.op-card__input:focus-visible + .op-card__label::after {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
 /* Keeps a control clear of the docked summary when focus scrolls it into view. */
 @media (min-width: 1024px) {
-  .trim,
-  .orow,
-  .swatch,
-  .addon {
+  .op-trim,
+  .op-row,
+  .op-chip,
+  .op-tile,
+  .op-card {
     scroll-margin-top: calc(var(--header-h) + var(--s-4));
     scroll-margin-bottom: 320px;
   }
@@ -451,49 +614,22 @@
 /* ── Narrow ─────────────────────────────────────────────────────────────────*/
 
 @media (max-width: 767px) {
-  .osec__title {
+  .op-sec {
+    padding-block: var(--s-10);
+  }
+
+  .op-sec__title {
     font-size: 1.75rem;
   }
 
-  .osec {
-    padding: var(--s-8) 0;
-  }
-
-  .ogroup--swatches,
-  .ogroup--wheels {
-    gap: var(--s-4);
-  }
-
-  .swatch__wheel {
-    width: 84px;
-    height: 84px;
-  }
-}
-
-/* Below ~1320px the option column is too narrow for one separated spec line, so
-   the three specs become aligned columns rather than a list that orphans a '·'. */
-@media (max-width: 1319px) {
-  .trim__specs {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    justify-content: start;
-    column-gap: var(--s-4);
-    font-size: var(--fs-xs);
-  }
-
-  .trim__spec + .trim__spec::before {
-    content: none;
+  .op-head__title {
+    font-size: 2rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .trim__box,
-  .orow__box,
-  .addon,
-  .addon__control,
-  .swatch__dot,
-  .swatch__wheel,
-  .swatch__interior {
-    transition: none;
+  .op-chip__dot,
+  .op-wheel__art {
+    transform: none !important;
   }
 }

@@ -10,8 +10,9 @@
  *      the car, and a wide strip light skimming the roofline (the highlight a
  *      car photographer hangs above the subject so the shell reads as metal).
  *   2. `.vm-hero__floor` — the floor plane, rising out of the wall with no seam
- *      at the exact y where the tyres touch down, darkening as it comes toward
- *      the camera.
+ *      at the exact y where the tyres touch down — a shading layer rather than a
+ *      colour of its own, so the key light carries across it and no edge can
+ *      form at the horizon — darkening as it comes toward the camera.
  *   3. `.vm-hero__pool` — bounced light on that floor, under the car.
  *   4. `.vm-hero__vignette` — one falloff laid over wall, floor and the outer
  *      edges of the render together, so the frame reads as a single exposure
@@ -55,7 +56,7 @@
   background-color: var(--vm-wall);
   background-image:
     /* strip light: the long soft box hung just above and behind the roofline */
-    radial-gradient(52% 13% at 50% 30%, var(--vm-strip) 0%, transparent 100%),
+    radial-gradient(var(--vm-strip-shape), var(--vm-strip) 0%, transparent 100%),
     /* key light, sitting behind and just above the car */
     radial-gradient(var(--vm-key-shape), var(--vm-key) 0%, transparent 68%);
 }
@@ -82,9 +83,13 @@
   z-index: 2;
 }
 
+/* Where the car sits in the frame is part of the chapter, not a constant: the
+   tall SUV drops, the long low sedan lifts. Set per section in HeroSection.tsx.
+   A transform, so nothing above or below it moves. */
 .vm-hero__stage {
   position: relative;
   z-index: 0;
+  transform: translateY(var(--vm-car-shift, 0px));
 }
 
 /* ── Tones ──────────────────────────────────────────────────────────────── */
@@ -92,43 +97,108 @@
 .vm-hero[data-tone='light'] {
   --vm-fg: var(--text);
   --vm-fg-2: var(--text-secondary);
-  --vm-wall: color-mix(in srgb, var(--ink) 6%, var(--bg));
+  --vm-wall: color-mix(in srgb, var(--ink) 4%, var(--bg));
   --vm-key: var(--bg);
-  --vm-strip: color-mix(in srgb, var(--bg) 88%, transparent);
-  --vm-vignette-mid: color-mix(in srgb, var(--ink) 11%, transparent);
-  --vm-vignette: color-mix(in srgb, var(--ink) 27%, transparent);
-  --vm-floor-ao: color-mix(in srgb, var(--ink) 17%, transparent);
-  --vm-floor-near: color-mix(in srgb, var(--ink) 8%, var(--surface));
-  --vm-floor-mid: color-mix(in srgb, var(--ink) 6%, var(--surface));
-  --vm-floor-far: color-mix(in srgb, var(--ink) 13%, var(--surface));
-  --vm-floor-deep: color-mix(in srgb, var(--ink) 22%, var(--surface));
-  --vm-pool: color-mix(in srgb, var(--bg) 52%, transparent);
+  --vm-strip: color-mix(in srgb, var(--bg) 92%, transparent);
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 9%, transparent);
+  --vm-vignette: color-mix(in srgb, var(--ink) 26%, transparent);
+  --vm-floor-ao: color-mix(in srgb, var(--ink) 15%, transparent);
+  --vm-floor-1: color-mix(in srgb, var(--ink) 4%, transparent);
+  --vm-floor-2: color-mix(in srgb, var(--ink) 11%, transparent);
+  --vm-floor-3: color-mix(in srgb, var(--ink) 24%, transparent);
+  --vm-pool: color-mix(in srgb, var(--bg) 56%, transparent);
   --vm-hairline: color-mix(in srgb, var(--ink) 22%, transparent);
 }
 
 .vm-hero[data-tone='dark'] {
   --vm-fg: var(--on-dark);
   --vm-fg-2: var(--on-dark-secondary);
-  --vm-wall: color-mix(in srgb, var(--on-dark) 4%, var(--ink));
-  --vm-key: color-mix(in srgb, var(--on-dark) 26%, var(--ink));
-  --vm-strip: color-mix(in srgb, var(--on-dark) 26%, transparent);
-  --vm-vignette-mid: color-mix(in srgb, var(--ink) 55%, transparent);
+  --vm-wall: color-mix(in srgb, var(--on-dark) 5%, var(--ink));
+  --vm-key: color-mix(in srgb, var(--on-dark) 20%, var(--ink));
+  --vm-strip: color-mix(in srgb, var(--on-dark) 20%, transparent);
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 66%, transparent);
   --vm-vignette: var(--ink);
-  --vm-floor-ao: color-mix(in srgb, var(--ink) 82%, transparent);
-  --vm-floor-near: color-mix(in srgb, var(--on-dark) 10%, var(--ink));
-  --vm-floor-mid: color-mix(in srgb, var(--on-dark) 6%, var(--ink));
-  --vm-floor-far: color-mix(in srgb, var(--on-dark) 2%, var(--ink));
-  --vm-floor-deep: var(--ink);
-  --vm-pool: color-mix(in srgb, var(--on-dark) 14%, transparent);
-  --vm-hairline: color-mix(in srgb, var(--on-dark) 36%, transparent);
+  --vm-floor-ao: color-mix(in srgb, var(--ink) 88%, transparent);
+  --vm-floor-1: color-mix(in srgb, var(--ink) 34%, transparent);
+  --vm-floor-2: color-mix(in srgb, var(--ink) 72%, transparent);
+  --vm-floor-3: var(--ink);
+  --vm-pool: color-mix(in srgb, var(--on-dark) 13%, transparent);
+  --vm-hairline: color-mix(in srgb, var(--on-dark) 34%, transparent);
 }
 
-/* The key light moves a little section to section, so two sections of the same
-   tone are never lit from the identical spot. */
-.vm-hero { --vm-key-shape: 92% 60% at 50% 43%; }
-.vm-hero[data-hero-index='1'] { --vm-key-shape: 84% 68% at 50% 39%; }
-.vm-hero[data-hero-index='2'] { --vm-key-shape: 100% 56% at 50% 46%; }
-.vm-hero[data-hero-index='3'] { --vm-key-shape: 80% 64% at 50% 41%; }
+/* ── Chapters ───────────────────────────────────────────────────────────────
+ *
+ * Alternating light/dark alone gives two backdrops shown twice. Each section is
+ * instead its own studio setup — a white room, a black box, a graphite room, a
+ * charcoal room — so arriving somewhere new looks like turning a page rather
+ * than seeing the same wall again. All four stay inside the greyscale the brand
+ * owns; the only colour on the page is the car.
+ *
+ * The rig is struck and re-set between chapters too: the key and the strip
+ * change size *and* side, by enough to see at a glance rather than by the two
+ * points that a measuring tape would catch. Paired with the lens and framing
+ * changes in HeroSection.tsx, no two adjacent sections light the same shape
+ * from the same place.
+ * -------------------------------------------------------------------------*/
+
+.vm-hero {
+  --vm-key-shape: 78% 54% at 50% 42%;
+  --vm-strip-shape: 52% 13% at 50% 30%;
+}
+
+/* 0 — white room. Wide, square-on key: the establishing shot, nothing clever. */
+.vm-hero[data-hero-index='0'] {
+  --vm-key-shape: 76% 52% at 50% 42%;
+  --vm-strip-shape: 52% 13% at 50% 30%;
+}
+
+/* 1 — black box. The wall goes to pure ink and the key pulls in tight, so the
+   white body is the only bright thing in the frame — a tight key struck low and
+   left of the lens, half the width of the one next door. */
+.vm-hero[data-hero-index='1'] {
+  --vm-key: color-mix(in srgb, var(--on-dark) 15%, var(--ink));
+  --vm-key-shape: 46% 34% at 34% 32%;
+  --vm-strip-shape: 34% 9% at 37% 30%;
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 72%, transparent);
+}
+
+/* 2 — graphite room. Still a light frame for the header and the type, but the
+   wall drops two full steps so the obsidian body has something to sit against. */
+.vm-hero[data-hero-index='2'] {
+  /* The wall is two steps down, so the supporting type comes a step up to keep
+     the 12px small print comfortably legible against it. */
+  --vm-fg-2: color-mix(in srgb, var(--ink) 45%, var(--text-secondary));
+  --vm-wall: color-mix(in srgb, var(--ink) 15%, var(--surface));
+  --vm-key: color-mix(in srgb, var(--bg) 94%, var(--ink));
+  /* The widest, highest key on the page, pushed right: a full cyc wash behind a
+     car shot flat in profile, which is nothing like the spotlight above it. */
+  --vm-key-shape: 92% 60% at 57% 34%;
+  --vm-strip-shape: 66% 15% at 58% 25%;
+  --vm-strip: color-mix(in srgb, var(--bg) 66%, transparent);
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 14%, transparent);
+  --vm-vignette: color-mix(in srgb, var(--ink) 36%, transparent);
+  --vm-floor-ao: color-mix(in srgb, var(--ink) 22%, transparent);
+  --vm-floor-1: color-mix(in srgb, var(--ink) 6%, transparent);
+  --vm-floor-2: color-mix(in srgb, var(--ink) 15%, transparent);
+  --vm-floor-3: color-mix(in srgb, var(--ink) 30%, transparent);
+  --vm-pool: color-mix(in srgb, var(--bg) 44%, transparent);
+}
+
+/* 3 — charcoal room. The dark frame opens back up: a lifted wall and a wide
+   key, which is what a grey body needs to keep its edges. */
+.vm-hero[data-hero-index='3'] {
+  --vm-wall: color-mix(in srgb, var(--on-dark) 11%, var(--ink));
+  --vm-key: color-mix(in srgb, var(--on-dark) 33%, var(--ink));
+  --vm-key-shape: 72% 48% at 43% 48%;
+  --vm-strip-shape: 46% 12% at 45% 35%;
+  --vm-strip: color-mix(in srgb, var(--on-dark) 28%, transparent);
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 46%, transparent);
+  --vm-vignette: color-mix(in srgb, var(--ink) 94%, transparent);
+  --vm-floor-1: color-mix(in srgb, var(--ink) 26%, transparent);
+  --vm-floor-2: color-mix(in srgb, var(--ink) 62%, transparent);
+  --vm-floor-3: color-mix(in srgb, var(--ink) 96%, transparent);
+  --vm-pool: color-mix(in srgb, var(--on-dark) 16%, transparent);
+}
 
 /* ── Entrance ───────────────────────────────────────────────────────────── */
 
@@ -206,11 +276,15 @@
    being letterboxed inside its own frame, which would break that anchoring. */
 .vm-hero__plate {
   position: relative;
-  width: min(100%, 132vh);
+  width: calc(min(100%, 132vh) * var(--vm-car-scale, 1));
   aspect-ratio: 1200 / 420;
-  /* The painted car sits ~2.7% right of the centre of its own viewBox; the
-     nudge puts its optical centre under the centred headline. */
-  transform: translateX(-2.7%);
+  /* Two lens corrections, in order. `--vm-car-nudge` is a bare number of
+     percent: the painted car sits off the centre of its own viewBox by that
+     much, so the nudge puts its optical centre under the centred headline —
+     and it changes sign when the stage is mirrored. `--vm-car-flip` turns the
+     car to face the other way, which is what makes one wheel notch read as a
+     different photograph rather than a recoloured one. */
+  transform: translateX(calc(var(--vm-car-nudge, -2.7) * 1%)) scaleX(var(--vm-car-flip, 1));
 }
 
 .vm-hero__car {
@@ -243,10 +317,9 @@
   background-image: linear-gradient(
     to bottom,
     transparent 0,
-    var(--vm-floor-near) 3.5vh,
-    var(--vm-floor-mid) 11vh,
-    var(--vm-floor-far) 26vh,
-    var(--vm-floor-deep) 44vh
+    var(--vm-floor-1) 15vh,
+    var(--vm-floor-2) 32vh,
+    var(--vm-floor-3) 56vh
   );
 }
 
@@ -256,12 +329,16 @@
 .vm-hero__floor::before {
   content: '';
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% - 80px);
   left: 50%;
-  width: 68%;
-  height: 108px;
+  /* Roughly the car's own footprint. The floor element is 150vw wide, so this
+     reads much narrower than the number suggests. */
+  width: 46%;
+  height: 160px;
   transform: translateX(-50%);
-  background-image: radial-gradient(50% 100% at 50% 100%, var(--vm-floor-ao) 0%, transparent 72%);
+  /* Centred on the contact line and falling off in every direction: an ellipse
+     cropped at the horizon would put a hard edge straight across the frame. */
+  background-image: radial-gradient(50% 50% at 50% 50%, var(--vm-floor-ao) 0%, transparent 72%);
 }
 
 /* Bounced light on the floor, centred under the car: a long, flat pool the way
@@ -423,9 +500,11 @@
 
 @media (min-width: 768px) {
   .vm-hero__plate {
-    /* ~65% of a 1440 frame ends up as painted car once the render's own
-       margins are taken off — the subject, not a motif. */
-    width: min(88%, 1260px, 132vh);
+    /* ~61% of a 1440 frame ends up as painted car at scale 1, once the render's
+       own margins are taken off — the subject, not a motif. Each chapter scales
+       that between roughly 55% and 70%, so consecutive sections never hand the
+       car the same box. */
+    width: calc(min(88%, 1260px, 132vh) * var(--vm-car-scale, 1));
   }
 }
 
@@ -439,9 +518,15 @@
   .vm-hero__plate {
     /* Wider than the section: at 390px a plate held to the gutter leaves the
        car reading as a thumbnail. This fills the frame edge to edge, and the
-       optical-centre nudge shrinks with it. */
-    width: min(130%, 78vh);
-    transform: translateX(-1.6%);
+       optical-centre nudge shrinks with it. The per-chapter scale is damped —
+       a phone frame has no room to give a section 12% more car. */
+    width: calc(min(130%, 78vh) * (0.72 + var(--vm-car-scale, 1) * 0.28));
+    transform: translateX(calc(var(--vm-car-nudge, -2.7) * 0.6%)) scaleX(var(--vm-car-flip, 1));
+  }
+
+  /* Same damping for where it sits: the vertical budget is far tighter here. */
+  .vm-hero__stage {
+    transform: translateY(calc(var(--vm-car-shift, 0px) * 0.5));
   }
 
   .vm-hero__specs {

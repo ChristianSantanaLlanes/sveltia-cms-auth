@@ -301,6 +301,20 @@ export function facetCounts(filters: InventoryFilters, dimension: MultiKey): Rec
   return counts;
 }
 
+/** Total catalogue size — the denominator the rail shows next to the live count. */
+export const INVENTORY_TOTAL = INVENTORY.length;
+
+/**
+ * How many vehicles the current filters match, computed synchronously. The rail
+ * reads this so the count reacts on the same frame as the click, while the grid
+ * catches up behind the cross-fade.
+ */
+export function matchCount(filters: InventoryFilters): number {
+  let n = 0;
+  for (const v of INVENTORY) if (matches(v, filters)) n += 1;
+  return n;
+}
+
 const COMPARATORS: Record<SortKey, (a: InventoryVehicle, b: InventoryVehicle) => number> = {
   'price-asc': (a, b) => a.price - b.price,
   'price-desc': (a, b) => b.price - a.price,
@@ -324,9 +338,16 @@ export function activeChips(filters: InventoryFilters): FilterChip[] {
       chips.push({ key, id, label: LABEL_BY_ID[key][id] ?? id });
     }
   }
-  if (filters.minPrice !== PRICE_BOUNDS.min || filters.maxPrice !== PRICE_BOUNDS.max) {
-    const upper = filters.maxPrice === PRICE_BOUNDS.max ? `${money(PRICE_BOUNDS.max)}+` : money(filters.maxPrice);
-    chips.push({ key: 'price', id: 'price', label: `${money(filters.minPrice)} – ${upper}` });
+  const lowAtBound = filters.minPrice === PRICE_BOUNDS.min;
+  const highAtBound = filters.maxPrice === PRICE_BOUNDS.max;
+  if (!lowAtBound || !highAtBound) {
+    // Read the way a shopper would say it: only name the bound they actually moved.
+    const label = lowAtBound
+      ? `Up to ${money(filters.maxPrice)}`
+      : highAtBound
+        ? `${money(filters.minPrice)} and up`
+        : `${money(filters.minPrice)} – ${money(filters.maxPrice)}`;
+    chips.push({ key: 'price', id: 'price', label });
   }
   if (filters.minRange !== RANGE_BOUNDS.min) {
     chips.push({ key: 'range', id: 'range', label: `${miles(filters.minRange)}+ range` });
@@ -363,11 +384,23 @@ export function useInventoryFilters(): UseInventoryFilters {
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useMemo(() => parseFilters(searchParams), [searchParams]);
 
+  /* React Router commits a navigation in a transition, so two clicks landing in
+     the same frame both read the pre-click query string and the second write
+     drops the first — tick two paint chips quickly and one silently fails to
+     take. Patches are layered onto the last params we asked for until the
+     router catches up, then the queue is dropped. */
+  const queued = useRef<URLSearchParams | null>(null);
+  useEffect(() => {
+    queued.current = null;
+  }, [searchParams]);
+
   const apply = useCallback(
     (patch: Partial<InventoryFilters>) => {
-      setSearchParams((prev) => writeParams(prev, patch), { replace: true });
+      const next = writeParams(queued.current ?? searchParams, patch);
+      queued.current = next;
+      setSearchParams(next, { replace: true });
     },
-    [setSearchParams],
+    [searchParams, setSearchParams],
   );
 
   const setFilter = useCallback(
@@ -383,26 +416,23 @@ export function useInventoryFilters(): UseInventoryFilters {
 
   const toggleFilter = useCallback(
     (key: MultiKey, id: string) => {
-      const current = filters[key] as string[];
+      const current = readList(queued.current ?? searchParams, key);
       const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
       apply({ [key]: next } as Partial<InventoryFilters>);
     },
-    [apply, filters],
+    [apply, searchParams],
   );
 
   const reset = useCallback(() => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams();
-        // The sort choice and the screenshot flag are not filters; they survive a reset.
-        const sort = prev.get('sort');
-        if (sort) next.set('sort', sort);
-        if (prev.get('slow') === '1') next.set('slow', '1');
-        return next;
-      },
-      { replace: true },
-    );
-  }, [setSearchParams]);
+    const prev = queued.current ?? searchParams;
+    const next = new URLSearchParams();
+    // The sort choice and the screenshot flag are not filters; they survive a reset.
+    const sort = prev.get('sort');
+    if (sort) next.set('sort', sort);
+    if (prev.get('slow') === '1') next.set('slow', '1');
+    queued.current = next;
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const pending = useMemo(() => filterAndSort(filters), [filters]);
 

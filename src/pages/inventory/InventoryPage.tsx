@@ -141,7 +141,9 @@ export default function InventoryPage(): ReactElement {
                 {showSkeletons ? (
                   <Skeleton w={168} h={34} />
                 ) : (
-                  `${num(results.length)} ${results.length === 1 ? 'result' : 'results'}`
+                  <span className="inv__count-value" key={results.length}>
+                    {`${num(results.length)} ${results.length === 1 ? 'result' : 'results'}`}
+                  </span>
                 )}
               </p>
               <p className="inv__location">

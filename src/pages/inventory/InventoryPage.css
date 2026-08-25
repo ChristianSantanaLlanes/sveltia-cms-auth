@@ -89,14 +89,25 @@
   .inv__rail {
     display: block;
     position: sticky;
+    /* Top offset matches the results header's padding so "FILTERS" sits on the
+       same line as the "Vela Inventory" eyebrow across the gutter. */
     top: calc(var(--header-h) + var(--s-8));
+    /* The margin holds the alignment on short pages, where nothing scrolls and
+       a sticky offset would not apply. */
+    margin-top: var(--s-8);
     align-self: start;
-    max-height: calc(100dvh - var(--header-h) - var(--s-12));
+    max-height: calc(100dvh - var(--header-h) - var(--s-8) - var(--s-4));
     padding-right: var(--s-3);
-    padding-bottom: var(--s-2);
+    padding-bottom: var(--s-6);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    /* The rail scrolls on its own; soften its last 24px so a section cut by the
+       viewport reads as "more below" rather than as a crop. The fade is exactly
+       the height of the trailing padding, so nothing dims at the end of scroll.
+       (Mask gradients use alpha only — currentColor here is just "opaque".) */
+    mask-image: linear-gradient(to bottom, currentColor calc(100% - 24px), transparent 100%);
   }
 }
 
@@ -134,6 +145,15 @@
   letter-spacing: -0.025em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
+}
+
+.inv__count-value {
+  animation: inv-count-in var(--dur) var(--ease-out);
+}
+
+@keyframes inv-count-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
 }
 
 .inv__location {
@@ -175,12 +195,6 @@
 
 .inv__header-sort .select {
   width: 214px;
-}
-
-@media (min-width: 1024px) {
-  .inv__header {
-    padding-top: var(--s-10);
-  }
 }
 
 /* ── Active filter row ──────────────────────────────────────────────────────*/

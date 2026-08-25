@@ -26,3 +26,10 @@ html.vm-home-snapping {
   height: 1px;
   scroll-snap-align: start;
 }
+
+/* A deliberate throw across more than one section: `scroll-snap-stop: always`
+   would otherwise arrest the move at the first section it flies past. Set for
+   the length of the animation only. */
+html.vm-home-throwing .vm-hero {
+  scroll-snap-stop: normal;
+}

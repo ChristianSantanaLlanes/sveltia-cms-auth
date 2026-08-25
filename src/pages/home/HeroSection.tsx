@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactElement } from 'react';
-import CarRender from '@/components/car/CarRender';
+import CarRender, { type CarRenderProps } from '@/components/car/CarRender';
 import Button from '@/components/ui/Button';
 import { MODELS } from '@/data/models';
 import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
 import { money } from '@/lib/format';
 import type { CarModel, ModelId, PaintOption, WheelOption } from '@/types';
+import type { CSSProperties } from 'react';
 import './HeroSection.css';
 
 export interface HeroSectionProps {
@@ -16,27 +17,72 @@ export interface HeroSectionProps {
 /* How much of the section has to be on screen before it counts as "entered"
    (its content reveals, once) and, higher up, as "active" (it owns the
    viewport, so the first section still shows its chevron). */
-const ENTER_RATIO = 0.35;
+/* Low on purpose: a section has to be told to reveal near the *start* of the
+   move that brings it in, so the entrance is finished — not mid-fade — by the
+   time the scroll comes to rest on it. */
+const ENTER_RATIO = 0.12;
 const ACTIVE_RATIO = 0.55;
+/* Backstop. The entrance belongs to the first frames of a visit; a section that
+   has still not been reached by then has nothing to reveal *on arrival* and
+   must simply be there, fully painted, whenever the reader gets to it. Without
+   this, anything that renders the page without scrolling it — a print, a
+   full-page capture, a headless reader — finds three empty rooms. */
+const SETTLE_ALL_MS = 900;
 
 /**
- * The hero car is cast, not defaulted. Every section pairs a paint that reads
- * against its own backdrop — dark bodies on the light studio, light bodies on
- * the dark one — with the halo wheel, the way a launch photograph would be
- * specced. Falls back to the model's stock combination if the catalogue moves.
+ * The hero car is cast, not defaulted — and so is the camera.
+ *
+ * Every section pairs a paint that reads against its own backdrop (dark bodies
+ * on the light studio, light bodies on the dark one) with the halo wheel, the
+ * way a launch photograph would be specced. It also books its own setup: the
+ * lens angle, which way the car faces, how much of the frame it fills and where
+ * it sits in it. No two consecutive chapters put the same silhouette in the same
+ * pixels, which is the difference between four photographs and one template run
+ * four times. Falls back to the model's stock combination if the catalogue moves.
  */
-const HERO_LOOK: Record<ModelId, { paint: string; wheel: string }> = {
-  'vela-3': { paint: 'deep-blue', wheel: 'arachnid-20' },
-  'vela-y': { paint: 'stellar-white', wheel: 'turbine-20' },
-  'vela-s': { paint: 'obsidian', wheel: 'sport-19' },
-  'vela-x': { paint: 'quartz-grey', wheel: 'arachnid-22' },
+interface HeroLook {
+  paint: string;
+  wheel: string;
+  /** Lens: the three-quarter hero angle, or the flat profile. */
+  view: CarView;
+  /** Mirror the stage, so the nose points the other way down the page. */
+  flip?: boolean;
+  /** Plate size as a multiple of the base frame width. */
+  scale: number;
+  /** Where the car sits in the frame, in px from the composed centre. */
+  shift: number;
+}
+
+type CarView = NonNullable<CarRenderProps['view']>;
+
+const HERO_LOOK: Record<ModelId, HeroLook> = {
+  /* 0 — white room, three-quarter, nose left: the establishing shot. */
+  'vela-3': { paint: 'deep-blue', wheel: 'arachnid-20', view: 'front-3q', scale: 1.02, shift: 0 },
+  /* 1 — black box, the camera walks around to the other flank and steps back;
+     the tallest body on the page sits lowest in the frame. */
+  'vela-y': { paint: 'stellar-white', wheel: 'turbine-20', view: 'front-3q', flip: true, scale: 0.93, shift: 30 },
+  /* 2 — graphite room, flat profile: the long low sedan filling the frame edge
+     to edge, lifted so the roofline breathes under the headline. */
+  'vela-s': { paint: 'obsidian', wheel: 'sport-19', view: 'side', scale: 1, shift: -14 },
+  /* 3 — charcoal room, back to the three-quarter but closer and lower. */
+  'vela-x': { paint: 'quartz-grey', wheel: 'arachnid-22', view: 'front-3q', scale: 1.05, shift: 18 },
 };
 
-function castLook(model: CarModel): { paint: PaintOption; wheel: WheelOption } {
-  const look = HERO_LOOK[model.id];
+/** Optical centre of the painted car inside its own viewBox, per lens. */
+const VIEW_NUDGE: Record<CarView, number> = { 'front-3q': -2.7, side: -0.3 };
+
+interface Cast {
+  paint: PaintOption;
+  wheel: WheelOption;
+  look: HeroLook;
+}
+
+function castLook(model: CarModel): Cast {
+  const look = HERO_LOOK[model.id] ?? HERO_LOOK['vela-3'];
   return {
-    paint: model.paints.find((p) => p.id === look?.paint) ?? model.paints[0],
-    wheel: model.wheels.find((w) => w.id === look?.wheel) ?? model.wheels[0],
+    look,
+    paint: model.paints.find((p) => p.id === look.paint) ?? model.paints[0],
+    wheel: model.wheels.find((w) => w.id === look.wheel) ?? model.wheels[0],
   };
 }
 
@@ -61,7 +107,17 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
   const [active, setActive] = useState(isFirst);
 
   const tone: 'light' | 'dark' = index % 2 === 0 ? 'light' : 'dark';
-  const { paint, wheel } = useMemo(() => castLook(model), [model]);
+  const { paint, wheel, look } = useMemo(() => castLook(model), [model]);
+
+  /* The camera setup for this chapter, handed to CSS. The nudge that puts the
+     painted car's optical centre under the centred headline is a property of
+     the lens, and it changes sign when the stage is mirrored. */
+  const stage = {
+    '--vm-car-scale': look.scale,
+    '--vm-car-shift': `${look.shift}px`,
+    '--vm-car-flip': look.flip ? -1 : 1,
+    '--vm-car-nudge': VIEW_NUDGE[look.view] * (look.flip ? -1 : 1),
+  } as CSSProperties;
   const next = MODELS[index + 1];
 
   useEffect(() => {
@@ -81,11 +137,15 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
         if (entry.intersectionRatio >= ENTER_RATIO) setEntered(true);
         setActive(entry.intersectionRatio >= ACTIVE_RATIO);
       },
-      { threshold: [0, ENTER_RATIO, ACTIVE_RATIO, 0.9] },
+      { threshold: [0, ENTER_RATIO, 0.3, ACTIVE_RATIO, 0.9] },
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    const backstop = window.setTimeout(() => setEntered(true), SETTLE_ALL_MS);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(backstop);
+    };
   }, []);
 
   const scrollToNext = useCallback(() => {
@@ -102,6 +162,8 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
       className="vm-hero"
       data-hero-index={index}
       data-tone={tone}
+      data-view={look.view}
+      style={stage}
       data-entered={entered ? 'true' : 'false'}
       data-chevron={showChevron ? 'true' : undefined}
       aria-labelledby={titleId}
@@ -123,9 +185,11 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
             body={model.body}
             paint={paint}
             wheel={wheel}
-            view="front-3q"
+            view={look.view}
             className="vm-hero__car vm-hero__reveal"
-            label={`${model.name} in ${paint.name} on ${wheel.name}`}
+            label={`${model.name} in ${paint.name} on ${wheel.name}, ${
+              look.view === 'side' ? 'side profile' : 'front three-quarter view'
+            }`}
           />
         </div>
       </div>

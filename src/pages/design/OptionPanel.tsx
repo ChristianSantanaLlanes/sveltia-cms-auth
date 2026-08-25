@@ -1,6 +1,7 @@
 import { useId, type CSSProperties, type ReactElement, type ReactNode } from 'react';
 import { RimDefs, Wheel } from '@/components/car/rims';
 import { money, num, signedMoney } from '@/lib/format';
+import { effectiveRange } from '@/lib/pricing';
 import { useOrder } from '@/store/OrderContext';
 import type { AddOnOption, InteriorOption, PaintOption, SeatingOption, Trim, WheelOption } from '@/types';
 import './OptionPanel.css';
@@ -71,16 +72,16 @@ interface SectionProps {
 /** Heading, option group, then the live echo of what is selected. */
 function Section({ id, title, name, delta, note, children }: SectionProps): ReactElement {
   return (
-    <section className="osec" aria-labelledby={`${id}-h`}>
-      <h2 className="osec__title" id={`${id}-h`}>
+    <section className="op-sec" aria-labelledby={`${id}-h`}>
+      <h2 className="op-sec__title" id={`${id}-h`}>
         {title}
       </h2>
       {children}
-      <p className="osec__echo">
-        <span className="osec__echoName">{name}</span>
-        {delta ? <span className="osec__echoDelta">{delta}</span> : null}
+      <p className="op-echo">
+        <span className="op-echo__name">{name}</span>
+        {delta ? <span className="op-echo__delta">{delta}</span> : null}
       </p>
-      <p className="osec__note">{note}</p>
+      <p className="op-echo__note">{note}</p>
     </section>
   );
 }
@@ -89,7 +90,7 @@ function Section({ id, title, name, delta, note, children }: SectionProps): Reac
 function WheelArt({ wheel }: { wheel: WheelOption }): ReactElement {
   const uid = `wt${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
-    <svg className="wheel__art" viewBox="-52 -52 104 104" aria-hidden="true">
+    <svg className="op-wheel__art" viewBox="-52 -52 104 104" aria-hidden="true">
       <defs>
         <RimDefs uid={uid} />
       </defs>
@@ -110,24 +111,24 @@ function AddOnCard({ option, selected, kind, groupName, onSelect }: AddOnCardPro
   const inputId = `ao${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const descId = `${inputId}-d`;
   return (
-    <div className={`addon${selected ? ' is-on' : ''}`} data-testid={`addon-${option.id}`}>
+    <div className={`op-card${selected ? ' is-on' : ''}`} data-testid={`addon-${option.id}`}>
       <input
         id={inputId}
-        className="addon__input"
+        className="op-card__input"
         type={kind}
         name={kind === 'radio' ? groupName : undefined}
         checked={selected}
         onChange={() => onSelect(option.id)}
         aria-describedby={descId}
       />
-      <label className="addon__label" htmlFor={inputId}>
-        <span className="addon__control" aria-hidden="true" />
-        <span className="addon__name">{option.name}</span>
-        <span className="addon__price">{signedMoney(option.price)}</span>
+      <label className="op-card__label" htmlFor={inputId}>
+        <span className="op-card__control" aria-hidden="true" />
+        <span className="op-card__name">{option.name}</span>
+        <span className="op-card__price">{signedMoney(option.price)}</span>
       </label>
-      <div className="addon__desc" id={descId}>
-        <p className="addon__summary">{option.summary}</p>
-        <ul className="addon__bullets">
+      <div className="op-card__desc" id={descId}>
+        <p className="op-card__summary">{option.summary}</p>
+        <ul className="op-card__bullets">
           {option.bullets.map((bullet) => (
             <li key={bullet}>{bullet}</li>
           ))}
@@ -145,6 +146,7 @@ export default function OptionPanel(): ReactElement {
   const uid = `op${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const baseTrimPrice = model.trims[0].price;
+  const range = effectiveRange(config);
   const seatingOptions = model.seating.filter(
     (option) => !option.availableOn || option.availableOn.includes(model.id),
   );
@@ -155,44 +157,77 @@ export default function OptionPanel(): ReactElement {
   const accessoryTotal = activeAccessories.reduce((sum, option) => sum + option.price, 0);
 
   return (
-    <div className="opanel">
+    <div className="op-panel">
+      {/* ── Build header: the vehicle as currently specified ─────────────── */}
+      <header className="op-head">
+        <p className="op-head__eyebrow">Design your own</p>
+        <h1 className="op-head__title">{model.name}</h1>
+        <p className="op-head__lead">{model.leadTime}</p>
+        <dl className="op-stats" aria-label="Estimated performance as configured">
+          <div className="op-stat">
+            <dt className="op-stat__label">Range (est.)</dt>
+            <dd className="op-stat__value">
+              {num(range)}
+              <span className="op-stat__unit">mi</span>
+            </dd>
+          </div>
+          <div className="op-stat">
+            <dt className="op-stat__label">0-60 mph</dt>
+            <dd className="op-stat__value">
+              {trim.accel}
+              <span className="op-stat__unit">s</span>
+            </dd>
+          </div>
+          <div className="op-stat">
+            <dt className="op-stat__label">Top speed</dt>
+            <dd className="op-stat__value">
+              {num(trim.topSpeed)}
+              <span className="op-stat__unit">mph</span>
+            </dd>
+          </div>
+        </dl>
+      </header>
+
       {/* ── Trim ────────────────────────────────────────────────────────── */}
       <Section
         id={`${uid}-trim`}
         title="Trim"
         name={trim.name}
-        delta={signedMoney(trim.price - baseTrimPrice)}
+        delta={trim.price > baseTrimPrice ? signedMoney(trim.price - baseTrimPrice) : money(trim.price)}
         note={trimNote(trim, wheel)}
       >
-        <div className="ogroup ogroup--rows" role="radiogroup" aria-labelledby={`${uid}-trim-h`}>
+        <div className="op-group op-group--rows" role="radiogroup" aria-labelledby={`${uid}-trim-h`}>
           {model.trims.map((option) => (
             <label
               key={option.id}
-              className={`trim${option.id === trim.id ? ' is-on' : ''}`}
+              className={`op-trim${option.id === trim.id ? ' is-on' : ''}`}
               data-testid={`trim-${option.id}`}
             >
               <input
-                className="ohidden"
+                className="op-input"
                 type="radio"
                 name={`${uid}-trim-g`}
                 value={option.id}
                 checked={option.id === trim.id}
                 onChange={() => patchConfig({ trimId: option.id })}
               />
-              <span className="trim__box">
-                <span className="trim__head">
-                  <span className="trim__name">{option.name}</span>
-                  <span className="trim__price">{money(option.price)}</span>
+              <span className="op-trim__box">
+                <span className="op-trim__head">
+                  <span className="op-trim__name">{option.name}</span>
+                  <span className="op-trim__price">{money(option.price)}</span>
                 </span>
-                <span className="trim__specs">
-                  <span className="trim__spec">
-                    <span className="trim__num">{num(option.range)}</span> mi range
+                <span className="op-trim__specs">
+                  <span className="op-trim__spec">
+                    <span className="op-trim__num">{num(option.range)}</span>
+                    <span className="op-trim__unit">mi range</span>
                   </span>
-                  <span className="trim__spec">
-                    <span className="trim__num">{option.accel}</span> s 0-60 mph
+                  <span className="op-trim__spec">
+                    <span className="op-trim__num">{option.accel}</span>
+                    <span className="op-trim__unit">s 0-60 mph</span>
                   </span>
-                  <span className="trim__spec">
-                    <span className="trim__num">{num(option.topSpeed)}</span> mph top speed
+                  <span className="op-trim__spec">
+                    <span className="op-trim__num">{num(option.topSpeed)}</span>
+                    <span className="op-trim__unit">mph top speed</span>
                   </span>
                 </span>
               </span>
@@ -209,32 +244,34 @@ export default function OptionPanel(): ReactElement {
         delta={signedMoney(paint.price)}
         note={paintNote(paint)}
       >
-        <div className="ogroup ogroup--swatches" role="radiogroup" aria-labelledby={`${uid}-paint-h`}>
+        <div className="op-group op-group--chips" role="radiogroup" aria-labelledby={`${uid}-paint-h`}>
           {model.paints.map((option) => (
             <label
               key={option.id}
-              className={`swatch${option.id === paint.id ? ' is-on' : ''}`}
+              className={`op-chip${option.id === paint.id ? ' is-on' : ''}`}
               data-testid={`paint-${option.id}`}
               title={option.name}
             >
               <input
-                className="ohidden"
+                className="op-input"
                 type="radio"
                 name={`${uid}-paint-g`}
                 value={option.id}
                 checked={option.id === paint.id}
                 onChange={() => patchConfig({ paintId: option.id })}
               />
-              <span
-                className="swatch__dot"
-                style={
-                  {
-                    '--sw-hex': option.hex,
-                    '--sw-sheen': option.sheen,
-                    '--sw-shade': option.shade,
-                  } as CSSProperties
-                }
-              />
+              <span className="op-chip__ring" aria-hidden="true">
+                <span
+                  className="op-chip__dot"
+                  style={
+                    {
+                      '--sw-hex': option.hex,
+                      '--sw-sheen': option.sheen,
+                      '--sw-shade': option.shade,
+                    } as CSSProperties
+                  }
+                />
+              </span>
               <span className="sr-only">{`${option.name}, ${signedMoney(option.price)}`}</span>
             </label>
           ))}
@@ -249,25 +286,26 @@ export default function OptionPanel(): ReactElement {
         delta={signedMoney(wheel.price)}
         note={wheelNote(wheel, trim)}
       >
-        <div className="ogroup ogroup--wheels" role="radiogroup" aria-labelledby={`${uid}-wheels-h`}>
+        <div className="op-group op-group--tiles" role="radiogroup" aria-labelledby={`${uid}-wheels-h`}>
           {model.wheels.map((option) => (
             <label
               key={option.id}
-              className={`swatch${option.id === wheel.id ? ' is-on' : ''}`}
+              className={`op-tile op-wheel${option.id === wheel.id ? ' is-on' : ''}`}
               data-testid={`wheel-${option.id}`}
               title={option.name}
             >
               <input
-                className="ohidden"
+                className="op-input"
                 type="radio"
                 name={`${uid}-wheels-g`}
                 value={option.id}
                 checked={option.id === wheel.id}
                 onChange={() => patchConfig({ wheelId: option.id })}
               />
-              <span className="swatch__wheel">
+              <span className="op-tile__plate">
                 <WheelArt wheel={option} />
               </span>
+              <span className="op-tile__caption" aria-hidden="true">{`${option.size}″`}</span>
               <span className="sr-only">{`${option.name}, ${signedMoney(option.price)}`}</span>
             </label>
           ))}
@@ -282,16 +320,16 @@ export default function OptionPanel(): ReactElement {
         delta={signedMoney(interior.price)}
         note={interiorNote(interior)}
       >
-        <div className="ogroup ogroup--swatches" role="radiogroup" aria-labelledby={`${uid}-interior-h`}>
+        <div className="op-group op-group--tiles" role="radiogroup" aria-labelledby={`${uid}-interior-h`}>
           {model.interiors.map((option) => (
             <label
               key={option.id}
-              className={`swatch${option.id === interior.id ? ' is-on' : ''}`}
+              className={`op-tile op-int${option.id === interior.id ? ' is-on' : ''}`}
               data-testid={`interior-${option.id}`}
               title={option.name}
             >
               <input
-                className="ohidden"
+                className="op-input"
                 type="radio"
                 name={`${uid}-interior-g`}
                 value={option.id}
@@ -299,10 +337,8 @@ export default function OptionPanel(): ReactElement {
                 onChange={() => patchConfig({ interiorId: option.id })}
               />
               <span
-                className="swatch__interior"
-                style={
-                  { '--sw-a': option.swatch[0], '--sw-b': option.swatch[1] } as CSSProperties
-                }
+                className="op-tile__plate op-int__plate"
+                style={{ '--sw-a': option.swatch[0], '--sw-b': option.swatch[1] } as CSSProperties}
               />
               <span className="sr-only">{`${option.name}, ${signedMoney(option.price)}`}</span>
             </label>
@@ -319,24 +355,24 @@ export default function OptionPanel(): ReactElement {
           delta={signedMoney(seating.price)}
           note={seatingNote(seating)}
         >
-          <div className="ogroup ogroup--rows" role="radiogroup" aria-labelledby={`${uid}-seating-h`}>
+          <div className="op-group op-group--rows" role="radiogroup" aria-labelledby={`${uid}-seating-h`}>
             {seatingOptions.map((option) => (
               <label
                 key={option.id}
-                className={`orow${option.id === seating.id ? ' is-on' : ''}`}
+                className={`op-row${option.id === seating.id ? ' is-on' : ''}`}
                 data-testid={`seating-${option.id}`}
               >
                 <input
-                  className="ohidden"
+                  className="op-input"
                   type="radio"
                   name={`${uid}-seating-g`}
                   value={option.id}
                   checked={option.id === seating.id}
                   onChange={() => patchConfig({ seatingId: option.id })}
                 />
-                <span className="orow__box">
-                  <span className="orow__name">{option.name}</span>
-                  <span className="orow__price">{signedMoney(option.price)}</span>
+                <span className="op-row__box">
+                  <span className="op-row__name">{option.name}</span>
+                  <span className="op-row__price">{signedMoney(option.price)}</span>
                 </span>
               </label>
             ))}
@@ -352,7 +388,7 @@ export default function OptionPanel(): ReactElement {
         delta={signedMoney(activeAutonomy ? activeAutonomy.price : 0)}
         note={activeAutonomy ? activeAutonomy.summary : 'Included as standard on every Vela.'}
       >
-        <div className="ogroup ogroup--cards" role="radiogroup" aria-labelledby={`${uid}-autonomy-h`}>
+        <div className="op-group op-group--cards" role="radiogroup" aria-labelledby={`${uid}-autonomy-h`}>
           {autonomy.map((option) => (
             <AddOnCard
               key={option.id}
@@ -382,7 +418,7 @@ export default function OptionPanel(): ReactElement {
             : 'You can add accessories to this order any time before it goes into production.'
         }
       >
-        <div className="ogroup ogroup--cards" role="group" aria-labelledby={`${uid}-accessories-h`}>
+        <div className="op-group op-group--cards" role="group" aria-labelledby={`${uid}-accessories-h`}>
           {accessories.map((option) => (
             <AddOnCard
               key={option.id}

@@ -54,7 +54,7 @@
     margin-top: 0;
     border-radius: 0;
     border-left: 1px solid var(--line-soft);
-    padding: var(--s-16) var(--panel-pad) 0;
+    padding: var(--s-10) var(--panel-pad) 0;
     box-shadow: none;
   }
 }
