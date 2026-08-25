@@ -14,11 +14,35 @@
   bottom: 0;
   z-index: 5;
   margin: auto calc(var(--panel-pad) * -1) 0;
-  padding: var(--s-3) var(--panel-pad) var(--s-4);
+  padding: var(--s-5) var(--panel-pad) var(--s-6);
   background: var(--bg);
   border-top: 1px solid var(--line-soft);
-  box-shadow: 0 -14px 26px -10px var(--ink-08);
 }
+
+/* The dock is the column's foot, not a card dropped on top of it: it carries no
+   drop shadow and no elevation, and its inner padding is squared up with the
+   side padding it already had so the CTA is not pressed against the viewport
+   floor. The option stack ends flush against this edge, so the dock also owns
+   the dissolve: a 40px scrim above its hairline lets a clipped row of thumbnails
+   fade into the page instead of being sliced by the summary. The tripled class
+   only outranks the layout rule that takes this footer out of sticky flow —
+   `relative` keeps it exactly where that rule puts it. */
+.ps--pinned.ps--pinned.ps--pinned {
+  position: relative;
+  isolation: isolate;
+}
+
+.ps--pinned::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 40px;
+  background: linear-gradient(to top, var(--bg), transparent);
+  pointer-events: none;
+}
+
 
 /* ── Mobile bar ─────────────────────────────────────────────────────────────*/
 
@@ -95,6 +119,13 @@
   border-radius: var(--r-pill);
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+
+/* In the dock the toggle stops short of the panel edge: mirroring the full
+   width of the Order Now bar made two competing rails and cost the summary its
+   hierarchy. The CTA is the only element that spans the column. */
+.ps--pinned .ps__seg {
+  max-width: 300px;
 }
 
 .ps__segThumb {
@@ -190,7 +221,7 @@
 
 .ps .ps__value {
   display: block;
-  font-size: 3.5rem;
+  font-size: 3.25rem;
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: var(--tracking-tight);
@@ -209,7 +240,7 @@
 }
 
 .ps__disclaimer {
-  margin-top: var(--s-3);
+  margin-top: var(--s-2);
   max-width: 52ch;
   font-size: var(--fs-xs);
   line-height: 1.45;
@@ -341,8 +372,8 @@
 /* Narrow desktops give the dock less room, so it gives some back. */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .ps--pinned {
-    padding-top: var(--s-3);
-    padding-bottom: var(--s-4);
+    padding-top: var(--s-4);
+    padding-bottom: var(--s-5);
   }
 
   .ps__head {
@@ -350,7 +381,7 @@
   }
 
   .ps .ps__value {
-    font-size: 3.25rem;
+    font-size: 3rem;
   }
 }
 

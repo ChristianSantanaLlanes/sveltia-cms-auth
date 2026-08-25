@@ -118,7 +118,9 @@ export default function PriceSummary({ variant }: PriceSummaryProps): ReactEleme
             </li>
           </ul>
           <p className="ps__total">
-            <span>Total</span>
+            {/* In a monthly mode the headline is a payment, so the sum of the
+                lines above needs naming as what it actually is. */}
+            <span>{paymentMode === 'cash' ? 'Total' : 'Total Vehicle Price'}</span>
             <span data-testid="price-total">{money(price.purchasePrice)}</span>
           </p>
         </div>
