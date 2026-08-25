@@ -1,0 +1,145 @@
+/* ── Button ────────────────────────────────────────────────────────────── */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  box-sizing: border-box;
+  padding: 0 var(--s-6);
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: var(--tracking-wide);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+/* The global focus rule squares the corners; keep the pill. */
+.btn:focus-visible {
+  border-radius: var(--r-pill);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Sizes ─────────────────────────────────────────────────────────────── */
+.btn--sm { height: 32px; }
+.btn--md { height: 40px; }
+.btn--lg { height: 48px; }
+
+.btn--full {
+  display: flex;
+  width: 100%;
+}
+
+/* ── Variants ──────────────────────────────────────────────────────────── */
+.btn--primary {
+  background-color: var(--accent);
+  color: var(--on-dark);
+}
+.btn--primary:hover { background-color: var(--accent-hover); }
+.btn--primary:active { background-color: var(--accent-press); }
+
+.btn--secondary {
+  background-color: transparent;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.btn--secondary:hover { background-color: var(--ink-08); }
+.btn--secondary:active { background-color: color-mix(in srgb, var(--ink) 16%, transparent); }
+
+.btn--on-image-light,
+.btn--on-image-dark {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.btn--on-image-light {
+  background-color: var(--btn-light);
+  color: var(--ink);
+}
+.btn--on-image-light:hover { background-color: var(--btn-light-hover); }
+.btn--on-image-light:active { background-color: var(--surface); }
+.btn--on-image-light:focus-visible { outline-color: var(--ink); }
+
+.btn--on-image-dark {
+  background-color: var(--btn-dark);
+  color: var(--on-dark);
+}
+.btn--on-image-dark:hover { background-color: var(--btn-dark-hover); }
+.btn--on-image-dark:active { background-color: color-mix(in srgb, var(--ink) 86%, black); }
+.btn--on-image-dark:focus-visible { outline-color: var(--on-dark); }
+
+.btn--text {
+  height: auto;
+  padding: var(--s-1) 0;
+  background-color: transparent;
+  color: var(--accent);
+}
+.btn--text:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.btn--text:active { color: var(--accent-press); }
+
+/* ── States ────────────────────────────────────────────────────────────── */
+.btn.is-blocked,
+.btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: default;
+}
+
+.btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.btn.is-loading {
+  opacity: 1;            /* loading is not the same signal as disabled */
+  pointer-events: none;
+}
+.btn.is-loading .btn__label { opacity: 0; }
+
+.btn__spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: btn-spin 640ms linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* A frozen spinner reads as broken — show the label and dim the control instead. */
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-loading { opacity: 0.6; }
+  .btn.is-loading .btn__label { opacity: 1; }
+  .btn__spinner { display: none; }
+}
+
+@media (forced-colors: active) {
+  .btn { border-color: currentColor; }
+}

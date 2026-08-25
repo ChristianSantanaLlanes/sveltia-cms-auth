@@ -40,6 +40,30 @@ function git(cmd, fallback = '') {
 }
 
 const state = JSON.parse(readFileSync(STATE, 'utf8'));
+
+// Merge per-piece verdicts dropped by the critics into .progress/<id>.json
+const PROG = path.join(ROOT, '.progress');
+if (existsSync(PROG)) {
+  for (const file of readdirSync(PROG).filter((f) => f.endsWith('.json'))) {
+    let patch;
+    try { patch = JSON.parse(readFileSync(path.join(PROG, file), 'utf8')); } catch { continue; }
+    const piece = state.pieces.find((p) => p.id === patch.id);
+    if (!piece) continue;
+    Object.assign(piece, {
+      status: patch.status ?? piece.status,
+      rounds: patch.rounds ?? piece.rounds,
+      verdict: patch.verdict ?? piece.verdict,
+      gap: patch.gap ?? piece.gap,
+    });
+    if (patch.log) {
+      state.log = state.log || [];
+      for (const entry of patch.log) {
+        if (!state.log.some((l) => l.t === entry.t && l.msg === entry.msg)) state.log.push(entry);
+      }
+    }
+  }
+  state.log = (state.log || []).sort((a, b) => String(a.t).localeCompare(String(b.t)));
+}
 const stamp = state.updated || new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 const branch = git('git rev-parse --abbrev-ref HEAD', 'unknown');
 const commit = git('git rev-parse --short HEAD', '—');
