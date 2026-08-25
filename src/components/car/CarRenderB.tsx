@@ -416,11 +416,11 @@ function frame(spec: Spec, view: View): Frame {
   const bx1 = Math.max(...xs);
   const by0 = Math.min(...ys);
   const by1 = Math.max(...ys);
-  const boxW = q3 ? 1058 : 1084;
-  const boxH = 296;
+  const boxW = q3 ? 1104 : 1116;
+  const boxH = 326;
   const k = Math.min(boxW / (bx1 - bx0), boxH / (by1 - by0));
   const ox = (VIEW_W - (bx1 - bx0) * k) / 2 - bx0 * k;
-  const oy = 44 + (boxH - (by1 - by0) * k) / 2 - by0 * k;
+  const oy = 32 + (boxH - (by1 - by0) * k) / 2 - by0 * k;
   return { p: (x, y, z = 0) => { const q = raw(x, y, z); return [ox + q[0] * k, oy + q[1] * k]; }, k };
 }
 
@@ -539,7 +539,8 @@ function build(spec: Spec, view: View, size: number): Geo {
   const shellPt = (i: number, z: number): Pt => {
     const [x, y] = topProfile[i];
     const t = Math.max(0, (1.05 - x) / (1.05 - spec.hoodFrontX));
-    const rise = spec.crown * Math.sin((Math.PI * z) / W);
+    const taper = x < spec.cowl[0] ? 1 : x > spec.deckEndX - 0.6 ? 0.8 : 0.5;
+    const rise = spec.crown * taper * Math.sin((Math.PI * z) / W);
     return p(x - bulge(z) * t, y + rise, z);
   };
   const shellEdge = (z: number) => topProfile.map((_, i) => shellPt(i, z));
@@ -553,7 +554,7 @@ function build(spec: Spec, view: View, size: number): Geo {
     const t = 1 - Math.max(0, Math.min(1, (y - yLo) / (yHi - yLo))) * 0.25;
     /* The far corner tucks back along the car, so the fascia rounds off there
        instead of ending on a ruled vertical edge. */
-    return -bulge(z) * t + 0.16 * (z / W) ** 7;
+    return -bulge(z) * t + 0.11 * (z / W) ** 4;
   };
   const faceTop = faceZ.map((z) => p(nose[3][0] + faceX(yHi, z), yHi, z));
   const faceFarEdge = [...nose].reverse().map(([x, y]) => p(x + faceX(y, W), y, W));
@@ -737,9 +738,8 @@ function build(spec: Spec, view: View, size: number): Geo {
       p(mid, spec.rockerY - 0.005, nearZ),
       p(spec.axleF, spec.rockerY + 0.02, nearZ),
       p(spec.axleF - 0.42, spec.rockerY - 0.04, nearZ),
-      p(0.34, yLo - 0.02, nearZ),
-      ...(q3 ? [p(0.3 - spec.bulgeF * 0.6, yLo - 0.05, W * 0.55)] : []),
-      p(0.46, 0.07, nearZ),
+      p(0.4, yLo - 0.02, nearZ),
+      p(0.52, 0.07, nearZ),
       p(spec.axleF, 0.02, nearZ),
       p(mid, 0.0, nearZ),
       p(spec.axleR, 0.02, nearZ),
@@ -883,6 +883,13 @@ export default function CarRenderB({
           <stop offset="0.66" stopColor={paint.hex} data-paint />
           <stop offset="1" stopColor={paint.shade} data-paint />
         </linearGradient>
+        <linearGradient id={`${uid}-topShade`} gradientUnits="userSpaceOnUse" x1={ha[0]} y1={ha[1]} x2={hb[0]} y2={hb[1]}>
+          <stop offset="0" stopColor="#05070a" stopOpacity="0.1" />
+          <stop offset="0.3" stopColor="#ffffff" stopOpacity="0.12" />
+          <stop offset="0.55" stopColor="#ffffff" stopOpacity="0.16" />
+          <stop offset="0.8" stopColor="#05070a" stopOpacity="0.1" />
+          <stop offset="1" stopColor="#05070a" stopOpacity="0.22" />
+        </linearGradient>
         <linearGradient id={`${uid}-faceP`} gradientUnits="userSpaceOnUse" x1={ca[0]} y1={ca[1]} x2={cb[0]} y2={cb[1]}>
           <stop offset="0" stopColor={paint.hex} data-paint />
           <stop offset="0.35" stopColor={paint.hex} data-paint />
@@ -902,8 +909,8 @@ export default function CarRenderB({
           <stop offset="1" stopColor="#ffffff" stopOpacity="0.08" />
         </linearGradient>
         <linearGradient id={`${uid}-underCrease`} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
-          <stop offset="0" stopColor="#0a0d12" stopOpacity="0.42" />
-          <stop offset="0.34" stopColor="#0a0d12" stopOpacity="0.12" />
+          <stop offset="0" stopColor="#0a0d12" stopOpacity="0.5" />
+          <stop offset="0.3" stopColor="#0a0d12" stopOpacity="0.14" />
           <stop offset="1" stopColor="#0a0d12" stopOpacity="0" />
         </linearGradient>
         <linearGradient id={`${uid}-horizon`} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
@@ -920,8 +927,8 @@ export default function CarRenderB({
         </linearGradient>
         <linearGradient id={`${uid}-sill`} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
           <stop offset="0" stopColor="#05070a" stopOpacity="0" />
-          <stop offset="0.6" stopColor="#05070a" stopOpacity="0.1" />
-          <stop offset="1" stopColor="#05070a" stopOpacity="0.5" />
+          <stop offset="0.55" stopColor="#05070a" stopOpacity="0.14" />
+          <stop offset="1" stopColor="#05070a" stopOpacity="0.6" />
         </linearGradient>
         <linearGradient id={`${uid}-bounce`} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
           <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
@@ -1062,8 +1069,9 @@ export default function CarRenderB({
       )}
 
       <g id={`${uid}-car`}>
-        {q3 &&
-          g.wheels
+        {q3 && (
+          <g opacity="0.62">
+            {g.wheels
             .filter((w) => w.far)
             .map((w) => (
               <Wheel
@@ -1079,6 +1087,8 @@ export default function CarRenderB({
                 shade={w.shade}
               />
             ))}
+          </g>
+        )}
 
         {q3 && (
           <>
@@ -1091,14 +1101,13 @@ export default function CarRenderB({
             whatever falls behind it ── */}
         {q3 && (
           <>
-            {g.shell.map((d, i) => (
+            {g.shell.map((d) => (
               <g key={d}>
                 <path d={d} fill={`url(#${uid}-top)`} data-paint />
-                <path d={d} fill={i === 0 ? '#ffffff' : '#05070a'} fillOpacity={i === 0 ? 0.05 : 0.12} />
+                <path d={d} fill={`url(#${uid}-topShade)`} />
               </g>
             ))}
-            <path d={g.crease} fill="none" stroke="#ffffff" strokeOpacity="0.26" strokeWidth="2.6" filter={`url(#${uid}-hair)`} />
-            <path d={g.crease} fill="none" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="0.9" />
+            <path d={g.crease} fill="none" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="2.6" filter={`url(#${uid}-hair)`} />
           </>
         )}
 
