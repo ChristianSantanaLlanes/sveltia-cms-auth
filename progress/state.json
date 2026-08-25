@@ -1,8 +1,8 @@
 {
-  "updated": "2026-08-25 11:29 UTC",
-  "phase": "Car bake-off + piece loops",
-  "headline": "Rebuilding the car, looping the rest",
-  "note": "Three independent car renders are being drawn and judged blind, because the vehicle was the biggest gap in three separate critiques. In parallel, five pieces are in builder/critic loops.",
+  "updated": "2026-08-25 13:03 UTC",
+  "phase": "Render finishing + piece loops",
+  "headline": "Variant B won the bake-off 3\u20130",
+  "note": "Three blind judges independently picked the same vehicle render and named the same two flaws: a hard-edged windscreen reflection that spills onto the roof, and far-side wheels drawn as black lobes off the ground plane. That render is now promoted and both flaws are being closed under verification.",
   "constraint": "tesla.com cannot be reached from this build sandbox: Tesla's edge (Akamai) blocks the datacenter IP for direct requests and for every public screenshot service tried, web.archive.org is blocked by this environment's egress policy, and Chromium here has no outbound HTTPS at all. Live side-by-side capture of the real funnel is therefore impossible from inside this session. Critics score against docs/reference-spec.md \u2014 the Tesla funnel written down as measurable properties \u2014 plus their own knowledge of that funnel, and every round must still name the single largest remaining gap.",
   "pieces": [
     {
@@ -70,10 +70,10 @@
       "id": "render",
       "name": "Car render",
       "detail": "SVG vehicle, paint and wheel swaps",
-      "status": "reviewing",
-      "rounds": 0,
-      "verdict": "",
-      "gap": "",
+      "status": "revising",
+      "rounds": 1,
+      "verdict": "BENCHMARK (3\u20130 jury, B promoted)",
+      "gap": "Windscreen reflection crosses onto painted roof; far-side wheels read as black lobes off the ground plane.",
       "shots": [
         "design-desktop",
         "design-paint"
@@ -189,6 +189,18 @@
     {
       "t": "2026-08-25 11:40",
       "msg": "Car render sent to a three-way blind bake-off; five non-car pieces resumed looping."
+    },
+    {
+      "t": "2026-08-25 12:02",
+      "msg": "Added README, favicon and the /lab/cars bake-off stage"
+    },
+    {
+      "t": "2026-08-25 13:20",
+      "msg": "Jury: B wins 3\u20130. None of the three called it production-ready."
+    },
+    {
+      "t": "2026-08-25 13:25",
+      "msg": "Variant B promoted into CarRender; flaw-closing loop started under two verifiers."
     }
   ]
 }

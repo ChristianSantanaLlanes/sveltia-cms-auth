@@ -1,6 +1,6 @@
 import { useId, type ReactElement } from 'react';
 import type { BodyStyle, PaintOption, WheelOption } from '@/types';
-import { Wheel, RimDefs, tyreRadius } from './rims';
+import { Wheel, RimDefs } from './rims';
 import './CarRender.css';
 
 export interface CarRenderProps {
@@ -15,71 +15,56 @@ export interface CarRenderProps {
 
 type View = NonNullable<CarRenderProps['view']>;
 type Pt = [number, number];
-/** A point on the car in metres: [along the car from the nose, up from the floor]. */
+/** A point on the car's near flank: [along the car from the nose, up from the floor]. */
 type P2 = [number, number];
+type V3 = [number, number, number];
 
 const VIEW_W = 1200;
 const VIEW_H = 420;
 
-/* ── Camera ───────────────────────────────────────────────────────────────
-   Both drawings are axonometric projections of the same car, measured in
-   metres, so nothing is hand-fudged: the three-quarter foreshortens the length
-   by cos 25° and lifts the far side by the camera's 9° elevation. Wheels,
-   arches, creases and light bars all inherit that transform, which is what
-   makes the frame read as a photograph of a solid object.                   */
+/* ── Vector maths ─────────────────────────────────────────────────────────*/
 
-interface Cam {
-  /** Pixels per metre. */
-  s: number;
-  yaw: number;
-  elev: number;
-  ox: number;
-  oy: number;
-}
-
-const CAMS: Record<View, Cam> = {
-  side: { s: 205, yaw: 0, elev: 0, ox: 116, oy: 340 },
-  'front-3q': { s: 172, yaw: 25, elev: 9, ox: 299, oy: 354 },
+const sub = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const dot = (a: V3, b: V3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a: V3, b: V3): V3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
+const unit = (a: V3): V3 => {
+  const l = Math.hypot(a[0], a[1], a[2]) || 1;
+  return [a[0] / l, a[1] / l, a[2] / l];
 };
 
-interface Projector {
-  /** X = nose → tail, Y = up from the floor, Z = near flank → far flank. */
-  p: (X: number, Y: number, Z?: number) => Pt;
-  kx: number;
-  kxy: number;
-  ky: number;
+function samples(x0: number, x1: number, n: number): number[] {
+  return Array.from({ length: n + 1 }, (_, i) => x0 + ((x1 - x0) * i) / n);
 }
 
-function projector(c: Cam): Projector {
-  const a = (c.yaw * Math.PI) / 180;
-  const e = (c.elev * Math.PI) / 180;
-  const kx = c.s * Math.cos(a);
-  const kz = -c.s * Math.sin(a);
-  const ky = -c.s * Math.cos(e);
-  const kxy = -c.s * Math.sin(e) * Math.sin(a);
-  const kzy = -c.s * Math.sin(e) * Math.cos(a);
-  return {
-    kx,
-    kxy,
-    ky,
-    p: (X, Y, Z = 0) => [c.ox + kx * X + kz * Z, c.oy + ky * Y + kxy * X + kzy * Z],
-  };
+/** Linear interpolation of a profile polyline at x. */
+function yAt(pts: P2[], x: number): number {
+  if (x <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i += 1) {
+    if (x <= pts[i][0]) {
+      const [x0, y0] = pts[i - 1];
+      const [x1, y1] = pts[i];
+      return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0 || 1);
+    }
+  }
+  return pts[pts.length - 1][1];
 }
 
 /* ── Path helpers ─────────────────────────────────────────────────────────*/
 
-function fmt(pt: Pt): string {
-  return `${pt[0].toFixed(1)},${pt[1].toFixed(1)}`;
-}
+const fmt = (pt: Pt): string => `${pt[0].toFixed(1)},${pt[1].toFixed(1)}`;
 
-/** Catmull-Rom through every point — the continuous line a car body has. */
+/** Catmull-Rom through every point — the continuous line a body panel has. */
 function curve(pts: Pt[], close = false): string {
   const n = pts.length;
   if (n < 2) return '';
   const at = (i: number): Pt => (close ? pts[(i + n) % n] : pts[Math.min(n - 1, Math.max(0, i))]);
   let d = `M ${fmt(pts[0])}`;
-  const segments = close ? n : n - 1;
-  for (let i = 0; i < segments; i += 1) {
+  const segs = close ? n : n - 1;
+  for (let i = 0; i < segs; i += 1) {
     const p0 = at(i - 1);
     const p1 = at(i);
     const p2 = at(i + 1);
@@ -91,599 +76,753 @@ function curve(pts: Pt[], close = false): string {
   return close ? `${d} Z` : d;
 }
 
-function poly(pts: Pt[], close = true): string {
-  return `M ${pts.map(fmt).join(' L ')}${close ? ' Z' : ''}`;
+const poly = (pts: Pt[], close = true): string => `M ${pts.map(fmt).join(' L ')}${close ? ' Z' : ''}`;
+
+/** A closed loop from a top edge and a bottom edge that share an x range. */
+function ribbon(top: Pt[], bottom: Pt[]): string {
+  return `${curve(top)} ${curve([...bottom].reverse()).replace('M', 'L')} Z`;
 }
 
-/* ── The vehicles, in metres ──────────────────────────────────────────────*/
+/* ── The vehicles ─────────────────────────────────────────────────────────
+   All dimensions share one unit. The sedan is 4.60 long, 1.42 tall at the
+   roof, its beltline at 0.95 and its rocker at 0.30 — the proportions in the
+   brief — with a 2.90 wheelbase pushed so the A-pillar lands 1.35 behind the
+   nose. The wheel is 0.73 across rather than a full unit, which is what lets
+   the arch crown sit under the beltline instead of through the door glass. */
 
 interface Spec {
-  width: number;
-  /** Flank silhouette, front bumper → over the roof → rear bumper. */
-  upper: P2[];
+  L: number;
+  W: number;
+  axleF: number;
+  axleR: number;
+  /** Tyre radius at 19in; bigger rims grow it very slightly. */
+  R: number;
+  archGap: number;
+  rockerY: number;
+  beltY: number;
+  roofY: number;
+  bulgeF: number;
+  outlineTop: P2[];
   rearLower: P2[];
   rocker: P2[];
   frontLower: P2[];
-  arch: { rx: number; ry: number; cy: number; front: number; rear: number };
-  /** Where the top surfaces begin and end along the car. */
-  shell: { from: number; to: number };
-  /** Half-width envelope of the top surfaces: [X, far-side Z]. */
-  crown: P2[];
-  /** How far the nose bulges forward at the centreline. */
-  bulge: number;
-  glassDlo: P2[];
-  ws: { base: P2; top: P2; baseZ: [number, number]; topZ: [number, number] };
-  roofPanel: { front: P2; rear: P2; z: [number, number] };
-  hoodPanel: { front: P2; rear: P2; z: [number, number] };
-  deckPanel: { front: P2; rear: P2; z: [number, number] };
-  doors: number[];
-  handles: P2[];
   shoulder: P2[];
-  beltY: number;
-  rockerY: number;
-  darkBand: [number, number];
-  bounceBand: [number, number];
-  /** Light bar across the front fascia: [lower Y, upper Y]. */
-  lampBar: [number, number];
-  /** Headlamp as it wraps onto the near fender. */
+  dlo: P2[];
+  wsBase: P2;
+  wsTop: P2;
+  wsZ: [number, number];
+  doors: number[];
+  handles: number[];
+  hoodFrontX: number;
+  deckEndX: number;
+  cowl: P2;
+  crown: number;
+  lamp: { y: [number, number]; inset: number };
   lampSide: P2[];
-  tailSide: P2[];
-  grille: { y: [number, number]; z: [number, number] };
-  vent: { y: [number, number]; z: [number, number] };
+  intake: { y: [number, number]; inset: number };
+  vent: { y: [number, number]; w: number };
   mirror: { x: number; y: number; w: number; h: number; out: number };
+  tailLamp: P2[];
+  deckCutX: number;
 }
 
 const SEDAN: Spec = {
-  width: 1.85,
-  upper: [
-    [0.0, 0.46],
-    [0.02, 0.68],
-    [0.1, 0.865],
-    [0.3, 0.95],
-    [0.85, 0.985],
-    [1.35, 1.015],
-    [1.66, 1.05],
-    [2.06, 1.27],
-    [2.44, 1.412],
-    [2.86, 1.438],
-    [3.3, 1.414],
-    [3.72, 1.3],
-    [4.1, 1.14],
-    [4.42, 1.088],
-    [4.61, 1.038],
-    [4.7, 0.9],
-    [4.72, 0.66],
-    [4.67, 0.45],
+  L: 4.6,
+  W: 1.85,
+  axleF: 0.9,
+  axleR: 3.76,
+  R: 0.336,
+  archGap: 0.078,
+  rockerY: 0.3,
+  beltY: 0.95,
+  roofY: 1.42,
+  bulgeF: 0.14,
+  outlineTop: [
+    [0.212, 0.298],
+    [0.126, 0.398],
+    [0.088, 0.514],
+    [0.104, 0.622],
+    [0.176, 0.694],
+    [0.3, 0.752],
+    [0.56, 0.8],
+    [0.9, 0.842],
+    [1.18, 0.882],
+    [1.35, 0.918],
+    [1.56, 1.022],
+    [1.87, 1.21],
+    [2.18, 1.362],
+    [2.43, 1.414],
+    [2.7, 1.424],
+    [3.0, 1.406],
+    [3.32, 1.336],
+    [3.66, 1.216],
+    [3.96, 1.124],
+    [4.2, 1.086],
+    [4.4, 1.068],
+    [4.512, 1.03],
+    [4.556, 0.92],
+    [4.57, 0.75],
+    [4.552, 0.556],
+    [4.516, 0.418],
+    [4.448, 0.348],
   ],
   rearLower: [
-    [4.56, 0.31],
-    [4.28, 0.278],
+    [4.36, 0.304],
+    [4.24, 0.298],
   ],
   rocker: [
-    [3.1, 0.372],
-    [2.4, 0.366],
-    [1.8, 0.368],
+    [3.28, 0.294],
+    [2.6, 0.29],
+    [2.0, 0.292],
+    [1.56, 0.298],
   ],
   frontLower: [
-    [0.36, 0.3],
-    [0.14, 0.28],
-    [0.02, 0.35],
-  ],
-  arch: { rx: 0.44, ry: 0.38, cy: 0.375, front: 0.87, rear: 3.745 },
-  shell: { from: 0.3, to: 4.61 },
-  crown: [
-    [0.3, 1.7],
-    [1.1, 1.76],
-    [1.66, 1.64],
-    [2.44, 1.53],
-    [3.3, 1.53],
-    [4.1, 1.65],
-    [4.61, 1.7],
-  ],
-  bulge: 0.12,
-  glassDlo: [
-    [1.99, 1.078],
-    [2.3, 1.293],
-    [2.6, 1.388],
-    [3.3, 1.388],
-    [3.72, 1.272],
-    [4.05, 1.138],
-    [3.34, 1.09],
-    [2.62, 1.08],
-    [2.06, 1.075],
-  ],
-  ws: { base: [1.66, 1.05], top: [2.5, 1.409], baseZ: [0.2, 1.65], topZ: [0.34, 1.52] },
-  roofPanel: { front: [2.5, 1.409], rear: [3.34, 1.4], z: [0.34, 1.52] },
-  hoodPanel: { front: [0.3, 0.95], rear: [1.66, 1.05], z: [0.06, 1.7] },
-  deckPanel: { front: [4.08, 1.145], rear: [4.61, 1.038], z: [0.16, 1.69] },
-  doors: [1.88, 2.84, 3.68],
-  handles: [
-    [2.46, 0.995],
-    [3.4, 1.012],
+    [0.29, 0.286],
+    [0.212, 0.298],
   ],
   shoulder: [
-    [0.95, 0.895],
-    [2.0, 0.925],
-    [3.2, 0.952],
-    [4.4, 0.978],
+    [0.176, 0.694],
+    [0.3, 0.752],
+    [0.56, 0.8],
+    [0.9, 0.842],
+    [1.18, 0.882],
+    [1.35, 0.918],
+    [1.7, 0.934],
+    [2.2, 0.944],
+    [2.8, 0.954],
+    [3.4, 0.972],
+    [3.9, 1.004],
+    [4.33, 1.052],
+    [4.512, 1.03],
   ],
-  beltY: 1.06,
-  rockerY: 0.372,
-  darkBand: [0.5, 0.73],
-  bounceBand: [0.375, 0.46],
-  lampBar: [0.845, 0.925],
+  dlo: [
+    [1.58, 0.966],
+    [1.86, 1.13],
+    [2.14, 1.296],
+    [2.32, 1.354],
+    [2.7, 1.378],
+    [3.02, 1.358],
+    [3.32, 1.288],
+    [3.64, 1.176],
+    [3.86, 1.098],
+    [3.56, 1.036],
+    [3.0, 1.0],
+    [2.3, 0.984],
+    [1.8, 0.976],
+  ],
+  wsBase: [1.35, 0.918],
+  wsTop: [2.18, 1.362],
+  wsZ: [0.09, 0.22],
+  doors: [1.64, 2.7, 3.7],
+  handles: [2.34, 3.4],
+  hoodFrontX: 0.176,
+  deckEndX: 4.512,
+  cowl: [1.35, 0.918],
+  crown: 0.045,
+  lamp: { y: [0.598, 0.652], inset: 0.13 },
   lampSide: [
-    [0.05, 0.885],
-    [0.24, 0.918],
-    [0.44, 0.947],
-    [0.45, 0.916],
-    [0.26, 0.886],
-    [0.06, 0.848],
+    [0.104, 0.606],
+    [0.22, 0.638],
+    [0.35, 0.662],
+    [0.356, 0.626],
+    [0.23, 0.602],
+    [0.116, 0.568],
   ],
-  tailSide: [
-    [4.36, 0.968],
-    [4.58, 0.99],
-    [4.72, 0.968],
-    [4.72, 0.915],
-    [4.58, 0.936],
-    [4.36, 0.918],
+  intake: { y: [0.316, 0.446], inset: 0.38 },
+  vent: { y: [0.34, 0.56], w: 0.14 },
+  mirror: { x: 1.72, y: 0.985, w: 0.2, h: 0.085, out: 0.17 },
+  tailLamp: [
+    [4.28, 1.016],
+    [4.44, 0.99],
+    [4.548, 0.936],
+    [4.536, 0.9],
+    [4.43, 0.952],
+    [4.28, 0.978],
   ],
-  grille: { y: [0.32, 0.53], z: [0.28, 1.57] },
-  vent: { y: [0.36, 0.66], z: [0.03, 0.24] },
-  mirror: { x: 1.92, y: 1.045, w: 0.18, h: 0.075, out: 0.19 },
+  deckCutX: 4.05,
 };
 
 const SUV: Spec = {
-  width: 1.92,
-  upper: [
-    [0.0, 0.52],
-    [0.02, 0.76],
-    [0.11, 0.975],
-    [0.36, 1.055],
-    [0.9, 1.085],
-    [1.42, 1.115],
-    [1.68, 1.145],
-    [2.02, 1.38],
-    [2.36, 1.562],
-    [2.8, 1.606],
-    [3.44, 1.6],
-    [3.94, 1.556],
-    [4.26, 1.49],
-    [4.5, 1.39],
-    [4.64, 1.23],
-    [4.71, 1.0],
-    [4.73, 0.74],
-    [4.68, 0.52],
+  L: 4.55,
+  W: 1.92,
+  axleF: 0.94,
+  axleR: 3.78,
+  R: 0.366,
+  archGap: 0.084,
+  rockerY: 0.38,
+  beltY: 1.1,
+  roofY: 1.72,
+  bulgeF: 0.15,
+  outlineTop: [
+    [0.222, 0.372],
+    [0.13, 0.478],
+    [0.096, 0.608],
+    [0.114, 0.722],
+    [0.186, 0.802],
+    [0.33, 0.878],
+    [0.62, 0.932],
+    [0.98, 0.982],
+    [1.26, 1.03],
+    [1.42, 1.068],
+    [1.64, 1.2],
+    [1.9, 1.39],
+    [2.15, 1.56],
+    [2.36, 1.66],
+    [2.62, 1.706],
+    [3.0, 1.716],
+    [3.4, 1.7],
+    [3.86, 1.668],
+    [4.14, 1.63],
+    [4.32, 1.564],
+    [4.44, 1.43],
+    [4.5, 1.25],
+    [4.53, 1.04],
+    [4.542, 0.83],
+    [4.526, 0.64],
+    [4.48, 0.5],
+    [4.4, 0.428],
   ],
   rearLower: [
-    [4.6, 0.38],
-    [4.32, 0.348],
+    [4.32, 0.384],
+    [4.2, 0.378],
   ],
   rocker: [
-    [3.2, 0.455],
-    [2.4, 0.448],
-    [1.8, 0.452],
+    [3.28, 0.374],
+    [2.5, 0.37],
+    [1.9, 0.372],
+    [1.62, 0.378],
   ],
   frontLower: [
-    [0.42, 0.38],
-    [0.16, 0.35],
-    [0.03, 0.43],
-  ],
-  arch: { rx: 0.46, ry: 0.36, cy: 0.46, front: 0.9, rear: 3.79 },
-  shell: { from: 0.36, to: 4.55 },
-  crown: [
-    [0.36, 1.76],
-    [1.2, 1.82],
-    [1.68, 1.7],
-    [2.36, 1.58],
-    [3.44, 1.58],
-    [4.1, 1.68],
-    [4.55, 1.76],
-  ],
-  bulge: 0.13,
-  glassDlo: [
-    [2.0, 1.175],
-    [2.28, 1.398],
-    [2.52, 1.54],
-    [3.46, 1.536],
-    [3.88, 1.492],
-    [4.18, 1.408],
-    [3.94, 1.235],
-    [3.0, 1.19],
-    [2.14, 1.175],
-  ],
-  ws: { base: [1.68, 1.145], top: [2.44, 1.555], baseZ: [0.2, 1.72], topZ: [0.34, 1.58] },
-  roofPanel: { front: [2.44, 1.555], rear: [3.5, 1.549], z: [0.34, 1.58] },
-  hoodPanel: { front: [0.36, 1.055], rear: [1.68, 1.145], z: [0.06, 1.76] },
-  deckPanel: { front: [4.18, 1.408], rear: [4.55, 1.3], z: [0.2, 1.72] },
-  doors: [1.9, 2.96, 3.86],
-  handles: [
-    [2.52, 1.11],
-    [3.54, 1.122],
+    [0.3, 0.362],
+    [0.222, 0.372],
   ],
   shoulder: [
-    [1.0, 0.985],
-    [2.1, 1.015],
-    [3.3, 1.045],
-    [4.4, 1.07],
+    [0.186, 0.802],
+    [0.33, 0.878],
+    [0.62, 0.932],
+    [0.98, 0.982],
+    [1.26, 1.03],
+    [1.42, 1.068],
+    [1.75, 1.086],
+    [2.3, 1.096],
+    [2.9, 1.106],
+    [3.5, 1.124],
+    [4.02, 1.16],
+    [4.3, 1.205],
+    [4.42, 1.222],
   ],
-  beltY: 1.16,
-  rockerY: 0.452,
-  darkBand: [0.58, 0.84],
-  bounceBand: [0.452, 0.55],
-  lampBar: [0.95, 1.035],
+  dlo: [
+    [1.64, 1.116],
+    [1.92, 1.304],
+    [2.19, 1.476],
+    [2.38, 1.58],
+    [2.76, 1.63],
+    [3.18, 1.64],
+    [3.56, 1.612],
+    [3.86, 1.552],
+    [4.06, 1.48],
+    [4.11, 1.3],
+    [3.6, 1.196],
+    [2.9, 1.156],
+    [2.2, 1.132],
+    [1.85, 1.126],
+  ],
+  wsBase: [1.42, 1.068],
+  wsTop: [2.15, 1.56],
+  wsZ: [0.1, 0.24],
+  doors: [1.7, 2.76, 3.78],
+  handles: [2.36, 3.4],
+  hoodFrontX: 0.186,
+  deckEndX: 4.53,
+  cowl: [1.42, 1.068],
+  crown: 0.05,
+  lamp: { y: [0.688, 0.752], inset: 0.14 },
   lampSide: [
-    [0.06, 0.99],
-    [0.26, 1.022],
-    [0.48, 1.05],
-    [0.49, 1.018],
-    [0.28, 0.99],
-    [0.07, 0.952],
+    [0.116, 0.702],
+    [0.24, 0.74],
+    [0.37, 0.766],
+    [0.376, 0.728],
+    [0.25, 0.702],
+    [0.128, 0.662],
   ],
-  tailSide: [
-    [4.34, 1.108],
-    [4.58, 1.13],
-    [4.73, 1.108],
-    [4.73, 1.05],
-    [4.58, 1.072],
-    [4.34, 1.052],
+  intake: { y: [0.396, 0.546], inset: 0.4 },
+  vent: { y: [0.42, 0.65], w: 0.15 },
+  mirror: { x: 1.78, y: 1.135, w: 0.21, h: 0.09, out: 0.18 },
+  tailLamp: [
+    [4.32, 1.264],
+    [4.46, 1.19],
+    [4.522, 1.086],
+    [4.508, 1.046],
+    [4.43, 1.15],
+    [4.32, 1.226],
   ],
-  grille: { y: [0.4, 0.62], z: [0.3, 1.62] },
-  vent: { y: [0.44, 0.76], z: [0.03, 0.26] },
-  mirror: { x: 1.94, y: 1.14, w: 0.19, h: 0.078, out: 0.2 },
+  deckCutX: 4.18,
 };
 
 const SPECS: Record<BodyStyle, Spec> = { sedan: SEDAN, suv: SUV };
 
-/* ── Derived geometry ─────────────────────────────────────────────────────*/
+/* ── Camera ───────────────────────────────────────────────────────────────
+   A real pinhole camera, 32° off the flank and set a shade above the
+   beltline, 17 lengths away: the far side of the car comes out about 8%
+   shorter and the far wheels about 10% smaller without a single hand-tuned
+   number. The side view is a true orthographic elevation.                  */
 
-/** Half wheel-arch, sampled right-to-left so it arcs over the tyre. */
-function archPts(cx: number, a: Spec['arch'], n = 12): P2[] {
-  return Array.from({ length: n + 1 }, (_, i) => {
-    const t = (i / n) * Math.PI;
-    return [cx + a.rx * Math.cos(t), a.cy + a.ry * Math.sin(t)] as P2;
-  });
+const YAW = 29;
+const DIST = 15;
+
+type Proj = (x: number, y: number, z?: number) => Pt;
+
+interface Frame {
+  p: Proj;
+  /** Pixels per unit at the near flank. */
+  k: number;
 }
 
-function lerpCrown(crown: P2[], x: number): number {
-  if (x <= crown[0][0]) return crown[0][1];
-  for (let i = 1; i < crown.length; i += 1) {
-    if (x <= crown[i][0]) {
-      const [x0, z0] = crown[i - 1];
-      const [x1, z1] = crown[i];
-      return z0 + ((z1 - z0) * (x - x0)) / (x1 - x0);
-    }
+function frame(spec: Spec, view: View): Frame {
+  const q3 = view === 'front-3q';
+  let raw: Proj;
+  if (q3) {
+    const yaw = (YAW * Math.PI) / 180;
+    const T: V3 = [spec.L * 0.47, spec.beltY * 0.66, spec.W / 2];
+    const C: V3 = [T[0] - Math.sin(yaw) * DIST, spec.roofY + 0.2, T[2] - Math.cos(yaw) * DIST];
+    const f = unit(sub(T, C));
+    const r = unit(cross([0, 1, 0], f));
+    const u = cross(f, r);
+    raw = (x, y, z = 0) => {
+      const d = sub([x, y, z], C);
+      const w = dot(d, f);
+      return [(dot(d, r) / w) * DIST, (-dot(d, u) / w) * DIST];
+    };
+  } else {
+    raw = (x, y) => [x, -y];
   }
-  return crown[crown.length - 1][1];
+
+  /* Fit the silhouette into the frame so both bodies and both cameras land
+     at the same visual weight. */
+  const ext: Pt[] = [];
+  const zs = q3 ? [0, spec.W] : [0];
+  for (const [x, y] of spec.outlineTop) for (const z of zs) ext.push(raw(x, y, z));
+  for (const z of zs) {
+    ext.push(raw(spec.outlineTop[0][0] - spec.bulgeF, 0.42, spec.W / 2));
+    ext.push(raw(spec.axleF, 0, z === 0 ? 0.14 : spec.W - 0.14));
+    ext.push(raw(spec.axleR, 0, z === 0 ? 0.14 : spec.W - 0.14));
+  }
+  const xs = ext.map((e) => e[0]);
+  const ys = ext.map((e) => e[1]);
+  const bx0 = Math.min(...xs);
+  const bx1 = Math.max(...xs);
+  const by0 = Math.min(...ys);
+  const by1 = Math.max(...ys);
+  const boxW = q3 ? 1104 : 1116;
+  const boxH = 326;
+  const k = Math.min(boxW / (bx1 - bx0), boxH / (by1 - by0));
+  const ox = (VIEW_W - (bx1 - bx0) * k) / 2 - bx0 * k;
+  const oy = 32 + (boxH - (by1 - by0) * k) / 2 - by0 * k;
+  return { p: (x, y, z = 0) => { const q = raw(x, y, z); return [ox + q[0] * k, oy + q[1] * k]; }, k };
 }
 
-interface Geometry {
+/* ── Geometry ─────────────────────────────────────────────────────────────*/
+
+function tyreR(spec: Spec, size: number): number {
+  return spec.R + (Math.min(22, Math.max(17, size)) - 19) * 0.006;
+}
+
+interface Wheel3 {
+  cx: number;
+  cy: number;
+  ax: number;
+  ay: number;
+  by: number;
+  far: boolean;
+  shade: number;
+}
+
+interface Geo {
   outline: string;
-  shell: string;
+  shell: string[];
+  crease: string;
+  shellAxis: [Pt, Pt];
   face: string;
+  farBody: string;
+  faceAxis: [Pt, Pt];
+  faceVert: [Pt, Pt];
+  faceSplit: string;
   faceLip: string;
-  under: string;
-  underAxis: [Pt, Pt];
-  hood: string;
-  hoodCrown: string;
-  roof: string;
-  deck: string;
+  intake: string;
+  vents: string[];
+  lampBar: string;
+  lampCore: string;
+  lampRecess: string;
+  faceGleam: string;
+  splitter: string;
+  lampSide: string;
   windscreen: string;
-  canopyEdge: string;
-  sideGlass: string;
-  pillar: string;
-  archPockets: string[];
-  archShadows: string[];
+  wsGlare: string;
+  wipers: string[];
+  dlo: string;
+  dloTopRail: string;
+  pillarA: string;
+  pillarB: string;
+  glassAxis: [Pt, Pt];
+  band: (t0: number, t1: number, x0?: number, x1?: number) => string;
+  line: (t: number, x0?: number, x1?: number) => string;
+  flankAxis: [Pt, Pt];
+  alongAxis: [Pt, Pt];
+  archOutline: string[];
+  archPocket: string[];
+  archLip: string[];
+  haunch: { cx: number; cy: number; rx: number; ry: number }[];
   doorCuts: string[];
   hoodCut: string;
   deckCut: string;
-  handles: string[];
-  shoulder: string;
-  darkBand: string;
-  bounceBand: string;
-  skirt: string;
-  beltLine: string;
-  rockerLine: string;
-  lampWrap: string;
-  lampSide: string;
-  lampGlow: string;
-  grille: string;
-  vents: string[];
-  faceSplit: string;
-  faceAxis: [Pt, Pt];
-  tail: string;
+  handles: { d: string; hi: string }[];
   mirrorNear: string;
   mirrorFar: string;
-  flankAxis: [Pt, Pt];
-  topAxis: [Pt, Pt];
-  glassAxis: [Pt, Pt];
-  contact: { front: Pt; rear: Pt; angle: number };
-  wheels: { cx: number; cy: number; far?: boolean; shade?: number }[];
-  wheelAx: number;
-  wheelAy: number;
-  wheelBy: number;
-  bounds: { x0: number; x1: number };
+  mirrorGlass: string;
+  tailLamp: string;
+  under: string;
+  underAxis: [Pt, Pt];
+  wheels: Wheel3[];
+  contacts: { x: number; y: number; r: number }[];
+  ground: { angle: number; cx: number; cy: number; span: number };
+  fadePx: number;
 }
 
-/** A gradient axis running square to the car's own length axis. */
-function axisFrom(top: Pt, len: number, tilt: number): [Pt, Pt] {
-  return [top, [top[0] + tilt * len, top[1] + len]];
-}
-
-function build(spec: Spec, view: View, wheelSize: number): Geometry {
-  const { p, kx, kxy, ky } = projector(CAMS[view]);
-  const W = spec.width;
-  const R = tyreRadius(wheelSize);
+function build(spec: Spec, view: View, size: number): Geo {
+  const { p, k } = frame(spec, view);
   const q3 = view === 'front-3q';
-  const line = (pts: P2[], z = 0) => curve(pts.map(([x, y]) => p(x, y, z)));
-  const shape = (pts: P2[], z = 0) => curve(pts.map(([x, y]) => p(x, y, z)), true);
+  const R = tyreR(spec, size);
+  const a = R + spec.archGap;
+  const W = spec.W;
+  const nearZ = 0;
+  /* The arch is projected in the wheel's own plane: an arch cut on the outer
+     skin would sit a parallax-width ahead of the tyre it is meant to frame. */
+  const wheelZ = q3 ? 0.075 : 0;
 
-  /* Flank silhouette, as one closed loop. */
-  const loop: P2[] = [
-    ...spec.upper,
-    ...spec.rearLower,
-    ...archPts(spec.arch.rear, spec.arch),
-    ...spec.rocker,
-    ...archPts(spec.arch.front, spec.arch),
-    ...spec.frontLower,
-  ];
-  const outline = curve(loop.map(([x, y]) => p(x, y)), true);
+  /* Wheel arches, drawn tail-end first so they run with the lower silhouette. */
+  const archPts = (cx: number, grow = 0): P2[] => {
+    const rr = a + grow;
+    const t0 = Math.asin(Math.max(-0.9, Math.min(0.9, (spec.rockerY - R) / rr)));
+    return samples(t0, Math.PI - t0, 16).map((t) => [cx + rr * Math.cos(t), R + rr * Math.sin(t)] as P2);
+  };
 
-  /* Top surfaces: the flank profile swept out to the crown line. */
-  const topProfile = spec.upper.filter(([x]) => x >= spec.shell.from - 0.001 && x <= spec.shell.to + 0.001);
-  const shellNear = topProfile.map(([x, y]) => p(x, y));
-  const shellFar = topProfile.map(([x, y]) => p(x, y, lerpCrown(spec.crown, x))).reverse();
-  const shell = `${curve(shellNear)} ${curve(shellFar).replace('M', 'L')} Z`;
+  const proj = (pts: P2[], z: number) => pts.map(([x, y]) => p(x, y, z));
+  const outline = curve(
+    [
+      ...proj(spec.outlineTop, nearZ),
+      ...proj(spec.rearLower, nearZ),
+      ...proj(archPts(spec.axleR), wheelZ),
+      ...proj(spec.rocker, nearZ),
+      ...proj(archPts(spec.axleF), wheelZ),
+      ...proj(spec.frontLower, nearZ),
+    ],
+    true
+  );
 
-  /* Front fascia: the nose profile swept across the car, bulging at the centre. */
-  const nose: P2[] = [...spec.frontLower.slice(-1), ...spec.upper.filter(([x]) => x <= spec.shell.from + 0.001)];
-  const bulgeAt = (z: number) => spec.bulge * Math.sin((Math.PI * z) / W);
-  /* The fascia is widest at the bumper and tucks in as it climbs to the hood
-     line, so the far corner rounds off instead of ending in a beak. */
+  /* Plan view: the fascia bulges forward at the centreline and tucks back at
+     the corners, so the nose reads wide and the tail narrows. */
+  const bulge = (z: number) => spec.bulgeF * Math.sin((Math.PI * z) / W);
+  const nose = spec.outlineTop.slice(0, 4);
   const yLo = nose[0][1];
   const yHi = nose[nose.length - 1][1];
-  const zFarAt = (y: number) =>
-    W - 0.02 - (W - 0.02 - lerpCrown(spec.crown, spec.shell.from)) * Math.min(1, Math.max(0, (y - yLo) / (yHi - yLo)));
-  const sweep = (y: number) =>
-    Array.from({ length: 9 }, (_, i) => (i / 8) * zFarAt(y)).map((z) => [z, bulgeAt(z)] as Pt);
-  const faceNear = nose.map(([x, y]) => p(x, y));
-  const faceTop = sweep(yHi).map(([z, b]) => p(nose[nose.length - 1][0] - b, yHi, z));
-  const faceFar = [...nose].reverse().map(([x, y]) => p(x, y, zFarAt(y)));
-  const faceBottom = [...sweep(yLo)].reverse().map(([z, b]) => p(nose[0][0] - b, yLo, z));
-  const face = curve([...faceNear, ...faceTop.slice(1), ...faceFar.slice(1), ...faceBottom.slice(1)], true);
-  const faceLip = curve(sweep(yLo).map(([z, b]) => p(nose[0][0] - b, yLo + 0.03, z)));
 
-  /* Everything under the sill reads as one dark mass. It follows the real
-     lower silhouette and pulls in at the floor, so its ends stay tucked behind
-     the bumpers and the tyres instead of squaring off into a slab. */
-  const mid = (spec.arch.front + spec.arch.rear) / 2;
-  const underTop: Pt[] = [
-    p(spec.arch.rear + 0.72, spec.rockerY - 0.045),
-    p(spec.arch.rear, spec.arch.cy),
-    p(mid, spec.rockerY - 0.005),
-    p(spec.arch.front, spec.arch.cy),
-    p(spec.arch.front - 0.5, spec.rockerY - 0.055),
-    p(0.07, spec.frontLower[2][1] - 0.015),
-  ];
-  const under = curve(
-    [
-      ...underTop,
-      ...(q3 ? [p(0.05, spec.frontLower[2][1] - 0.02, W - 0.3), p(0.2, 0.09, W - 0.34)] : []),
-      p(0.34, 0.05),
-      p(spec.arch.front, -0.01),
-      p(mid, -0.02),
-      p(spec.arch.rear, -0.01),
-      p(spec.arch.rear + 0.42, 0.1),
-    ],
+  /* Top surfaces — hood, roof and deck are one lofted shell swept from the
+     near shoulder to the far one, crowned along the centreline. Because the
+     camera sits a hair above the roof, the hood opens up and the roof stays a
+     sliver, exactly as it does in a studio frame. */
+  const topProfile = spec.outlineTop.filter(
+    ([x]) => x >= spec.hoodFrontX - 0.001 && x <= spec.deckEndX + 0.001
+  );
+  const shellPt = (i: number, z: number): Pt => {
+    const [x, y] = topProfile[i];
+    const t = Math.max(0, (1.05 - x) / (1.05 - spec.hoodFrontX));
+    const taper = x < spec.cowl[0] ? 1 : x > spec.deckEndX - 0.6 ? 0.8 : 0.5;
+    const rise = spec.crown * taper * Math.sin((Math.PI * z) / W);
+    return p(x - bulge(z) * t, y + rise, z);
+  };
+  const shellEdge = (z: number) => topProfile.map((_, i) => shellPt(i, z));
+  const shell = [ribbon(shellEdge(W / 2), shellEdge(0)), ribbon(shellEdge(W), shellEdge(W / 2))];
+  const crease = curve(shellEdge(W / 2));
+  const shellAxis: [Pt, Pt] = [shellPt(2, 0), shellPt(2, W)];
+
+  /* Front fascia: the nose profile swept across the car. */
+  const faceZ = samples(0, W, 16);
+  const faceX = (y: number, z: number) => {
+    const t = 1 - Math.max(0, Math.min(1, (y - yLo) / (yHi - yLo))) * 0.25;
+    /* The far corner tucks back along the car, so the fascia rounds off there
+       instead of ending on a ruled vertical edge. */
+    return -bulge(z) * t + 0.11 * (z / W) ** 4;
+  };
+  const faceTop = faceZ.map((z) => p(nose[3][0] + faceX(yHi, z), yHi, z));
+  const faceFarEdge = [...nose].reverse().map(([x, y]) => p(x + faceX(y, W), y, W));
+  const faceBottom = [...faceZ].reverse().map((z) => p(nose[0][0] + faceX(yLo, z), yLo, z));
+  const faceNear = nose.map(([x, y]) => p(x, y, 0));
+  const face = curve([...faceNear, ...faceTop.slice(1), ...faceFarEdge.slice(1), ...faceBottom.slice(1)], true);
+  const faceAxis: [Pt, Pt] = [p(0.15, 0.55, 0), p(0.15 - spec.bulgeF, 0.55, W)];
+  const faceVert: [Pt, Pt] = [p(0.14 - spec.bulgeF, yHi, W / 2), p(0.14 - spec.bulgeF, yLo - 0.03, W / 2)];
+  const sweep = (y: number, inset = 0, n = 12, far = W - inset) =>
+    samples(inset, far, n).map((z) => p(nose[0][0] + faceX(y, z), y, z));
+  const splitY = (spec.lamp.y[0] + spec.intake.y[1]) / 2;
+  const faceSplit = curve(sweep(splitY));
+  const faceLip = curve(sweep(yLo + 0.028));
+
+  const bandFace = (y0: number, y1: number, inset: number, far = W - inset) =>
+    `${curve(sweep(y1, inset, 12, far))} ${curve([...sweep(y0, inset, 12, far)].reverse()).replace('M', 'L')} Z`;
+
+  /* The far flank, as one dark mass. Nothing of it is lit, but it has to be
+     there or the far wheels show straight through the car. */
+  const farBody = curve(
+    [...spec.outlineTop, ...spec.rearLower, ...spec.rocker, ...spec.frontLower].map(([x, y]) =>
+      p(x, y, W - 0.02)
+    ),
     true
   );
-  const underAxis = axisFrom(p(mid, spec.rockerY), Math.abs(ky) * (spec.rockerY + 0.09), -kxy / kx);
 
-  const panel = (a: P2, b: P2, z: [number, number]) =>
-    poly([p(a[0], a[1], z[0]), p(b[0], b[1], z[0]), p(b[0], b[1], z[1]), p(a[0], a[1], z[1])]);
+  const intake = bandFace(spec.intake.y[0], spec.intake.y[1], spec.intake.inset);
+  const ventAt = (z0: number, z1: number) =>
+    `${curve(samples(z0, z1, 4).map((z) => p(nose[0][0] + faceX(spec.vent.y[1], z), spec.vent.y[1], z)))} ${curve(
+      samples(z1, z0, 4).map((z) => p(nose[0][0] + faceX(spec.vent.y[0], z), spec.vent.y[0], z))
+    ).replace('M', 'L')} Z`;
+  const vents = [ventAt(0.045, 0.045 + spec.vent.w), ventAt(W - 0.045 - spec.vent.w, W - 0.045)];
 
-  /* The hood shares the fascia's bulged leading edge exactly, so the two never
-     leave a sliver of paint sticking out past the nose. */
-  const hood = curve(
-    [
-      ...sweep(yHi).map(([z, b]) => p(spec.hoodPanel.front[0] - b, spec.hoodPanel.front[1], z)),
-      p(spec.hoodPanel.rear[0], spec.hoodPanel.rear[1], spec.hoodPanel.z[1]),
-      p(spec.hoodPanel.rear[0], spec.hoodPanel.rear[1], spec.hoodPanel.z[0]),
-    ],
-    true
-  );
-  const hoodCrown = curve([
-    p(spec.hoodPanel.front[0] - spec.bulge * 0.55, spec.hoodPanel.front[1] + 0.01, W * 0.34),
-    p((spec.hoodPanel.front[0] + spec.hoodPanel.rear[0]) / 2, (spec.hoodPanel.front[1] + spec.hoodPanel.rear[1]) / 2 + 0.02, W * 0.36),
-    p(spec.hoodPanel.rear[0] - 0.05, spec.hoodPanel.rear[1], W * 0.38),
-  ]);
-  const roof = panel(spec.roofPanel.front, spec.roofPanel.rear, spec.roofPanel.z);
-  const deck = panel(spec.deckPanel.front, spec.deckPanel.rear, spec.deckPanel.z);
+  const lampBar = bandFace(spec.lamp.y[0], spec.lamp.y[1], 0.012, W - spec.lamp.inset);
+  const lampCore = curve(sweep((spec.lamp.y[0] + spec.lamp.y[1]) / 2 + 0.006, 0.03, 12, W - spec.lamp.inset - 0.02));
+  const lampRecess = bandFace(spec.lamp.y[0] - 0.02, spec.lamp.y[1] + 0.02, 0, W - spec.lamp.inset + 0.02);
+  const faceGleam = `${curve(
+    samples(0.26, 0.5, 5).map((f) => p(nose[0][0] + faceX(yHi, W * f), yHi - 0.01, W * f))
+  )} ${curve(samples(0.5, 0.26, 5).map((f) => p(nose[0][0] + faceX(yLo, W * f), yLo + 0.02, W * f))).replace(
+    'M',
+    'L'
+  )} Z`;
+  const splitter = curve(sweep(yLo + 0.052, spec.intake.inset - 0.1));
+  const lampSide = curve(spec.lampSide.map(([x, y]) => p(x, y, nearZ)), true);
 
+  /* Glass. */
   const windscreen = poly([
-    p(spec.ws.base[0], spec.ws.base[1], spec.ws.baseZ[0]),
-    p(spec.ws.top[0], spec.ws.top[1], spec.ws.topZ[0]),
-    p(spec.ws.top[0], spec.ws.top[1], spec.ws.topZ[1]),
-    p(spec.ws.base[0], spec.ws.base[1], spec.ws.baseZ[1]),
+    p(spec.wsBase[0], spec.wsBase[1], spec.wsZ[0]),
+    p(spec.wsTop[0], spec.wsTop[1], spec.wsZ[1]),
+    p(spec.wsTop[0], spec.wsTop[1], W - spec.wsZ[1]),
+    p(spec.wsBase[0], spec.wsBase[1], W - spec.wsZ[0]),
   ]);
-  /* Bright rail where the glass canopy turns over onto the far side. */
-  const canopyEdge = poly(
-    [
-      p(spec.ws.base[0], spec.ws.base[1], spec.ws.baseZ[1]),
-      p(spec.ws.top[0], spec.ws.top[1], spec.ws.topZ[1]),
-      p(spec.roofPanel.rear[0], spec.roofPanel.rear[1], spec.roofPanel.z[1]),
-    ],
-    false
+  const wsGlare = poly([
+    p(spec.wsBase[0] + 0.1, spec.wsBase[1] + 0.02, spec.wsZ[0]),
+    p(spec.wsTop[0] - 0.02, spec.wsTop[1] - 0.01, spec.wsZ[1]),
+    p(spec.wsTop[0] - 0.02, spec.wsTop[1] - 0.01, W * 0.52),
+    p(spec.wsBase[0] + 0.1, spec.wsBase[1] + 0.02, W * 0.34),
+  ]);
+  const wipers = [0.34, 0.62].map((f) =>
+    curve([
+      p(spec.wsBase[0] + 0.02, spec.wsBase[1] + 0.005, W * f - 0.2),
+      p(spec.wsBase[0] + 0.12, spec.wsBase[1] + 0.055, W * f + 0.02),
+      p(spec.wsBase[0] + 0.2, spec.wsBase[1] + 0.085, W * f + 0.24),
+    ])
   );
-  const glassZ = q3 ? 0.22 : 0;
-  const sideGlass = shape(spec.glassDlo, glassZ);
-  const pillar = poly([
-    p(spec.ws.base[0], spec.ws.base[1], spec.ws.baseZ[0]),
-    p(spec.ws.top[0], spec.ws.top[1], spec.ws.topZ[0]),
-    p(spec.glassDlo[2][0], spec.glassDlo[2][1], glassZ),
-    p(spec.glassDlo[0][0], spec.glassDlo[0][1], glassZ),
+  const glassZ = q3 ? 0.06 : 0;
+  const dlo = curve(spec.dlo.map(([x, y]) => p(x, y, glassZ)), true);
+  const dloTopRail = curve(spec.dlo.slice(0, 9).map(([x, y]) => p(x, y, glassZ)));
+  const pillarA = poly([
+    p(spec.wsBase[0], spec.wsBase[1], spec.wsZ[0]),
+    p(spec.wsTop[0], spec.wsTop[1], spec.wsZ[1]),
+    p(spec.dlo[3][0], spec.dlo[3][1], glassZ),
+    p(spec.dlo[0][0], spec.dlo[0][1], glassZ),
   ]);
+  const bIdx = spec.doors[1];
+  const pillarB = poly([
+    p(bIdx, yAt(spec.dlo.slice(0, 9), bIdx) - 0.004, glassZ),
+    p(bIdx + 0.05, yAt(spec.dlo.slice(0, 9), bIdx + 0.05) - 0.004, glassZ),
+    p(bIdx + 0.05, spec.beltY + 0.05, glassZ),
+    p(bIdx, spec.beltY + 0.05, glassZ),
+  ]);
+  const glassAxis: [Pt, Pt] = [p(2.6, spec.roofY - 0.05, glassZ), p(2.6, spec.beltY - 0.02, glassZ)];
 
-  const archRing = (cx: number, grow: number) =>
-    curve(
-      Array.from({ length: 25 }, (_, i) => {
-        const t = (i / 24) * Math.PI;
-        return p(cx + (spec.arch.rx + grow) * Math.cos(t), spec.arch.cy + (spec.arch.ry + grow) * Math.sin(t));
-      })
-    );
+  /* ── The tonal scaffolding for the flank ───────────────────────────────
+     Every band is drawn between two curves that are blends of the shoulder
+     line and the sill line, so each one bows exactly the way the panel it
+     lies on bows. Nothing on this car is a straight stripe.               */
+  const mid = (spec.axleF + spec.axleR) / 2;
+  const half = (spec.axleR - spec.axleF) / 2;
+  const sillY = (x: number) => spec.rockerY + 0.03 * ((x - mid) / half) ** 2;
+  const mixY = (x: number, t: number) => {
+    const s = sillY(x);
+    return s + (yAt(spec.shoulder, x) - s) * t;
+  };
+  const bx0 = spec.frontLower[1][0] + 0.02;
+  const bx1 = spec.outlineTop[spec.outlineTop.length - 1][0] - 0.02;
+  const edge = (t: number, x0: number, x1: number) =>
+    samples(x0, x1, 22).map((x) => p(x, mixY(x, t), nearZ));
+  const band = (t0: number, t1: number, x0 = bx0, x1 = bx1) => ribbon(edge(t1, x0, x1), edge(t0, x0, x1));
+  const line = (t: number, x0 = bx0, x1 = bx1) => curve(edge(t, x0, x1));
+  const flankAxis: [Pt, Pt] = [p(mid, yAt(spec.shoulder, mid), nearZ), p(mid, sillY(mid) - 0.08, nearZ)];
+  const alongAxis: [Pt, Pt] = [p(bx0, spec.beltY, nearZ), p(bx1, spec.beltY, nearZ)];
 
-  const doorCuts = spec.doors.map((x) => {
-    const topY = spec.beltY + (x < spec.glassDlo[0][0] + 0.2 ? -0.015 : 0.02);
-    return line([
-      [x, spec.rockerY + 0.01],
-      [x - 0.015, (spec.rockerY + topY) / 2],
-      [x - 0.02, topY],
-    ]);
+  const archOutline = [spec.axleF, spec.axleR].map((cx) => curve(proj(archPts(cx), wheelZ)));
+  const archPocket = [spec.axleF, spec.axleR].map((cx) => {
+    const pts = proj(archPts(cx), wheelZ);
+    return `${curve(pts)} L ${fmt(p(cx - a * 0.99, spec.rockerY - 0.012, wheelZ))} L ${fmt(
+      p(cx + a * 0.99, spec.rockerY - 0.012, wheelZ)
+    )} Z`;
+  });
+  const archLip = [spec.axleF, spec.axleR].map((cx) =>
+    curve(proj(archPts(cx, 0.014).slice(4, 12), wheelZ))
+  );
+  const haunch = [spec.axleF, spec.axleR].map((cx) => {
+    const c = p(cx + (cx === spec.axleF ? 0.1 : -0.1), R + a * 1.02, nearZ);
+    return { cx: c[0], cy: c[1], rx: a * k * 1.25, ry: a * k * 0.3 };
   });
 
-  const perpTilt = -kxy / kx;
-  const axis = (top: Pt, span: number): [Pt, Pt] => axisFrom(top, Math.abs(ky * span), perpTilt);
-  const roofY = spec.upper[9][1];
-  const flankAxis = axis(p(spec.arch.front + 1.4, spec.beltY), spec.beltY - spec.rockerY);
-  const topAxis = axis(p(spec.arch.front + 1.4, roofY), roofY - spec.beltY);
-  const glassAxis = axis(p(spec.ws.top[0], spec.ws.top[1], glassZ), (spec.ws.top[1] - spec.beltY) * 1.15);
+  const doorCuts = spec.doors.map((x) =>
+    curve(
+      samples(0.02, 0.99, 6).map((t) => p(x - 0.03 * Math.sin(t * Math.PI * 0.5), mixY(x, t), nearZ))
+    )
+  );
+  const hoodCut = curve([
+    p(spec.cowl[0] - 0.01, spec.cowl[1] - 0.006, nearZ),
+    p(spec.cowl[0] + 0.03, mixY(spec.cowl[0], 0.55), nearZ),
+    p(spec.cowl[0] + 0.06, mixY(spec.cowl[0], 0.2), nearZ),
+  ]);
+  const deckCut = curve([
+    p(spec.deckCutX - 0.05, yAt(spec.shoulder, spec.deckCutX) + 0.005, nearZ),
+    p(spec.deckCutX, mixY(spec.deckCutX, 0.55), nearZ),
+    p(spec.deckCutX + 0.04, mixY(spec.deckCutX, 0.16), nearZ),
+  ]);
 
-  const strip = (y0: number, y1: number, x0: number, x1: number) =>
-    poly([p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)]);
+  const handles = spec.handles.map((x) => {
+    const y = yAt(spec.shoulder, x) - 0.085;
+    const pts = [
+      p(x - 0.105, y + 0.012, nearZ),
+      p(x + 0.105, y + 0.016, nearZ),
+      p(x + 0.105, y - 0.018, nearZ),
+      p(x - 0.105, y - 0.022, nearZ),
+    ];
+    return { d: poly(pts), hi: poly([pts[0], pts[1], p(x + 0.105, y + 0.006, nearZ), p(x - 0.105, y + 0.002, nearZ)]) };
+  });
 
-  const front = p(spec.arch.front, 0, 0.03);
-  const rear = p(spec.arch.rear, 0, 0.03);
-  const angle = (Math.atan2(rear[1] - front[1], rear[0] - front[0]) * 180) / Math.PI;
-
-  const wheelZ = 0.035;
-  const wheels: Geometry['wheels'] = [];
-  if (q3) {
-    const [fx, fy] = p(spec.arch.front, R, W - 0.06);
-    wheels.push({ cx: fx, cy: fy, far: true, shade: 0.52 });
-  }
-  const [nx, ny] = p(spec.arch.front, R, wheelZ);
-  const [rx2, ry2] = p(spec.arch.rear, R, wheelZ);
-  wheels.push({ cx: nx, cy: ny });
-  wheels.push({ cx: rx2, cy: ry2, shade: q3 ? 0.1 : 0.06 });
-
-  /* Door mirror: a small dark cap standing off the flank. */
   const m = spec.mirror;
-  const mirrorAt = (z: number) =>
-    shape(
+  const mirrorShape = (z: number) =>
+    curve(
       [
         [m.x, m.y],
-        [m.x + m.w * 0.55, m.y + 0.014],
-        [m.x + m.w, m.y - 0.012],
-        [m.x + m.w * 0.9, m.y - m.h],
-        [m.x + m.w * 0.4, m.y - m.h - 0.008],
-        [m.x + 0.01, m.y - m.h * 0.7],
-      ],
-      z
+        [m.x + m.w * 0.5, m.y + 0.016],
+        [m.x + m.w, m.y - 0.008],
+        [m.x + m.w * 0.94, m.y - m.h],
+        [m.x + m.w * 0.36, m.y - m.h - 0.012],
+        [m.x + 0.012, m.y - m.h * 0.62],
+      ].map(([x, y]) => p(x, y, z)),
+      true
     );
-
-  /* Headlamp: one continuous blade that crosses the fascia and wraps the fender. */
-  /* The blade has to die inside the fascia, so its far end is clamped to the
-     fascia's own tapered edge at that height. */
-  const zLamp = zFarAt(spec.lampBar[1]) - 0.05;
-  const barZ = [zLamp, zLamp * 0.78, zLamp * 0.55, zLamp * 0.3, zLamp * 0.1, 0.02];
-  const nX = spec.frontLower[2][0] + 0.02;
-  const lampTop = barZ.map((z) => p(nX - bulgeAt(z), spec.lampBar[1] + (z > 0.1 ? 0.01 : 0), z));
-  const lampBot = [...barZ].reverse().map((z) => p(nX - bulgeAt(z) + 0.01, spec.lampBar[0] + (z > 0.1 ? 0.01 : 0), z));
-  const sideTop = spec.lampSide.slice(1, 3).map(([x, y]) => p(x, y));
-  const sideBot = spec.lampSide.slice(3, 5).map(([x, y]) => p(x, y));
-  const capY = (spec.lampBar[0] + spec.lampBar[1]) / 2 + 0.01;
-  const lampCap = p(nX - bulgeAt(zLamp) - 0.012, capY, zLamp);
-  const lampWrap = curve([lampCap, ...lampTop, ...sideTop, ...sideBot, ...lampBot], true);
-
-  /* Lower intake and the corner air curtains, both on the fascia surface. */
-  const gz = Array.from({ length: 7 }, (_, i) => spec.grille.z[0] + ((spec.grille.z[1] - spec.grille.z[0]) * i) / 6);
-  const grille = curve(
+  const mirrorNear = mirrorShape(-m.out);
+  const mirrorFar = mirrorShape(W + m.out);
+  const mirrorGlass = curve(
     [
-      ...gz.map((z) => p(nX + 0.02 - bulgeAt(z) * 0.85, spec.grille.y[1], z)),
-      ...[...gz].reverse().map((z) => p(nX + 0.05 - bulgeAt(z) * 0.85, spec.grille.y[0], z)),
+      [m.x + 0.03, m.y - 0.004],
+      [m.x + m.w * 0.55, m.y + 0.006],
+      [m.x + m.w * 0.9, m.y - 0.016],
+      [m.x + m.w * 0.82, m.y - m.h * 0.86],
+      [m.x + m.w * 0.36, m.y - m.h * 0.94],
+      [m.x + 0.036, m.y - m.h * 0.56],
+    ].map(([x, y]) => p(x, y, -m.out)),
+    true
+  );
+
+  const tailLamp = curve(spec.tailLamp.map(([x, y]) => p(x, y, nearZ)), true);
+
+  /* Everything under the sill reads as one soft dark mass that tucks in at
+     the floor, so it never squares off into a slab. */
+  const under = curve(
+    [
+      p(spec.axleR + 0.62, spec.rockerY - 0.02, nearZ),
+      p(spec.axleR, spec.rockerY + 0.02, nearZ),
+      p(mid, spec.rockerY - 0.005, nearZ),
+      p(spec.axleF, spec.rockerY + 0.02, nearZ),
+      p(spec.axleF - 0.42, spec.rockerY - 0.04, nearZ),
+      p(0.4, yLo - 0.02, nearZ),
+      p(0.52, 0.07, nearZ),
+      p(spec.axleF, 0.02, nearZ),
+      p(mid, 0.0, nearZ),
+      p(spec.axleR, 0.02, nearZ),
+      p(spec.axleR + 0.4, 0.1, nearZ),
     ],
     true
   );
-  const ventAt = (z0: number, z1: number) => {
-    const vz = Array.from({ length: 4 }, (_, i) => z0 + ((z1 - z0) * i) / 3);
-    return curve(
-      [
-        ...vz.map((z) => p(nX + 0.02 - bulgeAt(z) * 0.85, spec.vent.y[1], z)),
-        ...[...vz].reverse().map((z) => p(nX + 0.05 - bulgeAt(z) * 0.85, spec.vent.y[0], z)),
-      ],
-      true
-    );
+  const underAxis: [Pt, Pt] = [p(mid, spec.rockerY, nearZ), p(mid, 0, nearZ)];
+
+  /* Wheels: near pair, plus the far front wheel which the perspective makes
+     about a tenth smaller on its own. */
+  const mk = (axle: number, z: number, far: boolean, shade: number): Wheel3 => {
+    const c = p(axle, R, z);
+    const ex = p(axle + R, R, z);
+    const dn = p(axle, 0, z);
+    return { cx: c[0], cy: c[1], ax: ex[0] - c[0], ay: ex[1] - c[1], by: dn[1] - c[1], far, shade };
   };
-  const zVent = zFarAt(spec.vent.y[1]) - 0.1;
-  const vents = [ventAt(spec.vent.z[0], spec.vent.z[1]), ventAt(zVent - (spec.vent.z[1] - spec.vent.z[0]), zVent)];
-  const splitY = (spec.lampBar[0] + spec.grille.y[1]) / 2;
-  const faceSplit = curve(sweep(splitY).map(([z, b]) => p(nX - b * 0.9, splitY, z)));
-  const faceAxis = axisFrom(p(0.05, yHi + 0.02), Math.abs(ky) * (yHi - yLo + 0.12), -kxy / kx);
+  const wheels: Wheel3[] = [];
+  if (q3) {
+    wheels.push(mk(spec.axleF, W - 0.11, true, 0.9));
+    wheels.push(mk(spec.axleR, W - 0.11, true, 0.92));
+  }
+  wheels.push(mk(spec.axleR, wheelZ, false, q3 ? 0.1 : 0.06));
+  wheels.push(mk(spec.axleF, wheelZ, false, 0));
+
+  const contacts = wheels
+    .filter((w) => !w.far)
+    .map((w) => ({ x: w.cx, y: w.cy + w.by, r: Math.abs(w.ax) }));
+  const cF = p(spec.axleF, 0, wheelZ);
+  const cR = p(spec.axleR, 0, wheelZ);
+  const ground = {
+    angle: (Math.atan2(cR[1] - cF[1], cR[0] - cF[0]) * 180) / Math.PI,
+    cx: (cF[0] + cR[0]) / 2,
+    cy: (cF[1] + cR[1]) / 2,
+    span: Math.hypot(cR[0] - cF[0], cR[1] - cF[1]),
+  };
 
   return {
     outline,
     shell,
+    crease,
+    shellAxis,
     face,
+    farBody,
+    faceAxis,
+    faceVert,
+    faceSplit,
     faceLip,
+    intake,
+    vents,
+    lampBar,
+    lampCore,
+    lampRecess,
+    faceGleam,
+    splitter,
+    lampSide,
+    windscreen,
+    wsGlare,
+    wipers,
+    dlo,
+    dloTopRail,
+    pillarA,
+    pillarB,
+    glassAxis,
+    band,
+    line,
+    flankAxis,
+    alongAxis,
+    archOutline,
+    archPocket,
+    archLip,
+    haunch,
+    doorCuts,
+    hoodCut,
+    deckCut,
+    handles,
+    mirrorNear,
+    mirrorFar,
+    mirrorGlass,
+    tailLamp,
     under,
     underAxis,
-    hood,
-    hoodCrown,
-    roof,
-    deck,
-    windscreen,
-    canopyEdge,
-    sideGlass,
-    pillar,
-    archPockets: [`${archRing(spec.arch.front, 0)} Z`, `${archRing(spec.arch.rear, 0)} Z`],
-    archShadows: [archRing(spec.arch.front, 0.025), archRing(spec.arch.rear, 0.025)],
-    doorCuts,
-    hoodCut: line([
-      [spec.hoodPanel.rear[0], spec.hoodPanel.rear[1]],
-      [spec.hoodPanel.rear[0] + 0.02, spec.beltY - 0.08],
-      [spec.hoodPanel.rear[0] + 0.05, spec.rockerY + 0.2],
-    ]),
-    deckCut: line([
-      [spec.tailSide[0][0] - 0.06, spec.beltY - 0.02],
-      [spec.tailSide[0][0] - 0.03, (spec.beltY + spec.rockerY) / 2],
-      [spec.tailSide[0][0] + 0.02, spec.rockerY + 0.1],
-    ]),
-    handles: spec.handles.map(([x, y]) =>
-      poly([p(x - 0.09, y), p(x + 0.09, y + 0.004), p(x + 0.09, y - 0.03), p(x - 0.09, y - 0.034)])
-    ),
-    shoulder: line(spec.shoulder),
-    darkBand: strip(spec.darkBand[0], spec.darkBand[1], spec.arch.front - 0.35, spec.arch.rear + 0.9),
-    bounceBand: strip(spec.bounceBand[0], spec.bounceBand[1], spec.arch.front - 0.35, spec.arch.rear + 0.9),
-    skirt: strip(spec.rockerY - 0.02, spec.rockerY + 0.055, spec.arch.front + 0.3, spec.arch.rear - 0.3),
-    beltLine: line([
-      [spec.arch.front - 0.1, spec.beltY - 0.02],
-      [(spec.arch.front + spec.arch.rear) / 2, spec.beltY + 0.005],
-      [spec.arch.rear + 0.8, spec.beltY + 0.02],
-    ]),
-    rockerLine: line([
-      [spec.arch.front + 0.5, spec.rockerY + 0.025],
-      [(spec.arch.front + spec.arch.rear) / 2, spec.rockerY + 0.02],
-      [spec.arch.rear - 0.5, spec.rockerY + 0.025],
-    ]),
-    lampWrap,
-    lampSide: shape(spec.lampSide),
-    lampGlow: line(spec.lampSide.slice(0, 3)),
-    grille,
-    vents,
-    faceSplit,
-    faceAxis,
-    tail: shape(spec.tailSide),
-    mirrorNear: mirrorAt(-m.out),
-    mirrorFar: mirrorAt(W + m.out),
-    flankAxis,
-    topAxis,
-    glassAxis,
-    contact: { front, rear, angle },
     wheels,
-    wheelAx: kx * R,
-    wheelAy: kxy * R,
-    wheelBy: -ky * R,
-    bounds: { x0: p(0, 0, q3 ? W : 0)[0], x1: p(4.75, 0)[0] },
+    contacts,
+    ground,
+    fadePx: R * k,
   };
 }
 
@@ -704,17 +843,19 @@ export default function CarRender({
   className,
   label,
 }: CarRenderProps): ReactElement {
-  const uid = `c${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
+  const uid = `b${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const spec = SPECS[body] ?? SEDAN;
   const g = build(spec, view, wheel.size);
   const q3 = view === 'front-3q';
   const [fa, fb] = g.flankAxis;
-  const [ta, tb] = g.topAxis;
-  const [ga, gb] = g.glassAxis;
-  const c = g.contact;
-  const [ua, ub] = g.underAxis;
+  const [aa, ab] = g.alongAxis;
+  const [ha, hb] = g.shellAxis;
   const [ca, cb] = g.faceAxis;
-  const flip = `translate(${c.front[0].toFixed(1)} ${c.front[1].toFixed(1)}) rotate(${c.angle.toFixed(2)})`;
+  const [va, vb] = g.faceVert;
+  const [ga, gb] = g.glassAxis;
+  const [ua, ub] = g.underAxis;
+  const gr = g.ground;
+  const flip = `translate(${gr.cx.toFixed(1)} ${gr.cy.toFixed(1)}) rotate(${gr.angle.toFixed(2)})`;
 
   return (
     <svg
@@ -724,318 +865,412 @@ export default function CarRender({
       aria-label={label ?? describe(body, paint, wheel, view)}
     >
       <defs>
-        {/* The flank: sky at the shoulder, body colour through the middle, the
-            dark studio floor low down, then a lick of bounce off the tile. */}
+        {/* Paint. The flank runs sky → body → floor down the panel; the neutral
+            bands layered over it supply the studio. */}
         <linearGradient id={`${uid}-flank`} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
           <stop offset="0" stopColor={paint.sheen} data-paint />
-          <stop offset="0.12" stopColor={paint.hex} data-paint />
-          <stop offset="0.46" stopColor={paint.hex} data-paint />
-          <stop offset="0.82" stopColor={paint.shade} data-paint />
-          <stop offset="0.95" stopColor={paint.shade} data-paint />
-          <stop offset="1" stopColor={paint.hex} data-paint />
+          <stop offset="0.1" stopColor={paint.hex} data-paint />
+          <stop offset="0.52" stopColor={paint.hex} data-paint />
+          <stop offset="0.88" stopColor={paint.shade} data-paint />
+          <stop offset="1" stopColor={paint.shade} data-paint />
         </linearGradient>
-        {/* Upward-facing panels see the softbox, so they run light-to-mid. */}
-        <linearGradient id={`${uid}-top`} gradientUnits="userSpaceOnUse" x1={ta[0]} y1={ta[1]} x2={tb[0]} y2={tb[1]}>
-          <stop offset="0" stopColor={paint.sheen} data-paint />
-          <stop offset="0.62" stopColor={paint.hex} data-paint />
-          <stop offset="1" stopColor={paint.hex} data-paint />
+        <linearGradient id={`${uid}-top`} gradientUnits="userSpaceOnUse" x1={ha[0]} y1={ha[1]} x2={hb[0]} y2={hb[1]}>
+          <stop offset="0" stopColor={paint.hex} data-paint />
+          <stop offset="0.42" stopColor={paint.sheen} data-paint />
+          <stop offset="0.66" stopColor={paint.hex} data-paint />
+          <stop offset="1" stopColor={paint.shade} data-paint />
         </linearGradient>
-        <linearGradient
-          id={`${uid}-face`}
-          gradientUnits="userSpaceOnUse"
-          x1={g.bounds.x0}
-          y1="0"
-          x2={g.bounds.x0 + 230}
-          y2="0"
-        >
-          <stop offset="0" stopColor={paint.shade} data-paint />
-          <stop offset="0.55" stopColor={paint.hex} data-paint />
-          <stop offset="1" stopColor={paint.hex} data-paint />
+        <linearGradient id={`${uid}-topShade`} gradientUnits="userSpaceOnUse" x1={ha[0]} y1={ha[1]} x2={hb[0]} y2={hb[1]}>
+          <stop offset="0" stopColor="#05070a" stopOpacity="0.1" />
+          <stop offset="0.3" stopColor="#ffffff" stopOpacity="0.12" />
+          <stop offset="0.55" stopColor="#ffffff" stopOpacity="0.16" />
+          <stop offset="0.8" stopColor="#05070a" stopOpacity="0.1" />
+          <stop offset="1" stopColor="#05070a" stopOpacity="0.22" />
         </linearGradient>
-        <linearGradient id={`${uid}-sky`} gradientUnits="userSpaceOnUse" x1={ta[0]} y1={ta[1]} x2={tb[0]} y2={tb[1]}>
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.34" />
-          <stop offset="0.66" stopColor="#ffffff" stopOpacity="0.05" />
-          <stop offset="1" stopColor="#000000" stopOpacity="0.2" />
+        <linearGradient id={`${uid}-faceP`} gradientUnits="userSpaceOnUse" x1={ca[0]} y1={ca[1]} x2={cb[0]} y2={cb[1]}>
+          <stop offset="0" stopColor={paint.hex} data-paint />
+          <stop offset="0.35" stopColor={paint.hex} data-paint />
+          <stop offset="1" stopColor={paint.shade} data-paint />
+        </linearGradient>
+        <linearGradient id={`${uid}-far`} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
+          <stop offset="0" stopColor={paint.hex} data-paint />
+          <stop offset="1" stopColor={paint.shade} data-paint />
         </linearGradient>
 
-        {/* Reflections run along the car, so they fade on x. */}
-        <linearGradient id={`${uid}-along`} gradientUnits="userSpaceOnUse" x1={g.bounds.x0} y1="0" x2={g.bounds.x1} y2="0">
+        {/* Neutral studio light. */}
+        <linearGradient id={`${uid}-skyband`} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.05" />
+          <stop offset="0.2" stopColor="#ffffff" stopOpacity="0.4" />
+          <stop offset="0.52" stopColor="#ffffff" stopOpacity="0.2" />
+          <stop offset="0.86" stopColor="#ffffff" stopOpacity="0.3" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0.08" />
+        </linearGradient>
+        <linearGradient id={`${uid}-underCrease`} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
+          <stop offset="0" stopColor="#0a0d12" stopOpacity="0.5" />
+          <stop offset="0.3" stopColor="#0a0d12" stopOpacity="0.14" />
+          <stop offset="1" stopColor="#0a0d12" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id={`${uid}-horizon`} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.06" />
+          <stop offset="0.16" stopColor="#ffffff" stopOpacity="0.44" />
+          <stop offset="0.46" stopColor="#ffffff" stopOpacity="0.16" />
+          <stop offset="0.72" stopColor="#ffffff" stopOpacity="0.34" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0.05" />
+        </linearGradient>
+        <linearGradient id={`${uid}-floorRefl`} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
           <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
-          <stop offset="0.26" stopColor="#ffffff" stopOpacity="0.5" />
-          <stop offset="0.62" stopColor="#ffffff" stopOpacity="0.16" />
+          <stop offset="0.42" stopColor="#ffffff" stopOpacity="0.26" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
-        <linearGradient id={`${uid}-dark`} gradientUnits="userSpaceOnUse" x1={g.bounds.x0} y1="0" x2={g.bounds.x1} y2="0">
-          <stop offset="0" stopColor={paint.shade} stopOpacity="0.12" data-paint />
-          <stop offset="0.3" stopColor={paint.shade} stopOpacity="0.6" data-paint />
-          <stop offset="0.8" stopColor={paint.shade} stopOpacity="0.48" data-paint />
-          <stop offset="1" stopColor={paint.shade} stopOpacity="0.14" data-paint />
+        <linearGradient id={`${uid}-sill`} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
+          <stop offset="0" stopColor="#05070a" stopOpacity="0" />
+          <stop offset="0.55" stopColor="#05070a" stopOpacity="0.14" />
+          <stop offset="1" stopColor="#05070a" stopOpacity="0.6" />
         </linearGradient>
-        <linearGradient id={`${uid}-bounce`} gradientUnits="userSpaceOnUse" x1={g.bounds.x0} y1="0" x2={g.bounds.x1} y2="0">
-          <stop offset="0" stopColor={paint.sheen} stopOpacity="0" data-paint />
-          <stop offset="0.35" stopColor={paint.sheen} stopOpacity="0.42" data-paint />
-          <stop offset="0.85" stopColor={paint.sheen} stopOpacity="0.24" data-paint />
-          <stop offset="1" stopColor={paint.sheen} stopOpacity="0" data-paint />
-        </linearGradient>
-        <linearGradient id={`${uid}-crease`} gradientUnits="userSpaceOnUse" x1={g.bounds.x0} y1="0" x2={g.bounds.x1} y2="0">
+        <linearGradient id={`${uid}-bounce`} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
           <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
-          <stop offset="0.2" stopColor="#ffffff" stopOpacity="0.75" />
-          <stop offset="0.7" stopColor="#ffffff" stopOpacity="0.4" />
+          <stop offset="0.3" stopColor="#ffffff" stopOpacity="0.24" />
+          <stop offset="0.75" stopColor="#ffffff" stopOpacity="0.18" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
+        <radialGradient id={`${uid}-haunch`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.13" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
 
-        {/* One continuous glass canopy — windscreen, roof, side glass. */}
+        {/* Glass — its own blue-grey, never the paint. */}
         <linearGradient id={`${uid}-glass`} gradientUnits="userSpaceOnUse" x1={ga[0]} y1={ga[1]} x2={gb[0]} y2={gb[1]}>
-          <stop offset="0" stopColor="#54606d" />
-          <stop offset="0.34" stopColor="#2a323b" />
-          <stop offset="0.74" stopColor="#181e25" />
-          <stop offset="1" stopColor="#0c1014" />
+          <stop offset="0" stopColor="#5b6773" />
+          <stop offset="0.28" stopColor="#2c343d" />
+          <stop offset="0.66" stopColor="#181e25" />
+          <stop offset="1" stopColor="#0d1116" />
         </linearGradient>
         <linearGradient id={`${uid}-ws`} gradientUnits="userSpaceOnUse" x1={ga[0]} y1={ga[1]} x2={gb[0]} y2={gb[1]}>
-          <stop offset="0" stopColor="#616e7c" />
-          <stop offset="0.3" stopColor="#333d48" />
-          <stop offset="0.72" stopColor="#1c232b" />
-          <stop offset="1" stopColor="#10151a" />
-        </linearGradient>
-        <linearGradient id={`${uid}-roofglass`} gradientUnits="userSpaceOnUse" x1={ta[0]} y1={ta[1]} x2={tb[0]} y2={tb[1]}>
-          <stop offset="0" stopColor="#69747f" />
-          <stop offset="0.45" stopColor="#272f38" />
-          <stop offset="1" stopColor="#12171d" />
+          <stop offset="0" stopColor="#6c7885" />
+          <stop offset="0.4" stopColor="#333c46" />
+          <stop offset="1" stopColor="#151a20" />
         </linearGradient>
 
-        <linearGradient id={`${uid}-led`} gradientUnits="userSpaceOnUse" x1={g.bounds.x0} y1="0" x2={g.bounds.x0 + 300} y2="0">
-          <stop offset="0" stopColor="#9db4d6" />
-          <stop offset="0.35" stopColor="#ffffff" />
-          <stop offset="0.75" stopColor="#e7effb" />
-          <stop offset="1" stopColor="#a9bfdd" />
+        <linearGradient id={`${uid}-led`} gradientUnits="userSpaceOnUse" x1={ca[0]} y1={ca[1]} x2={cb[0]} y2={cb[1]}>
+          <stop offset="0" stopColor="#b9cbe4" />
+          <stop offset="0.22" stopColor="#ffffff" />
+          <stop offset="0.5" stopColor="#fff6e4" />
+          <stop offset="0.8" stopColor="#dce7f6" />
+          <stop offset="1" stopColor="#8fa4c0" />
         </linearGradient>
-        <linearGradient id={`${uid}-tail`} gradientUnits="userSpaceOnUse" x1={g.bounds.x1 - 150} y1="0" x2={g.bounds.x1} y2="0">
-          <stop offset="0" stopColor="#8f1016" />
-          <stop offset="0.45" stopColor="#d8261f" />
-          <stop offset="1" stopColor="#f2604a" />
+        <linearGradient id={`${uid}-tail`} gradientUnits="userSpaceOnUse" x1={ab[0]} y1={ab[1]} x2={aa[0]} y2={aa[1]}>
+          <stop offset="0" stopColor="#ff8a6a" />
+          <stop offset="0.35" stopColor="#d8241d" />
+          <stop offset="1" stopColor="#7d0d12" />
         </linearGradient>
 
-        {/* The fascia turns away from the light top and bottom, and picks up a
-            thin bounce off the studio floor along its very lowest edge. */}
-        <linearGradient id={`${uid}-faceShade`} gradientUnits="userSpaceOnUse" x1={ca[0]} y1={ca[1]} x2={cb[0]} y2={cb[1]}>
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.2" />
-          <stop offset="0.3" stopColor="#ffffff" stopOpacity="0.03" />
-          <stop offset="0.68" stopColor="#000000" stopOpacity="0.12" />
-          <stop offset="0.92" stopColor="#000000" stopOpacity="0.34" />
-          <stop offset="1" stopColor="#ffffff" stopOpacity="0.14" />
+        <linearGradient id={`${uid}-faceShade`} gradientUnits="userSpaceOnUse" x1={va[0]} y1={va[1]} x2={vb[0]} y2={vb[1]}>
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.26" />
+          <stop offset="0.18" stopColor="#05070a" stopOpacity="0.16" />
+          <stop offset="0.34" stopColor="#ffffff" stopOpacity="0.06" />
+          <stop offset="0.66" stopColor="#05070a" stopOpacity="0.2" />
+          <stop offset="0.94" stopColor="#05070a" stopOpacity="0.46" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0.12" />
         </linearGradient>
         <linearGradient id={`${uid}-under`} gradientUnits="userSpaceOnUse" x1={ua[0]} y1={ua[1]} x2={ub[0]} y2={ub[1]}>
-          <stop offset="0" stopColor="#05070a" stopOpacity="0.9" />
-          <stop offset="0.45" stopColor="#080b0f" stopOpacity="0.7" />
-          <stop offset="0.82" stopColor="#0e1319" stopOpacity="0.26" />
-          <stop offset="1" stopColor="#141a21" stopOpacity="0" />
+          <stop offset="0" stopColor="#05070a" stopOpacity="0.92" />
+          <stop offset="0.5" stopColor="#070a0e" stopOpacity="0.6" />
+          <stop offset="1" stopColor="#0d1218" stopOpacity="0" />
         </linearGradient>
-        <radialGradient id={`${uid}-shadow`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#0b0e12" stopOpacity="0.34" />
-          <stop offset="0.5" stopColor="#0b0e12" stopOpacity="0.13" />
+        <linearGradient id={`${uid}-well`} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
+          <stop offset="0" stopColor="#161b21" />
+          <stop offset="0.55" stopColor="#0b0e13" />
+          <stop offset="1" stopColor="#05070a" />
+        </linearGradient>
+        <radialGradient id={`${uid}-pool`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#0b0e12" stopOpacity="0.3" />
+          <stop offset="0.55" stopColor="#0b0e12" stopOpacity="0.12" />
           <stop offset="1" stopColor="#0b0e12" stopOpacity="0" />
         </radialGradient>
+        <radialGradient id={`${uid}-patch`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#05070a" stopOpacity="0.62" />
+          <stop offset="0.45" stopColor="#05070a" stopOpacity="0.32" />
+          <stop offset="1" stopColor="#05070a" stopOpacity="0" />
+        </radialGradient>
         <linearGradient id={`${uid}-fade`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.85" />
-          <stop offset="0.4" stopColor="#ffffff" stopOpacity="0.16" />
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="0.45" stopColor="#ffffff" stopOpacity="0.1" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
 
         <RimDefs uid={uid} />
 
-        <filter id={`${uid}-soft`} x="-30%" y="-320%" width="160%" height="740%">
-          <feGaussianBlur stdDeviation="13" />
+        <filter id={`${uid}-soft`} x="-40%" y="-400%" width="180%" height="900%">
+          <feGaussianBlur stdDeviation="14" />
         </filter>
-        <filter id={`${uid}-tight`} x="-60%" y="-300%" width="220%" height="700%">
-          <feGaussianBlur stdDeviation="4" />
+        <filter id={`${uid}-mid`} x="-40%" y="-400%" width="180%" height="900%">
+          <feGaussianBlur stdDeviation="7" />
         </filter>
-        <filter id={`${uid}-hair`} x="-60%" y="-300%" width="220%" height="700%">
-          <feGaussianBlur stdDeviation="1.6" />
+        <filter id={`${uid}-tight`} x="-60%" y="-400%" width="220%" height="900%">
+          <feGaussianBlur stdDeviation="3.2" />
+        </filter>
+        <filter id={`${uid}-hair`} x="-60%" y="-400%" width="220%" height="900%">
+          <feGaussianBlur stdDeviation="1.3" />
         </filter>
 
-        <clipPath id={`${uid}-clip-flank`}>
+        <clipPath id={`${uid}-clipBody`}>
           <path d={g.outline} />
         </clipPath>
-        <clipPath id={`${uid}-clip-face`}>
+        <clipPath id={`${uid}-clipFace`}>
           <path d={g.face} />
         </clipPath>
-        <clipPath id={`${uid}-clip-glass`}>
-          <path d={g.sideGlass} />
+        <clipPath id={`${uid}-clipWs`}>
+          <path d={g.windscreen} />
         </clipPath>
-        <mask id={`${uid}-mask-floor`}>
+        <clipPath id={`${uid}-clipDlo`}>
+          <path d={g.dlo} />
+        </clipPath>
+        <mask id={`${uid}-maskFloor`}>
           <g transform={flip}>
-            <rect x="-500" y="0" width="1600" height="110" fill={`url(#${uid}-fade)`} />
+            <rect x="-700" y="0" width="2400" height={g.fadePx * 1.6} fill={`url(#${uid}-fade)`} />
           </g>
         </mask>
       </defs>
 
       {ground && (
-        <g className="car-render__floor" mask={`url(#${uid}-mask-floor)`} opacity="0.1">
+        <g className="car-render__floor" mask={`url(#${uid}-maskFloor)`} opacity="0.11">
           <use
             href={`#${uid}-car`}
-            transform={`${flip} scale(1 -1) rotate(${(-c.angle).toFixed(2)}) translate(${(-c.front[0]).toFixed(1)} ${(
-              -c.front[1]
+            transform={`${flip} scale(1 -1) rotate(${(-gr.angle).toFixed(2)}) translate(${(-gr.cx).toFixed(1)} ${(
+              -gr.cy
             ).toFixed(1)})`}
+            filter={`url(#${uid}-hair)`}
           />
         </g>
       )}
 
       {ground && (
-        <g
-          className="car-render__shadow"
-          transform={`translate(${((c.front[0] + c.rear[0]) / 2).toFixed(1)} ${(
-            (c.front[1] + c.rear[1]) / 2
-          ).toFixed(1)}) rotate(${c.angle.toFixed(2)})`}
-        >
-          <ellipse cx="0" cy="4" rx={(c.rear[0] - c.front[0]) / 2 + 86} ry="13" fill={`url(#${uid}-shadow)`} filter={`url(#${uid}-soft)`} />
-        </g>
-      )}
-
-      {ground && (
-        <g className="car-render__contact">
-          {g.wheels
-            .filter((w) => !w.far)
-            .map((w) => (
-              <ellipse
-                key={w.cx}
-                cx={w.cx}
-                cy={w.cy + g.wheelBy}
-                rx={Math.abs(g.wheelAx) * 0.8}
-                ry="6"
-                fill="#0b0e12"
-                opacity="0.55"
-                filter={`url(#${uid}-tight)`}
-                transform={`rotate(${c.angle.toFixed(2)} ${w.cx.toFixed(1)} ${(w.cy + g.wheelBy).toFixed(1)})`}
-              />
-            ))}
+        <g className="car-render__shadow">
+          <g transform={`translate(${gr.cx.toFixed(1)} ${gr.cy.toFixed(1)}) rotate(${gr.angle.toFixed(2)})`}>
+            <ellipse
+              cx="0"
+              cy="2"
+              rx={gr.span / 2 + g.fadePx * 1.35}
+              ry={g.fadePx * 0.42}
+              fill={`url(#${uid}-pool)`}
+              filter={`url(#${uid}-soft)`}
+            />
+          </g>
+          {g.contacts.map((c) => (
+            <g key={c.x} transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)}) rotate(${gr.angle.toFixed(2)})`}>
+              <ellipse cx="0" cy="1" rx={c.r * 1.15} ry={c.r * 0.26} fill={`url(#${uid}-patch)`} filter={`url(#${uid}-tight)`} />
+              <ellipse cx="0" cy="0.5" rx={c.r * 0.5} ry={c.r * 0.1} fill="#05070a" opacity="0.5" filter={`url(#${uid}-hair)`} />
+            </g>
+          ))}
         </g>
       )}
 
       <g id={`${uid}-car`}>
-        <path d={g.under} fill={`url(#${uid}-under)`} filter={`url(#${uid}-tight)`} />
-        {g.archPockets.map((d) => (
-          <path key={d} d={d} fill="#07080b" />
-        ))}
+        {q3 &&
+          g.wheels
+            .filter((w) => w.far)
+            .map((w) => (
+              <Wheel
+                key={`f${w.cx.toFixed(1)}`}
+                uid={uid}
+                style={wheel.style}
+                size={wheel.size}
+                cx={w.cx}
+                cy={w.cy}
+                ax={w.ax}
+                ay={w.ay}
+                by={w.by}
+                shade={w.shade}
+              />
+            ))}
 
-        {g.wheels.map((w) => (
-          <Wheel
-            key={`${w.cx.toFixed(1)}-${w.far ? 'f' : 'n'}`}
-            uid={uid}
-            style={wheel.style}
-            size={wheel.size}
-            cx={w.cx}
-            cy={w.cy}
-            ax={g.wheelAx}
-            ay={g.wheelAy}
-            by={g.wheelBy}
-            shade={w.shade}
-          />
-        ))}
-
-        {/* Body: top surfaces first, then the near flank over them. */}
         {q3 && (
           <>
-            <path d={g.shell} fill={`url(#${uid}-top)`} data-paint />
-            <path d={g.shell} fill={`url(#${uid}-sky)`} />
+            <path d={g.farBody} fill={`url(#${uid}-far)`} data-paint />
+            <path d={g.farBody} fill="#05070a" fillOpacity="0.5" />
           </>
         )}
-        <path d={g.outline} fill={`url(#${uid}-flank)`} data-paint />
 
-        <g clipPath={`url(#${uid}-clip-flank)`}>
-          <path d={g.darkBand} fill={`url(#${uid}-dark)`} data-paint />
-          <path d={g.bounceBand} fill={`url(#${uid}-bounce)`} data-paint />
-          <path d={g.beltLine} fill="none" stroke={`url(#${uid}-along)`} strokeWidth="15" filter={`url(#${uid}-tight)`} />
-          {g.archShadows.map((d) => (
-            <path key={d} d={d} fill="none" stroke="#05070a" strokeOpacity="0.42" strokeWidth="12" filter={`url(#${uid}-tight)`} />
-          ))}
-          <path d={g.shoulder} fill="none" stroke={`url(#${uid}-crease)`} strokeWidth="7" filter={`url(#${uid}-hair)`} />
-          <path d={g.shoulder} fill="none" stroke={`url(#${uid}-crease)`} strokeWidth="1.6" />
-          <path d={g.skirt} fill="#0d1014" fillOpacity="0.5" filter={`url(#${uid}-tight)`} />
-          <path d={g.rockerLine} fill="none" stroke="#ffffff" strokeOpacity="0.18" strokeWidth="3" filter={`url(#${uid}-hair)`} />
-          <g fill="none" stroke="#05070a" strokeOpacity="0.28" strokeWidth="1.5" strokeLinecap="round">
-            {g.doorCuts.map((d) => (
-              <path key={d} d={d} />
+        {/* ── Top surfaces. Drawn before the near flank so the body occludes
+            whatever falls behind it ── */}
+        {q3 && (
+          <>
+            {g.shell.map((d) => (
+              <g key={d}>
+                <path d={d} fill={`url(#${uid}-top)`} data-paint />
+                <path d={d} fill={`url(#${uid}-topShade)`} />
+              </g>
             ))}
-            <path d={g.hoodCut} strokeOpacity="0.18" />
-            <path d={g.deckCut} strokeOpacity="0.18" />
-          </g>
-          {g.handles.map((d) => (
-            <g key={d}>
-              <path d={d} fill="#ffffff" fillOpacity="0.32" />
-              <path d={d} fill="none" stroke="#05070a" strokeOpacity="0.28" strokeWidth="0.8" />
-            </g>
-          ))}
-          <path d={g.tail} fill="#0d1013" />
-          <path d={g.tail} fill={`url(#${uid}-tail)`} transform="translate(0 1.2)" opacity="0.94" />
-          <path d={g.tail} fill="none" stroke="#0a0c0f" strokeOpacity="0.5" strokeWidth="1" />
-          {!q3 && (
-            <>
-              <path d={g.lampSide} fill="#0d1013" />
-              <path d={g.lampSide} fill={`url(#${uid}-led)`} transform="translate(0 1.2)" />
-              <path d={g.lampGlow} fill="none" stroke="#dceaff" strokeOpacity="0.75" strokeWidth="3" filter={`url(#${uid}-hair)`} />
-            </>
-          )}
-        </g>
+            <path d={g.crease} fill="none" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="2.6" filter={`url(#${uid}-hair)`} />
+          </>
+        )}
 
-        {/* Glass canopy */}
-        <path d={g.sideGlass} fill={`url(#${uid}-glass)`} />
-        <g clipPath={`url(#${uid}-clip-glass)`}>
+        <path d={g.under} fill={`url(#${uid}-under)`} filter={`url(#${uid}-tight)`} />
+        {g.archPocket.map((d) => (
+          <path key={d} d={d} fill={`url(#${uid}-well)`} />
+        ))}
+
+        {g.wheels
+          .filter((w) => !w.far)
+          .map((w) => (
+            <Wheel
+              key={`n${w.cx.toFixed(1)}`}
+              uid={uid}
+              style={wheel.style}
+              size={wheel.size}
+              cx={w.cx}
+              cy={w.cy}
+              ax={w.ax}
+              ay={w.ay}
+              by={w.by}
+              shade={w.shade}
+            />
+          ))}
+
+        {/* ── Near flank ──────────────────────────────────────────────────
+            Base paint, then five neutral bands. Every band is bounded by
+            curves blended between the shoulder and the sill, so each one
+            bows the way its panel bows. */}
+        <path d={g.outline} fill={`url(#${uid}-flank)`} data-paint />
+        <g clipPath={`url(#${uid}-clipBody)`}>
+          {/* 1 · the shoulder turn-over takes the sky */}
+          <path d={g.band(0.86, 1.06)} fill={`url(#${uid}-skyband)`} filter={`url(#${uid}-mid)`} />
+          {/* 2 · dark immediately under the character line — the tightest step */}
+          <path d={g.band(0.6, 0.95)} fill={`url(#${uid}-underCrease)`} filter={`url(#${uid}-tight)`} />
+          {/* 3 · the flank mirrors the floor: a soft horizon sweep, then dark to the sill */}
+          <path d={g.band(0.3, 0.6)} fill={`url(#${uid}-floorRefl)`} filter={`url(#${uid}-mid)`} />
+          <path d={g.band(-0.1, 0.4)} fill={`url(#${uid}-sill)`} filter={`url(#${uid}-mid)`} />
+          {/* 4 · bounce off the tile, just above the rocker */}
           <path
-            d={g.beltLine}
+            d={g.line(0.11)}
             fill="none"
-            stroke="#ffffff"
-            strokeOpacity="0.12"
-            strokeWidth="24"
-            transform={`translate(0 ${(-(spec.beltY - spec.rockerY) * 22).toFixed(1)})`}
+            stroke={`url(#${uid}-bounce)`}
+            strokeWidth={g.fadePx * 0.15}
             filter={`url(#${uid}-tight)`}
           />
+          {/* fender crowns */}
+          {g.haunch.map((h) => (
+            <ellipse
+              key={h.cx}
+              cx={h.cx}
+              cy={h.cy}
+              rx={h.rx}
+              ry={h.ry}
+              fill={`url(#${uid}-haunch)`}
+              filter={`url(#${uid}-mid)`}
+            />
+          ))}
+          {/* 5 · arches and sill hold the darkest values on the car */}
+          {g.archOutline.map((d) => (
+            <path
+              key={d}
+              d={d}
+              fill="none"
+              stroke="#05070a"
+              strokeOpacity="0.4"
+              strokeWidth={g.fadePx * 0.15}
+              filter={`url(#${uid}-tight)`}
+            />
+          ))}
+          {g.archLip.map((d) => (
+            <path key={d} d={d} fill="none" stroke="#ffffff" strokeOpacity="0.15" strokeWidth="1" />
+          ))}
+          {/* the character line: a bright hairline with dark right beneath it */}
+          <path d={g.line(0.95)} fill="none" stroke={`url(#${uid}-horizon)`} strokeWidth="3.4" filter={`url(#${uid}-hair)`} />
+          <path d={g.line(0.95)} fill="none" stroke={`url(#${uid}-horizon)`} strokeWidth="1.1" />
+          <path d={g.line(0.4)} fill="none" stroke="#ffffff" strokeOpacity="0.09" strokeWidth="1" />
+
+          <g fill="none" strokeLinecap="round">
+            {g.doorCuts.map((d) => (
+              <g key={d}>
+                <path d={d} stroke="#05070a" strokeOpacity="0.3" strokeWidth="0.9" />
+                <path d={d} stroke="#ffffff" strokeOpacity="0.08" strokeWidth="0.7" transform="translate(1.4 0)" />
+              </g>
+            ))}
+            <path d={g.hoodCut} stroke="#05070a" strokeOpacity="0.22" strokeWidth="0.8" />
+            <path d={g.deckCut} stroke="#05070a" strokeOpacity="0.22" strokeWidth="0.8" />
+          </g>
+
+          {g.handles.map((h) => (
+            <g key={h.d}>
+              <path d={h.d} fill="#05070a" fillOpacity="0.3" />
+              <path d={h.hi} fill="#ffffff" fillOpacity="0.32" />
+            </g>
+          ))}
+
+          <path d={g.tailLamp} fill="#0b0e12" />
+          <path d={g.tailLamp} fill={`url(#${uid}-tail)`} transform="translate(0 1)" opacity="0.95" />
+          <path d={g.tailLamp} fill="none" stroke="#05070a" strokeOpacity="0.5" strokeWidth="0.9" />
+
+          <path d={g.lampSide} fill="#0b0e12" fillOpacity="0.8" />
+          <path d={g.lampSide} fill={`url(#${uid}-led)`} transform="translate(0 0.7)" opacity="0.85" />
         </g>
-        <path d={g.sideGlass} fill="none" stroke="#080a0d" strokeOpacity="0.55" strokeWidth="2.4" />
+
+        {/* ── Glass ── */}
+        <path d={g.dlo} fill={`url(#${uid}-glass)`} />
+        <g clipPath={`url(#${uid}-clipDlo)`}>
+          <path
+            d={g.line(1.52)}
+            fill="none"
+            stroke="#ffffff"
+            strokeOpacity="0.11"
+            strokeWidth={g.fadePx * 0.55}
+            filter={`url(#${uid}-mid)`}
+          />
+          <path d={g.pillarB} fill="#0a0d11" fillOpacity="0.85" />
+        </g>
+        <path d={g.dloTopRail} fill="none" stroke="#ffffff" strokeOpacity="0.26" strokeWidth="1.1" />
+        <path d={g.dlo} fill="none" stroke="#05070a" strokeOpacity="0.42" strokeWidth="1.5" />
+
         {q3 && (
           <>
-            <path d={g.roof} fill={`url(#${uid}-roofglass)`} />
+            <path d={g.pillarA} fill="#0e1216" />
             <path d={g.windscreen} fill={`url(#${uid}-ws)`} />
-            <path d={g.windscreen} fill="none" stroke="#080a0d" strokeOpacity="0.5" strokeWidth="2.2" />
-            <path d={g.canopyEdge} fill="none" stroke="#ffffff" strokeOpacity="0.4" strokeWidth="1.6" />
-            <path d={g.pillar} fill="#101317" />
-            <path d={g.deck} fill={`url(#${uid}-top)`} data-paint />
-            <path d={g.deck} fill={`url(#${uid}-sky)`} />
-          </>
-        )}
-
-        {/* Mirrors */}
-        {q3 && (
-          <>
-            <path d={g.mirrorFar} fill={`url(#${uid}-face)`} data-paint />
-            <path d={g.mirrorFar} fill="#05070a" fillOpacity="0.4" />
-          </>
-        )}
-        <path d={g.mirrorNear} fill={`url(#${uid}-flank)`} data-paint />
-        <path d={g.mirrorNear} fill="#05070a" fillOpacity="0.2" />
-
-        {/* Front end — nearest to camera, so it lands last. */}
-        {q3 && (
-          <>
-            <path d={g.hood} fill={`url(#${uid}-top)`} data-paint />
-            <path d={g.hood} fill={`url(#${uid}-sky)`} />
-            <path d={g.hoodCrown} fill="none" stroke="#ffffff" strokeOpacity="0.22" strokeWidth="5" filter={`url(#${uid}-hair)`} />
-            <path d={g.hoodCrown} fill="none" stroke="#05070a" strokeOpacity="0.12" strokeWidth="1" />
-            <path d={g.face} fill={`url(#${uid}-face)`} data-paint />
-            <g clipPath={`url(#${uid}-clip-face)`}>
-              <path d={g.face} fill={`url(#${uid}-faceShade)`} />
-              <path d={g.faceSplit} fill="none" stroke="#05070a" strokeOpacity="0.24" strokeWidth="1.4" />
-              <path d={g.faceSplit} fill="none" stroke="#ffffff" strokeOpacity="0.16" strokeWidth="1.6" transform="translate(0 2.2)" />
-              <path d={g.grille} fill="#0d1013" fillOpacity="0.9" />
-              <path d={g.grille} fill="none" stroke="#ffffff" strokeOpacity="0.16" strokeWidth="2" transform="translate(0 -2)" />
-              {g.vents.map((d) => (
-                <path key={d} d={d} fill="#0d1013" fillOpacity="0.78" />
+            <g clipPath={`url(#${uid}-clipWs)`}>
+              <path d={g.wsGlare} fill="#ffffff" fillOpacity="0.09" filter={`url(#${uid}-soft)`} />
+              {g.wipers.map((d) => (
+                <path key={d} d={d} fill="none" stroke="#05070a" strokeOpacity="0.35" strokeWidth="1.3" />
               ))}
-              <path d={g.faceLip} fill="none" stroke="#ffffff" strokeOpacity="0.22" strokeWidth="3" filter={`url(#${uid}-hair)`} />
-              <path d={g.lampWrap} fill="#0a0d11" transform="translate(0 -1.6)" />
-              <path d={g.lampWrap} fill="#0a0d11" transform="translate(0 1.8)" />
-              <path d={g.lampWrap} fill={`url(#${uid}-led)`} />
-              <path d={g.lampWrap} fill="#ffffff" opacity="0.5" filter={`url(#${uid}-hair)`} />
-              <path d={g.lampWrap} fill="none" stroke="#0a0d11" strokeOpacity="0.65" strokeWidth="1.1" />
+            </g>
+            <path d={g.windscreen} fill="none" stroke="#05070a" strokeOpacity="0.38" strokeWidth="1.3" />
+            <path d={g.mirrorFar} fill={`url(#${uid}-far)`} data-paint />
+            <path d={g.mirrorFar} fill="#05070a" fillOpacity="0.45" />
+          </>
+        )}
+
+        <path d={g.mirrorNear} fill={`url(#${uid}-flank)`} data-paint />
+        <path d={g.mirrorGlass} fill="#12161b" />
+        <path d={g.mirrorNear} fill="none" stroke="#05070a" strokeOpacity="0.32" strokeWidth="0.9" />
+
+        {/* ── Fascia — nearest the camera, so it lands last ── */}
+        {q3 && (
+          <>
+            <path d={g.face} fill={`url(#${uid}-faceP)`} data-paint />
+            <g clipPath={`url(#${uid}-clipFace)`}>
+              <path d={g.face} fill={`url(#${uid}-faceShade)`} />
+              {/* the convex nose gathers a soft vertical gleam off the ceiling */}
+              <path d={g.faceGleam} fill="#ffffff" fillOpacity="0.1" filter={`url(#${uid}-soft)`} />
+              {/* bumper crease */}
+              <path d={g.faceSplit} fill="none" stroke="#05070a" strokeOpacity="0.16" strokeWidth="1.1" />
+              <path d={g.faceSplit} fill="none" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1" transform="translate(0 1.8)" />
+              {/* lower intake, air curtains, splitter */}
+              <path d={g.intake} fill="#0a0d11" fillOpacity="0.94" />
+              <path d={g.intake} fill="none" stroke="#05070a" strokeOpacity="0.5" strokeWidth="2.4" filter={`url(#${uid}-hair)`} />
+              <path d={g.intake} fill="none" stroke="#ffffff" strokeOpacity="0.13" strokeWidth="1.2" transform="translate(0 -2)" />
+              {g.vents.map((d) => (
+                <g key={d}>
+                  <path d={d} fill="#0a0d11" fillOpacity="0.8" />
+                  <path d={d} fill="none" stroke="#ffffff" strokeOpacity="0.1" strokeWidth="0.9" />
+                </g>
+              ))}
+              <path d={g.splitter} fill="none" stroke="#ffffff" strokeOpacity="0.16" strokeWidth="1.6" filter={`url(#${uid}-hair)`} />
+              <path d={g.faceLip} fill="none" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="2.4" filter={`url(#${uid}-hair)`} />
+              {/* LED signature: a recess, the blade, a warm core */}
+              <path d={g.lampRecess} fill="#080b0f" fillOpacity="0.85" filter={`url(#${uid}-hair)`} />
+              <path d={g.lampBar} fill={`url(#${uid}-led)`} />
+              <path d={g.lampCore} fill="none" stroke="#fff4e0" strokeOpacity="0.95" strokeWidth="1.6" filter={`url(#${uid}-hair)`} />
+              <path d={g.lampBar} fill="none" stroke="#05070a" strokeOpacity="0.45" strokeWidth="0.8" />
+              <path d={g.lampBar} fill="#ffffff" fillOpacity="0.3" filter={`url(#${uid}-mid)`} />
             </g>
           </>
         )}
