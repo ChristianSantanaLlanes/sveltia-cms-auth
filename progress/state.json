@@ -1,8 +1,8 @@
 {
-  "updated": "2026-08-25 13:03 UTC",
-  "phase": "Render finishing + piece loops",
-  "headline": "Variant B won the bake-off 3\u20130",
-  "note": "Three blind judges independently picked the same vehicle render and named the same two flaws: a hard-edged windscreen reflection that spills onto the roof, and far-side wheels drawn as black lobes off the ground plane. That render is now promoted and both flaws are being closed under verification.",
+  "updated": "2026-08-25 19:28 UTC",
+  "phase": "Render finish + hero/grid/checkout/mobile",
+  "headline": "The funnel works end to end; the finish is what is left",
+  "note": "An end-to-end test now walks home \u2192 inventory \u2192 configurator \u2192 checkout \u2192 confirmation and passes 17 of 17 checks: filters narrow the results, every option moves the price, an empty submit is refused with field-level messages, and a completed form places a real order. The remaining work is finish, not function.",
   "constraint": "tesla.com cannot be reached from this build sandbox: Tesla's edge (Akamai) blocks the datacenter IP for direct requests and for every public screenshot service tried, web.archive.org is blocked by this environment's egress policy, and Chromium here has no outbound HTTPS at all. Live side-by-side capture of the real funnel is therefore impossible from inside this session. Critics score against docs/reference-spec.md \u2014 the Tesla funnel written down as measurable properties \u2014 plus their own knowledge of that funnel, and every round must still name the single largest remaining gap.",
   "pieces": [
     {
@@ -33,8 +33,8 @@
       "id": "scroll",
       "name": "Scroll",
       "detail": "Snap, section transitions, header flip",
-      "status": "reviewing",
-      "rounds": 0,
+      "status": "revising",
+      "rounds": 3,
       "verdict": "",
       "gap": "",
       "shots": [
@@ -58,8 +58,8 @@
       "id": "filters",
       "name": "Filters",
       "detail": "Facets, URL sync, reset",
-      "status": "reviewing",
-      "rounds": 0,
+      "status": "revising",
+      "rounds": 3,
       "verdict": "",
       "gap": "",
       "shots": [
@@ -71,9 +71,9 @@
       "name": "Car render",
       "detail": "SVG vehicle, paint and wheel swaps",
       "status": "revising",
-      "rounds": 1,
-      "verdict": "BENCHMARK (3\u20130 jury, B promoted)",
-      "gap": "Windscreen reflection crosses onto painted roof; far-side wheels read as black lobes off the ground plane.",
+      "rounds": 2,
+      "verdict": "BENCHMARK (jury 3\u20130 for B, then one fix round)",
+      "gap": "Rocker artefact between the wheels, flat front fascia, floating rear lamp.",
       "shots": [
         "design-desktop",
         "design-paint"
@@ -83,8 +83,8 @@
       "id": "options",
       "name": "Options panel",
       "detail": "Trim, paint, wheels, interior, add-ons",
-      "status": "reviewing",
-      "rounds": 0,
+      "status": "revising",
+      "rounds": 3,
       "verdict": "",
       "gap": "",
       "shots": [
@@ -95,8 +95,8 @@
       "id": "price",
       "name": "Live price",
       "detail": "Payment modes, breakdown, roll animation",
-      "status": "reviewing",
-      "rounds": 0,
+      "status": "revising",
+      "rounds": 3,
       "verdict": "",
       "gap": "",
       "shots": [
@@ -107,8 +107,8 @@
       "id": "loading",
       "name": "Loading states",
       "detail": "Skeletons, empty, error",
-      "status": "reviewing",
-      "rounds": 0,
+      "status": "revising",
+      "rounds": 3,
       "verdict": "",
       "gap": "",
       "shots": [
@@ -133,7 +133,7 @@
       "id": "mobile",
       "name": "Mobile",
       "detail": "390px across the whole funnel",
-      "status": "queued",
+      "status": "building",
       "rounds": 0,
       "verdict": "",
       "gap": "",
@@ -201,6 +201,18 @@
     {
       "t": "2026-08-25 13:25",
       "msg": "Variant B promoted into CarRender; flaw-closing loop started under two verifiers."
+    },
+    {
+      "t": "2026-08-25 16:20",
+      "msg": "Second session-limit cut; a builder died mid-edit and left the filter rail uncompilable \u2014 repaired by hand."
+    },
+    {
+      "t": "2026-08-25 19:30",
+      "msg": "End-to-end funnel test added: 17/17 checks pass, including a real order placement."
+    },
+    {
+      "t": "2026-08-25 19:35",
+      "msg": "Render finishing resumed; hero, grid, checkout and the first mobile pass queued behind it."
     }
   ]
 }
