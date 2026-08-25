@@ -126,11 +126,7 @@ export default function PriceSummary({ variant }: PriceSummaryProps): ReactEleme
     </div>
   );
 
-  const headline = (
-    <span className="ps__headline">
-      <AnimatedPrice className="ps__value" value={headlineValue} suffix={suffix} />
-    </span>
-  );
+  const headline = <AnimatedPrice className="ps__value" value={headlineValue} suffix={suffix} />;
 
   const cta = (
     <Button to="/checkout" variant="primary" size="lg" fullWidth data-testid="design-order">
@@ -175,10 +171,12 @@ export default function PriceSummary({ variant }: PriceSummaryProps): ReactEleme
   return (
     <div className="ps ps--pinned">
       {segmented}
-      <div className="ps__headRow">
-        <span className="ps__headLabel">{mode.heading}</span>
+      <div className="ps__head">
+        <p className="ps__headMeta">
+          <span className="ps__headLabel">{mode.heading}</span>
+          <span className="ps__lead">{resolved.model.leadTime}</span>
+        </p>
         {headline}
-        <span className="ps__lead">{resolved.model.leadTime}</span>
       </div>
       <p className="ps__disclaimer">{disclaimer}</p>
       {details}

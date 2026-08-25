@@ -18,24 +18,24 @@ import './OptionPanel.css';
    the catalogue stays the single source of truth for names and prices.       */
 
 const PAINT_NOTE: Record<string, string> = {
-  'stellar-white': 'Solid finish under a hand-polished clear coat — no cost, no compromise.',
-  'midnight-silver': 'Fine metallic flake that shifts from graphite to silver in low sun.',
-  'deep-blue': 'Deep metallic blue that reads close to black in the shade.',
-  obsidian: 'A dense black laid under a clear coat for depth across the shoulder line.',
-  'ember-red': 'Multi-coat red over a bright metallic ground — the richest finish we make.',
-  'quartz-grey': 'Warm metallic grey with a low-gloss flake that plays reflections down.',
+  'stellar-white': 'Solid finish under a hand-polished clear coat.',
+  'midnight-silver': 'Fine metallic flake, graphite to silver in low sun.',
+  'deep-blue': 'Deep metallic blue that reads near black in the shade.',
+  obsidian: 'Dense black under a clear coat, deep across the shoulder.',
+  'ember-red': 'Multi-coat red over a bright metallic ground.',
+  'quartz-grey': 'Warm metallic grey with a low-gloss flake.',
 };
 
 const INTERIOR_NOTE: Record<string, string> = {
-  'obsidian-int': 'Black perforated seating with dark ash trim and a black headliner.',
-  'alpine-int': 'White seating against a black dash, with satin trim on the doors.',
-  'cream-int': 'Cream seating with open-pore walnut across the dash and a woven headliner.',
+  'obsidian-int': 'Black perforated seating with dark ash trim.',
+  'alpine-int': 'White seating against a black dash, satin door trim.',
+  'cream-int': 'Cream seating with open-pore walnut across the dash.',
 };
 
 const SEATING_NOTE: Record<number, string> = {
-  5: 'Bench second row with a 60/40 fold and a flat load floor behind it.',
-  6: 'Two captain’s chairs in the second row with a walk-through to the third.',
-  7: 'A power-folding second row and a third row sized for two adults.',
+  5: 'Bench second row with a 60/40 fold and flat load floor.',
+  6: 'Two captain’s chairs with a walk-through to the third row.',
+  7: 'Power-folding second row; third row sized for two adults.',
 };
 
 const MOTOR_WORD: Record<number, string> = { 1: 'Single motor', 2: 'Dual motor', 3: 'Tri motor' };
@@ -50,9 +50,9 @@ function trimNote(trim: Trim, wheel: WheelOption): string {
 function wheelNote(wheel: WheelOption, trim: Trim): string {
   const range = Math.max(0, trim.range + wheel.rangeDelta);
   if (wheel.rangeDelta === 0) {
-    return `Aerodynamic covers over a lightweight rim — the full ${num(range)} mi of estimated range.`;
+    return `Aerodynamic covers on a light rim — the full ${num(range)} mi of range.`;
   }
-  return `${num(Math.abs(wheel.rangeDelta))} mi less range, ${num(range)} mi estimated, on a wider ${wheel.size}" performance tyre.`;
+  return `A wider ${wheel.size}" performance tyre — ${num(range)} mi, ${num(Math.abs(wheel.rangeDelta))} mi less range.`;
 }
 
 function paintNote(paint: PaintOption): string {

@@ -13,6 +13,7 @@ import {
   RANGE_BOUNDS,
   SORT_OPTIONS,
   activeChips,
+  bestRelaxation,
   useInventoryFilters,
   type FilterChip,
   type SortKey,
@@ -27,8 +28,8 @@ const SKELETON_COUNT = 6;
    from the card's own classes: the plate keeps its 19:10 aspect and radius, the
    hairline above the spec row stays, the button keeps its pill and its height.
    Every bar is set to the measured width and line-height of the type it stands
-   in for — a title is 112px because "2024 Vela 3" is 112px — so nothing grows,
-   shrinks or reflows at the moment the data lands. Widths are uniform across
+   in for — a title is 112px because "2024 Vela 3" measures 112px in the live
+   card — so nothing grows, shrinks or reflows at the moment the data lands. Widths are uniform across
    the six cards on purpose: a grid of identical placeholders reads as a system
    waiting, while randomised ones read as content that arrived wrong. */
 
@@ -37,6 +38,18 @@ function LoadingCard(): ReactElement {
     <article className="vcard vcard--skeleton" aria-hidden="true">
       <div className="vcard__plate">
         <Skeleton className="vcard__plate-skeleton" radius="var(--r-md)" />
+        {/* The plate is not the thing that is missing — it is already the right
+            surface at the right aspect. The car is. So the plate carries a
+            car-shaped mass at the render's own footprint: body, greenhouse and
+            two wheels, centred where the render lands. A frame of empty grey
+            rectangles is what a page looks like when it fails; a frame of
+            car-shaped masses can only be a page that is still loading cars. */}
+        <div className="vcard__ghost">
+          <Skeleton className="vcard__ghost-cabin" radius="var(--r-pill) var(--r-pill) 0 0" />
+          <Skeleton className="vcard__ghost-body" radius="var(--r-pill)" />
+          <Skeleton className="vcard__ghost-wheel vcard__ghost-wheel--rear" radius="var(--r-pill)" />
+          <Skeleton className="vcard__ghost-wheel vcard__ghost-wheel--front" radius="var(--r-pill)" />
+        </div>
       </div>
 
       <div className="vcard__body">
@@ -46,7 +59,7 @@ function LoadingCard(): ReactElement {
               <Skeleton w={112} h={24} />
             </p>
             <p className="vcard__trim">
-              <Skeleton w={138} h={19} />
+              <Skeleton w={180} h={19} />
             </p>
           </div>
 
@@ -71,7 +84,7 @@ function LoadingCard(): ReactElement {
 
         <div className="vcard__foot">
           <p className="vcard__meta">
-            <Skeleton w={198} h={20} />
+            <Skeleton w={190} h={20} />
           </p>
           <p className="vcard__meta vcard__meta--delivery">
             <Skeleton w={166} h={17} />
@@ -84,10 +97,10 @@ function LoadingCard(): ReactElement {
   );
 }
 
-/** Measured from the live row: RANGE / 231 mi, 0–60 MPH / 5.8 s, DRIVE / AWD. */
+/** Measured off the live row: Range / 231 mi, 0–60 mph / 5.8 s, Drive / AWD. */
 const SPEC_BARS: [number, number][] = [
   [44, 58],
-  [62, 46],
+  [64, 42],
   [38, 42],
 ];
 
@@ -121,6 +134,9 @@ export default function InventoryPage(): ReactElement {
 
   const chips = activeChips(filters);
   const isEmpty = !showSkeletons && results.length === 0;
+  /* The one filter that, lifted on its own, brings stock back — offered beside
+     the reset so the way out does not have to cost the whole search. */
+  const relaxation = isEmpty ? bestRelaxation(filters) : null;
 
   const removeChip = (chip: FilterChip) => {
     if (chip.key === 'price') {
@@ -256,24 +272,40 @@ export default function InventoryPage(): ReactElement {
           ) : null}
 
           {isEmpty ? (
+            /* A filtered view that returned zero rows is still that view, not an
+               error screen: the block starts at the results column's own left
+               edge, directly under the header rule, and stays below the "0
+               results" in the hierarchy instead of restating it at headline
+               scale. Sentence, one line of help, the filters that caused it as
+               removable chips, one solid way out. */
             <div className="inv__empty" data-fading={fading || undefined}>
-              <div className="inv__empty-inner">
-                <p className="inv__empty-title">Nothing in stock matches this search.</p>
-                <p className="inv__empty-body">
-                  Every Vela is also built to order. Drop a filter below to see what is ready to deliver
-                  near {zip} today.
-                </p>
+              <p className="inv__empty-title">Nothing in stock matches these filters.</p>
+              <p className="inv__empty-body">
+                Every Vela is also built to order. Remove a filter below to see what is ready to
+                deliver near {zip}.
+              </p>
 
-                {chips.length > 0 ? (
-                  <div className="inv__empty-filters">
-                    <p className="inv__empty-label">Filters applied</p>
-                    {chipList('inv__chips inv__chips--empty')}
-                    <Button variant="primary" onClick={reset} className="inv__empty-reset">
+              {chips.length > 0 ? (
+                <>
+                  {chipList('inv__chips inv__chips--empty')}
+                  <div className="inv__empty-actions">
+                    <Button variant="primary" onClick={reset}>
                       Clear all filters
                     </Button>
+                    {relaxation ? (
+                      <Button variant="secondary" onClick={() => removeChip(relaxation.chip)}>
+                        {relaxation.label}
+                      </Button>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
+                </>
+              ) : (
+                <div className="inv__empty-actions">
+                  <Button variant="primary" to="/design/vela-3">
+                    Build one to order
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="inv__grid" data-fading={fading || undefined} aria-busy={isLoading || undefined}>

@@ -1,14 +1,78 @@
-/* ── AnimatedPrice ─────────────────────────────────────────────────────── */
+/* ── AnimatedPrice ──────────────────────────────────────────────────────────
+   Odometer digits. Every cell is a normally-flowing inline-block whose visible
+   glyph is a hidden ghost digit — so the row keeps an ordinary text baseline
+   that `$`, `,` and the unit align to — with the rolling reel absolutely
+   positioned over it inside a clip that bleeds 0.08em, enough to show a sliver
+   of the neighbouring digit mid-roll and nothing at rest.                     */
+
 .aprice {
   position: relative;
   display: inline-block;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
+  line-height: 1;
   white-space: nowrap;
 }
 
-/* The visible span counts; a separate live region announces only the
-   settled value, so assistive tech is not read every frame. */
+/* The reel geometry below is measured in `em` against a 1em line box, so the
+   row re-asserts it: a caller may set a display line-height on the outer box
+   without a neighbouring digit bleeding into the clip at rest. */
+.aprice__row {
+  display: inline-block;
+  line-height: 1;
+}
+
+.aprice__punct {
+  display: inline-block;
+}
+
+.aprice__cell {
+  position: relative;
+  display: inline-block;
+}
+
+.aprice__ghost {
+  visibility: hidden;
+}
+
+.aprice__clip {
+  position: absolute;
+  top: -0.08em;
+  right: 0;
+  bottom: -0.08em;
+  left: 0;
+  overflow: hidden;
+}
+
+.aprice__reel {
+  position: absolute;
+  top: 0.08em;
+  right: 0;
+  left: 0;
+  transform: translateY(calc(var(--d, 0) * -1em));
+  transition: transform var(--aprice-dur, 420ms) var(--ease-out);
+  transition-delay: calc(min(var(--p, 0), 5) * var(--aprice-stagger, 26ms));
+  will-change: transform;
+}
+
+.aprice__reel > span {
+  display: block;
+  height: 1em;
+  line-height: 1;
+  text-align: center;
+}
+
+/* The unit is a footnote to the figure, never a second headline. */
+.aprice__unit {
+  margin-left: 0.04em;
+  font-size: var(--aprice-unit, 0.5em);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+
+/* The visible reels are hidden from assistive tech; this announces the settled
+   value once instead of every frame. */
 .aprice__live {
   position: absolute;
   width: 1px;
@@ -19,4 +83,11 @@
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aprice__reel {
+    transition: none;
+    transition-delay: 0ms;
+  }
 }

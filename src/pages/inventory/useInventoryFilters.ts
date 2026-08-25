@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { INVENTORY } from '@/data/inventory';
 import { MODELS } from '@/data/models';
 import { effectiveRange } from '@/lib/pricing';
-import { miles, money } from '@/lib/format';
+import { miles, money, num } from '@/lib/format';
 import type { Condition, InventoryVehicle, PaintOption, WheelOption } from '@/types';
 
 /* ── Vocabulary ─────────────────────────────────────────────────────────────
@@ -353,6 +353,62 @@ export function activeChips(filters: InventoryFilters): FilterChip[] {
     chips.push({ key: 'range', id: 'range', label: `${miles(filters.minRange)}+ range` });
   }
   return chips;
+}
+
+/* ── The nearest way out of a dead end ──────────────────────────────────────
+ *
+ * Zero results is almost always one filter's fault. Rather than offering only
+ * the scorched-earth "clear everything", the empty state names the single
+ * constraint that, dropped on its own, brings stock back — and says how much.
+ * Dimensions are tried in order of how little they say about what the shopper
+ * actually wants: a price ceiling is a budget guess, a model is a decision. */
+
+const RELAX_ORDER: ChipKey[] = ['price', 'range', 'wheel', 'paint', 'condition', 'trim', 'model'];
+
+/** Sentence tail for the button: "Show 24 at any price". */
+const RELAX_PHRASE: Record<ChipKey, string> = {
+  price: 'at any price',
+  range: 'at any range',
+  model: 'across all models',
+  condition: 'in any condition',
+  trim: 'in any trim',
+  paint: 'in any paint',
+  wheel: 'on any wheel',
+};
+
+export interface Relaxation {
+  chip: FilterChip;
+  count: number;
+  /** Ready-to-set label, e.g. "Show 24 at any price". */
+  label: string;
+}
+
+/** The same filters with one chip's constraint lifted. */
+function withoutChip(filters: InventoryFilters, chip: FilterChip): InventoryFilters {
+  if (chip.key === 'price') {
+    return { ...filters, minPrice: PRICE_BOUNDS.min, maxPrice: PRICE_BOUNDS.max };
+  }
+  if (chip.key === 'range') {
+    return { ...filters, minRange: RANGE_BOUNDS.min };
+  }
+  const kept = (filters[chip.key] as string[]).filter((id) => id !== chip.id);
+  return { ...filters, [chip.key]: kept };
+}
+
+export function bestRelaxation(filters: InventoryFilters): Relaxation | null {
+  const chips = activeChips(filters);
+  if (chips.length < 2) return null; // With one filter active, "clear all" already is this.
+  let best: Relaxation | null = null;
+  let bestRank = Number.POSITIVE_INFINITY;
+  for (const chip of chips) {
+    const count = matchCount(withoutChip(filters, chip));
+    if (count === 0) continue;
+    const rank = RELAX_ORDER.indexOf(chip.key);
+    if (rank > bestRank || (rank === bestRank && best && count <= best.count)) continue;
+    bestRank = rank;
+    best = { chip, count, label: `Show ${num(count)} ${RELAX_PHRASE[chip.key]}` };
+  }
+  return best;
 }
 
 export function countActive(filters: InventoryFilters): number {

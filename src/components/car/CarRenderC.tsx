@@ -36,7 +36,7 @@ const VIEW_W = 1200;
 const VIEW_H = 420;
 
 /** Where the car is allowed to land inside the viewBox. */
-const FIT = { x0: 62, x1: 1138, y0: 24, y1: 348 };
+const FIT = { x0: 104, x1: 1096, y0: 30, y1: 344 };
 
 /* ── Path helpers ───────────────────────────────────────────────────────── */
 
@@ -81,6 +81,8 @@ interface Spec {
   upper: Node[];
   /** Tail → nose along the underside, minus the two wheel arches. */
   lower: Node[];
+  /** Air dam and lower bumper, ahead of the front arch. */
+  frontLower: Node[];
   /** Rocker points that sit between the arches. */
   rocker: Node[];
   frontAxle: number;
@@ -104,10 +106,12 @@ interface Spec {
   /** Character line down the flank. */
   shoulder: Pt[];
   doorCuts: number[];
+  /** Bumper-cover shut lines, as polylines down the flank. */
+  cuts: Pt[][];
   handles: Pt[];
   mirror: { x: number; y: number };
   /** Headlamp blade: leading node and its trailing node on the fender. */
-  lamp: { top: Node; bot: Node; fender: Pt[] };
+  lamp: { top: Node; bot: Node; fender: Pt[]; reach: number };
   tailLamp: Pt[];
   intake: { y: [number, number]; t: number };
   eye: number;
@@ -148,24 +152,29 @@ const SEDAN: Spec = {
     [4.62, 0.6, 0.8, 0.09],
   ],
   lower: [
-    [4.58, 0.42, 0.76, 0.08],
-    [4.52, 0.3, 0.88, 0.05],
-    [4.24, 0.262, 1.0, 0],
+    [4.58, 0.35, 0.76, 0.08],
+    [4.52, 0.245, 0.88, 0.05],
+    [4.24, 0.208, 1.0, 0],
+  ],
+  frontLower: [
+    [0.46, 0.226, 0.94, -0.05],
+    [0.32, 0.244, 0.82, -0.12],
+    [0.24, 0.315, 0.62, -0.18],
   ],
   rocker: [
-    [3.12, 0.298, 1.0],
-    [2.5, 0.29, 1.0],
-    [1.9, 0.298, 1.0],
+    [3.16, 0.238, 1.0],
+    [2.5, 0.229, 1.0],
+    [1.94, 0.238, 1.0],
   ],
-  frontAxle: 0.65,
-  rearAxle: 3.55,
-  tyre: 0.372,
-  archGap: 0.046,
-  archRx: 0.455,
+  frontAxle: 0.8,
+  rearAxle: 3.7,
+  tyre: 0.335,
+  archGap: 0.058,
+  archRx: 0.4,
   inset: 0.07,
   beltY: 0.95,
-  rockerY: 0.3,
-  floorY: 0.16,
+  rockerY: 0.238,
+  floorY: 0.128,
   idx: { hoodF: 3, cowl: 6, wsTop: 9, roofR: 11, blBase: 13, deck: 15 },
   glassF: [
     [1.74, 1.005],
@@ -193,6 +202,20 @@ const SEDAN: Spec = {
     [4.46, 0.876],
   ],
   doorCuts: [1.8, 2.66, 3.68],
+  cuts: [
+    [
+      [0.56, 0.85],
+      [0.48, 0.62],
+      [0.44, 0.4],
+      [0.43, 0.27],
+    ],
+    [
+      [4.32, 1.015],
+      [4.24, 0.72],
+      [4.2, 0.44],
+      [4.19, 0.26],
+    ],
+  ],
   handles: [
     [2.32, 0.888],
     [3.22, 0.902],
@@ -202,24 +225,25 @@ const SEDAN: Spec = {
     top: [0.4, 0.826, 0.755, -0.135],
     bot: [0.355, 0.778, 0.705, -0.15],
     fender: [
-      [0.4, 0.826],
-      [0.62, 0.836],
-      [0.72, 0.83],
-      [0.72, 0.804],
-      [0.6, 0.802],
-      [0.4, 0.784],
+      [0.29, 0.812],
+      [0.42, 0.828],
+      [0.52, 0.826],
+      [0.52, 0.798],
+      [0.42, 0.792],
+      [0.29, 0.772],
     ],
+    reach: 0.22,
   },
   tailLamp: [
-    [4.24, 1.02],
-    [4.48, 1.032],
-    [4.62, 1.0],
-    [4.62, 0.958],
-    [4.48, 0.986],
-    [4.24, 0.976],
+    [4.18, 1.028],
+    [4.46, 1.042],
+    [4.62, 1.004],
+    [4.62, 0.948],
+    [4.46, 0.988],
+    [4.18, 0.974],
   ],
-  intake: { y: [0.305, 0.44], t: 0.82 },
-  eye: 1.38,
+  intake: { y: [0.248, 0.4], t: 0.82 },
+  eye: 1.5,
 };
 
 const SUV: Spec = {
@@ -257,24 +281,29 @@ const SUV: Spec = {
     [4.46, 0.46, 0.8, 0.06],
   ],
   lower: [
-    [4.42, 0.4, 0.78, 0.06],
-    [4.36, 0.38, 0.9, 0.04],
-    [4.16, 0.342, 1.0, 0],
+    [4.42, 0.35, 0.78, 0.06],
+    [4.36, 0.33, 0.9, 0.04],
+    [4.16, 0.292, 1.0, 0],
+  ],
+  frontLower: [
+    [0.52, 0.316, 0.94, -0.06],
+    [0.38, 0.332, 0.82, -0.13],
+    [0.3, 0.41, 0.62, -0.19],
   ],
   rocker: [
-    [3.06, 0.378, 1.0],
-    [2.44, 0.37, 1.0],
-    [1.86, 0.378, 1.0],
+    [3.06, 0.328, 1.0],
+    [2.44, 0.32, 1.0],
+    [1.9, 0.328, 1.0],
   ],
-  frontAxle: 0.68,
-  rearAxle: 3.53,
-  tyre: 0.415,
-  archGap: 0.05,
-  archRx: 0.5,
+  frontAxle: 0.84,
+  rearAxle: 3.69,
+  tyre: 0.378,
+  archGap: 0.062,
+  archRx: 0.44,
   inset: 0.07,
   beltY: 1.1,
-  rockerY: 0.38,
-  floorY: 0.22,
+  rockerY: 0.33,
+  floorY: 0.19,
   idx: { hoodF: 3, cowl: 6, wsTop: 9, roofR: 11, blBase: 13, deck: 15 },
   glassF: [
     [1.8, 1.16],
@@ -302,6 +331,20 @@ const SUV: Spec = {
     [4.42, 1.024],
   ],
   doorCuts: [1.88, 2.7, 3.86],
+  cuts: [
+    [
+      [0.62, 1.005],
+      [0.53, 0.76],
+      [0.49, 0.52],
+      [0.48, 0.36],
+    ],
+    [
+      [4.26, 1.2],
+      [4.19, 0.86],
+      [4.15, 0.56],
+      [4.14, 0.36],
+    ],
+  ],
   handles: [
     [2.36, 1.042],
     [3.3, 1.058],
@@ -311,24 +354,25 @@ const SUV: Spec = {
     top: [0.46, 0.982, 0.775, -0.145],
     bot: [0.415, 0.928, 0.725, -0.16],
     fender: [
-      [0.46, 0.982],
-      [0.68, 0.994],
-      [0.78, 0.988],
-      [0.78, 0.958],
-      [0.66, 0.956],
-      [0.46, 0.934],
+      [0.35, 0.966],
+      [0.48, 0.984],
+      [0.58, 0.982],
+      [0.58, 0.95],
+      [0.48, 0.944],
+      [0.35, 0.922],
     ],
+    reach: 0.26,
   },
   tailLamp: [
-    [4.16, 1.19],
-    [4.4, 1.204],
-    [4.52, 1.172],
-    [4.52, 1.128],
-    [4.4, 1.156],
-    [4.16, 1.144],
+    [4.1, 1.2],
+    [4.38, 1.214],
+    [4.52, 1.178],
+    [4.52, 1.122],
+    [4.38, 1.158],
+    [4.1, 1.142],
   ],
-  intake: { y: [0.385, 0.55], t: 0.84 },
-  eye: 1.66,
+  intake: { y: [0.335, 0.5], t: 0.84 },
+  eye: 1.8,
 };
 
 const SPECS: Record<BodyStyle, Spec> = { sedan: SEDAN, suv: SUV };
@@ -347,7 +391,7 @@ interface Rig {
 }
 
 const RIGS: Record<View, Rig> = {
-  'front-3q': { yaw: 32, dist: 15 },
+  'front-3q': { yaw: 27, dist: 15 },
   side: { yaw: 0, dist: 1e7 },
 };
 
@@ -422,7 +466,7 @@ function archNodes(cx: number, rx: number, ry: number, cy: number, rockerY: numb
   return Array.from({ length: 15 }, (_, i) => {
     const t = lerp(-dip, Math.PI + dip, i / 14);
     return [cx + rx * Math.cos(t), cy + ry * Math.sin(t), 0.985] as Node;
-  }).reverse();
+  });
 }
 
 interface WheelPlace {
@@ -449,7 +493,14 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
   const rearArch = archNodes(spec.rearAxle, spec.archRx, archRy, R, spec.rockerY);
 
   /* One closed silhouette: over the roof, down the tail, through both arches. */
-  const loop: Node[] = [...spec.upper, ...spec.lower, ...rearArch, ...spec.rocker, ...frontArch];
+  const loop: Node[] = [
+    ...spec.upper,
+    ...spec.lower,
+    ...rearArch,
+    ...spec.rocker,
+    ...frontArch,
+    ...spec.frontLower,
+  ];
   const near = (nodes: Node[], side = -1) => nodes.map((nd) => P.n(nd, side));
   const outline = curve(near(loop), true);
 
@@ -463,6 +514,18 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
   const panel = (i0: number, i1: number, lead?: Pt[]) =>
     strip(lead ? [...lead, ...chain(i0 + 1, i1, 1)] : chain(i0, i1, 1), chain(i1, i0, -1));
 
+  /* Back-face culling. A floor quad wound like the panels tells us which sign
+     faces the lens; a panel that has turned away is simply not drawn, which is
+     why the roof never spills out over the glass on a low camera. */
+  const area = (pts: Pt[]) =>
+    pts.reduce((acc, q, i) => {
+      const r = pts[(i + 1) % pts.length];
+      return acc + (q[0] * r[1] - r[0] * q[1]);
+    }, 0) / 2;
+  const refSign = Math.sign(area([P.raw(1, 0, 1), P.raw(3, 0, 1), P.raw(3, 0, -1), P.raw(1, 0, -1)]));
+  const faces = (i0: number, i1: number) =>
+    q3 && Math.sign(area([...chain(i0, i1, 1), ...chain(i1, i0, -1)])) === refSign;
+
   const hoodLead = P.contour(spec.upper[idx.hoodF]);
   const hood = panel(idx.hoodF, idx.cowl, hoodLead);
   const windscreen = panel(idx.cowl, idx.wsTop);
@@ -472,13 +535,19 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
 
   /* Front fascia: the nose profile swept across the car, bulging at the centre
      so the leading edge is a curve in plan, not a flat wall. */
-  const frontLower = frontArch[frontArch.length - 1];
-  const noseChain: Node[] = [spec.upper[3], spec.upper[2], spec.upper[1], spec.upper[0], frontLower];
+  const frontLower = spec.frontLower[spec.frontLower.length - 1];
+  const noseChain: Node[] = [
+    spec.upper[3],
+    spec.upper[2],
+    spec.upper[1],
+    spec.upper[0],
+    ...[...spec.frontLower].reverse(),
+  ];
   const face = strip(
     [...hoodLead, ...near(noseChain.slice(1), 1)],
     near([...noseChain].reverse().slice(1), -1)
   );
-  const faceLip = curve(P.contour(frontLower, -0.9, 0.9));
+  const faceLip = curve(P.contour(spec.frontLower[0], -0.88, 0.88));
 
   const intakeTop: Node = [
     lerp(frontLower[0], spec.upper[0][0], 0.35),
@@ -486,7 +555,8 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
     lerp(frontLower[2], spec.upper[0][2], 0.35),
     lerp(frontLower[3] ?? 0, spec.upper[0][3] ?? 0, 0.35),
   ];
-  const intakeBot: Node = [frontLower[0] + 0.02, spec.intake.y[0], frontLower[2] * 0.97, (frontLower[3] ?? 0) * 0.9];
+  const bumper = spec.frontLower[0];
+  const intakeBot: Node = [bumper[0] - 0.02, spec.intake.y[0], bumper[2] * 0.98, (bumper[3] ?? 0) * 1.4];
   const intake = strip(
     P.contour(intakeTop, -spec.intake.t, spec.intake.t),
     P.contour(intakeBot, spec.intake.t, -spec.intake.t)
@@ -498,6 +568,18 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
     P.contour(spec.lamp.bot, 0.97, -0.97)
   );
   const lampFender = curve(spec.lamp.fender.map((pt) => P.f(pt, 1)), true);
+  const lampProfile = curve(
+    spec.lamp.fender.map(([x, y]) => P.f([x - spec.lamp.reach, y] as Pt, 1)),
+    true
+  );
+
+  /* A soft reflection wedge across the windscreen, and the bright rail where
+     the roof turns over — both follow the glass, never a straight ruled band. */
+  const wsGlint = strip(
+    [P.n(spec.upper[idx.cowl], -0.82), P.n(spec.upper[idx.cowl + 1], -0.3), P.n(spec.upper[idx.wsTop], 0.3)],
+    [P.n(spec.upper[idx.wsTop], -0.12), P.n(spec.upper[idx.cowl + 1], -0.72), P.n(spec.upper[idx.cowl], -1.04)]
+  );
+  const roofRail = curve(chain(idx.cowl, idx.deck, -1));
 
   const glassF = curve(spec.glassF.map((pt) => P.f(pt, spec.glassK)), true);
   const glassR = curve(spec.glassR.map((pt) => P.f(pt, spec.glassK)), true);
@@ -513,22 +595,34 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
 
   /* Shading ribbons — every one of them follows the panel, never a straight
      rule across the door. */
-  const ribbon = (pts: Pt[], up: number, down: number, k = 1) =>
-    strip(
-      pts.map(([x, y]) => P.f([x, y + up], k)),
-      [...pts].reverse().map(([x, y]) => P.f([x, y - down], k))
+  const ribbon = (pts: Pt[], up: number, down: number, k = 1, taper = 0.85) => {
+    const w = (i: number) => {
+      const t = i / (pts.length - 1);
+      return 1 - taper * (1 - Math.sqrt(Math.sin(Math.PI * t)));
+    };
+    return strip(
+      pts.map(([x, y], i) => P.f([x, y + up * w(i)], k)),
+      [...pts].reverse().map(([x, y], i) => P.f([x, y - down * w(pts.length - 1 - i)], k))
     );
+  };
 
   const shoulderPath = curve(spec.shoulder.map((pt) => P.f(pt, 1)));
-  const shoulderGlow = ribbon(spec.shoulder, 0.055, 0.012);
+  const shoulderGlow = ribbon(spec.shoulder, 0.03, 0.008);
   const shoulderDark = ribbon(
-    spec.shoulder.map(([x, y]) => [x, y - 0.05] as Pt),
-    0.035,
-    0.075
+    spec.shoulder.map(([x, y]) => [x, y - 0.028] as Pt),
+    0.014,
+    0.05
   );
 
-  const horizon: Pt[] = spec.shoulder.map(([x, y], i) => [x, y - (0.2 + 0.03 * i)] as Pt);
-  const horizonBand = ribbon(horizon, 0.075, 0.075);
+  const horizon: Pt[] = spec.shoulder.map(([x, y], i) => [x, y - (0.17 + 0.022 * i)] as Pt);
+  const horizonBand = ribbon(horizon, 0.09, 0.13, 1, 0.7);
+  const glowBand = ribbon(
+    spec.shoulder.map(([x, y]) => [x, y - 0.5] as Pt),
+    0.16,
+    0.16,
+    1,
+    0.7
+  );
 
   const sillPts: Pt[] = [
     [spec.frontAxle + 0.42, spec.rockerY + 0.055],
@@ -537,9 +631,11 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
   ];
   const sillBounce = curve(sillPts.map((pt) => P.f(pt, 1)));
   const sillShade = ribbon(
-    sillPts.map(([x, y]) => [x, y - 0.03] as Pt),
-    0.018,
-    0.05
+    sillPts.map(([x, y]) => [x, y - 0.035] as Pt),
+    0.02,
+    0.07,
+    1,
+    0.55
   );
 
   /* Panel gaps, as hairlines. */
@@ -561,6 +657,8 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
     P.f([spec.glassR[3][0] + 0.08, lerp(spec.beltY, spec.rockerY, 0.5)], 1),
     P.f([spec.glassR[3][0] + 0.12, spec.rockerY + 0.14], 1),
   ]);
+
+  const bumperCuts = spec.cuts.map((pts) => curve(pts.map((pt) => P.f(pt, 1))));
 
   const handles = spec.handles.map(([x, y]) =>
     strip(
@@ -593,14 +691,12 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
         return P.f([cx + (spec.archRx + 0.03) * Math.cos(t), R + (archRy + 0.03) * Math.sin(t)] as Pt, 0.99);
       })
     );
+  /* The wheel house has to over-fill the opening in every direction, or the
+     plate shows through the gap between tyre and arch. */
+  /* The wheel house is exactly the opening in the flank, so no plate can show
+     through the gap between tyre and arch and nothing spills past the sill. */
   const archPocket = (cx: number) =>
-    curve(
-      Array.from({ length: 21 }, (_, i) => {
-        const t = lerp(-0.3, Math.PI + 0.3, i / 20);
-        return P.f([cx + spec.archRx * Math.cos(t), R + archRy * Math.sin(t)] as Pt, 0.9);
-      }),
-      true
-    );
+    curve(near(archNodes(cx, spec.archRx, archRy, R, spec.rockerY)), true);
 
   /* Everything under the sill is one dark mass that tucks in at the floor, so
      it can never read as a slab the car is parked on. */
@@ -650,13 +746,20 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
   wheels.push(place(spec.rearAxle, -1, q3 ? 0.1 : 0.05, false));
   wheels.push(place(spec.frontAxle, -1, 0, false));
 
-  /* Ground plane basis, for shadows that lie on the floor. */
-  const gO = P.raw(L / 2, 0, 0);
-  const gX = P.raw(L / 2 + 1, 0, 0);
-  const gZ = P.raw(L / 2, 0, 1);
-  const groundM = `matrix(${(gX[0] - gO[0]).toFixed(3)} ${(gX[1] - gO[1]).toFixed(3)} ${(gZ[0] - gO[0]).toFixed(
-    3
-  )} ${(gZ[1] - gO[1]).toFixed(3)} ${gO[0].toFixed(2)} ${gO[1].toFixed(2)})`;
+  /* The floor is all but edge-on to this lens, so the shadow is authored in
+     screen space: a soft pool the length of the footprint, and a tight, much
+     darker patch where each tyre actually touches. Nothing rectangular, and
+     nothing that reaches past the bumpers. */
+  const contacts = wheels.map((w) => ({ x: w.cx, y: w.cy + w.by, r: Math.abs(w.ax), far: w.far }));
+  const near0 = contacts.filter((c) => !c.far);
+  const tilt =
+    (Math.atan2(near0[0].y - near0[near0.length - 1].y, near0[0].x - near0[near0.length - 1].x) * 180) / Math.PI;
+  const pool = {
+    x: (near0[0].x + near0[near0.length - 1].x) / 2,
+    y: (near0[0].y + near0[near0.length - 1].y) / 2,
+    rx: Math.abs(near0[0].x - near0[near0.length - 1].x) / 2 + near0[0].r * 1.5,
+    tilt,
+  };
 
   /* Gradient axes, measured on the car so they stay square to its panels. */
   const midX = (spec.frontAxle + spec.rearAxle) / 2;
@@ -664,6 +767,13 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
   const along = (y: number): [Pt, Pt] => [P.f([0.1, y], 0.9), P.f([L, y], 0.9)];
 
   return {
+    show: {
+      hood: faces(idx.hoodF, idx.cowl),
+      windscreen: faces(idx.cowl, idx.wsTop),
+      roof: faces(idx.wsTop, idx.roofR),
+      backlight: faces(idx.roofR, idx.blBase),
+      deck: faces(idx.blBase, idx.deck),
+    },
     outline,
     hood,
     hoodLead: curve(hoodLead),
@@ -676,6 +786,9 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
     intake,
     lampBlade,
     lampFender,
+    lampProfile,
+    wsGlint,
+    roofRail,
     glassF,
     glassR,
     canopy,
@@ -683,11 +796,13 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
     shoulderGlow,
     shoulderDark,
     horizonBand,
+    glowBand,
     sillBounce,
     sillShade,
     doorCuts,
     hoodCut,
     deckCut,
+    bumperCuts,
     handles,
     mirrorNear: mirrorAt(-1),
     mirrorFar: mirrorAt(1),
@@ -697,10 +812,11 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
     under,
     wipers,
     wheels,
-    groundM,
+    contacts,
+    pool,
     R,
     L,
-    flankAxis: axis(spec.beltY + 0.02, spec.rockerY - 0.02),
+    flankAxis: axis(spec.beltY + 0.03, spec.rockerY - 0.05),
     topAxis: axis(spec.upper[idx.roofR][1] + 0.05, spec.beltY - 0.1, 0.3),
     glassAxis: axis(spec.upper[idx.wsTop][1] + 0.02, spec.beltY - 0.04, 0.6),
     faceAxis: [P.raw(0, spec.upper[3][1] + 0.04, 0), P.raw(0, spec.rockerY - 0.06, 0)] as [Pt, Pt],
@@ -781,10 +897,10 @@ export default function CarRenderC({
             lick of bounce right at the sill. */}
         <linearGradient id={id('flank')} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
           <stop offset="0" stopColor={paint.sheen} data-paint />
-          <stop offset="0.1" stopColor={paint.hex} data-paint />
-          <stop offset="0.34" stopColor={paint.hex} data-paint />
-          <stop offset="0.72" stopColor={paint.shade} data-paint />
-          <stop offset="0.9" stopColor={paint.shade} data-paint />
+          <stop offset="0.18" stopColor={paint.hex} data-paint />
+          <stop offset="0.46" stopColor={paint.hex} data-paint />
+          <stop offset="0.78" stopColor={paint.shade} data-paint />
+          <stop offset="0.94" stopColor={paint.shade} data-paint />
           <stop offset="1" stopColor={paint.hex} data-paint />
         </linearGradient>
         {/* Upward-facing panels see the softbox: light, and very soft. */}
@@ -793,6 +909,12 @@ export default function CarRenderC({
           <stop offset="0.55" stopColor={paint.hex} data-paint />
           <stop offset="1" stopColor={paint.hex} data-paint />
         </linearGradient>
+        <linearGradient id={id('lower')} gradientUnits="userSpaceOnUse" x1={fa[0]} y1={fa[1]} x2={fb[0]} y2={fb[1]}>
+          <stop offset="0.34" stopColor="#0a0d12" stopOpacity="0" />
+          <stop offset="0.72" stopColor="#0a0d12" stopOpacity="0.16" />
+          <stop offset="0.93" stopColor="#0a0d12" stopOpacity="0.3" />
+          <stop offset="1" stopColor="#0a0d12" stopOpacity="0.05" />
+        </linearGradient>
         <linearGradient id={id('sky')} gradientUnits="userSpaceOnUse" x1={ta[0]} y1={ta[1]} x2={tb[0]} y2={tb[1]}>
           <stop offset="0" stopColor="#ffffff" stopOpacity="0.3" />
           <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.08" />
@@ -800,24 +922,25 @@ export default function CarRenderC({
         </linearGradient>
         <linearGradient id={id('face')} gradientUnits="userSpaceOnUse" x1={ca[0]} y1={ca[1]} x2={cb[0]} y2={cb[1]}>
           <stop offset="0" stopColor={paint.sheen} data-paint />
-          <stop offset="0.16" stopColor={paint.hex} data-paint />
-          <stop offset="0.62" stopColor={paint.hex} data-paint />
-          <stop offset="0.94" stopColor={paint.shade} data-paint />
+          <stop offset="0.1" stopColor={paint.sheen} data-paint />
+          <stop offset="0.3" stopColor={paint.hex} data-paint />
+          <stop offset="0.7" stopColor={paint.hex} data-paint />
+          <stop offset="0.95" stopColor={paint.shade} data-paint />
           <stop offset="1" stopColor={paint.hex} data-paint />
         </linearGradient>
 
         {/* Reflections travel along the car, so they fade on its length. */}
         <linearGradient id={id('along')} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
           <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
-          <stop offset="0.16" stopColor="#ffffff" stopOpacity="0.62" />
-          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.3" />
-          <stop offset="0.86" stopColor="#ffffff" stopOpacity="0.5" />
+          <stop offset="0.18" stopColor="#ffffff" stopOpacity="0.5" />
+          <stop offset="0.52" stopColor="#ffffff" stopOpacity="0.2" />
+          <stop offset="0.86" stopColor="#ffffff" stopOpacity="0.36" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
         <linearGradient id={id('horizon')} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
           <stop offset="0" stopColor={paint.shade} stopOpacity="0" data-paint />
-          <stop offset="0.22" stopColor={paint.shade} stopOpacity="0.5" data-paint />
-          <stop offset="0.7" stopColor={paint.shade} stopOpacity="0.34" data-paint />
+          <stop offset="0.22" stopColor={paint.shade} stopOpacity="0.62" data-paint />
+          <stop offset="0.7" stopColor={paint.shade} stopOpacity="0.44" data-paint />
           <stop offset="1" stopColor={paint.shade} stopOpacity="0" data-paint />
         </linearGradient>
         <linearGradient id={id('bounce')} gradientUnits="userSpaceOnUse" x1={aa[0]} y1={aa[1]} x2={ab[0]} y2={ab[1]}>
@@ -835,10 +958,10 @@ export default function CarRenderC({
 
         {/* Glass is never the paint colour: it carries its own blue-grey. */}
         <linearGradient id={id('glass')} gradientUnits="userSpaceOnUse" x1={ga[0]} y1={ga[1]} x2={gb[0]} y2={gb[1]}>
-          <stop offset="0" stopColor="#5d6a78" />
-          <stop offset="0.3" stopColor="#2c343d" />
-          <stop offset="0.72" stopColor="#191f26" />
-          <stop offset="1" stopColor="#0e1216" />
+          <stop offset="0" stopColor="#7c8b9c" />
+          <stop offset="0.26" stopColor="#3a444f" />
+          <stop offset="0.66" stopColor="#1d242c" />
+          <stop offset="1" stopColor="#10151a" />
         </linearGradient>
         <linearGradient id={id('ws')} gradientUnits="userSpaceOnUse" x1={ta[0]} y1={ta[1]} x2={tb[0]} y2={tb[1]}>
           <stop offset="0" stopColor="#6c798a" />
@@ -860,13 +983,13 @@ export default function CarRenderC({
         </linearGradient>
 
         <radialGradient id={id('pool')} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#0a0d11" stopOpacity="0.4" />
-          <stop offset="0.45" stopColor="#0a0d11" stopOpacity="0.2" />
+          <stop offset="0" stopColor="#0a0d11" stopOpacity="0.8" />
+          <stop offset="0.4" stopColor="#0a0d11" stopOpacity="0.42" />
           <stop offset="1" stopColor="#0a0d11" stopOpacity="0" />
         </radialGradient>
         <radialGradient id={id('contact')} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#05070a" stopOpacity="0.72" />
-          <stop offset="0.55" stopColor="#05070a" stopOpacity="0.34" />
+          <stop offset="0" stopColor="#05070a" stopOpacity="0.85" />
+          <stop offset="0.55" stopColor="#05070a" stopOpacity="0.42" />
           <stop offset="1" stopColor="#05070a" stopOpacity="0" />
         </radialGradient>
         <linearGradient id={id('mirrorfade')} gradientUnits="userSpaceOnUse" x1="0" y1={gy} x2="0" y2={gy + fade}>
@@ -881,7 +1004,7 @@ export default function CarRenderC({
           <feGaussianBlur stdDeviation="16" />
         </filter>
         <filter id={id('soft')} x="-40%" y="-260%" width="180%" height="620%">
-          <feGaussianBlur stdDeviation="7" />
+          <feGaussianBlur stdDeviation="5.5" />
         </filter>
         <filter id={id('tight')} x="-60%" y="-300%" width="220%" height="700%">
           <feGaussianBlur stdDeviation="3" />
@@ -905,24 +1028,28 @@ export default function CarRenderC({
       </defs>
 
       {ground && (
-        <g className="car-render__floor" mask={`url(#${uid}-floor)`} opacity="0.5">
+        <g className="car-render__floor" mask={`url(#${uid}-floor)`} opacity="0.18">
           <use href={`#${uid}-car`} transform={`matrix(1 0 0 -0.6 0 ${(gy * 1.6).toFixed(1)})`} />
         </g>
       )}
 
       {ground && (
-        <g className="car-render__shadow" transform={g.groundM}>
-          <ellipse cx="0" cy="0" rx={g.L * 0.44} ry="0.95" fill={u('pool')} filter={u('pooler')} />
-          {g.wheels.map((w) => (
-            <ellipse
-              key={`s${w.gx}${w.gz}`}
-              cx={w.gx - g.L / 2}
-              cy={w.gz}
-              rx={g.R * 1.15}
-              ry={g.R * 0.5}
-              fill={u('contact')}
-              filter={u('soft')}
-            />
+        <g className="car-render__shadow">
+          <ellipse
+            cx={g.pool.x}
+            cy={g.pool.y + 3}
+            rx={g.pool.rx}
+            ry="16"
+            fill={u('pool')}
+            filter={u('pooler')}
+            transform={`rotate(${g.pool.tilt.toFixed(2)} ${g.pool.x.toFixed(1)} ${g.pool.y.toFixed(1)})`}
+          />
+          {g.contacts.map((c) => (
+            <g key={`s${c.x.toFixed(1)}`} transform={`rotate(${g.pool.tilt.toFixed(2)} ${c.x.toFixed(1)} ${c.y.toFixed(1)})`}>
+              <ellipse cx={c.x} cy={c.y} rx={c.r * 1.25} ry="13" fill={u('contact')} filter={u('soft')} opacity={c.far ? 0.55 : 1} />
+              <ellipse cx={c.x} cy={c.y} rx={c.r * 0.66} ry="5" fill="#05070a" opacity={c.far ? 0.4 : 0.8} filter={u('tight')} />
+              <ellipse cx={c.x} cy={c.y - 1} rx={c.r * 0.34} ry="2.6" fill="#030507" opacity={c.far ? 0.35 : 0.7} filter={u('hair')} />
+            </g>
           ))}
         </g>
       )}
@@ -933,7 +1060,7 @@ export default function CarRenderC({
         {g.archPockets.map((d) => (
           <path key={d} d={d} fill="#06080b" />
         ))}
-        <path d={g.under} fill={u('under')} filter={u('soft')} />
+        <path d={g.under} fill={u('under')} filter={u('tight')} />
 
         {g.wheels.map((w) => (
           <Wheel
@@ -952,44 +1079,50 @@ export default function CarRenderC({
 
         {/* Upper surfaces first — the near flank lands on top of them and the
             two share an edge exactly, so no seam can open up. */}
-        {q3 && (
+        {g.show.deck && (
           <>
-            <g>
-              <path d={g.deck} fill={u('top')} data-paint />
-              <path d={g.deck} fill={u('sky')} />
-              <path d={g.backlight} fill={u('ws')} />
-              <path d={g.roof} fill={u('top')} data-paint />
-              <path d={g.roof} fill={u('sky')} />
-              <path d={g.windscreen} fill={u('ws')} />
-              <g clipPath={`url(#${uid}-clipws)`}>
-                <path d={g.wipers} fill="#0b0e12" fillOpacity="0.55" filter={u('hair')} />
-                <path
-                  d={g.roof}
-                  fill="#ffffff"
-                  fillOpacity="0.16"
-                  transform={`translate(${(-g.R * 0.28).toFixed(1)} ${(g.R * 1.5).toFixed(1)})`}
-                  filter={u('tight')}
-                />
-              </g>
-              <path d={g.windscreen} fill="none" stroke="#0a0d11" strokeOpacity="0.45" strokeWidth="1.6" />
-              <path d={g.hood} fill={u('top')} data-paint />
-              <path d={g.hood} fill={u('sky')} />
-              <path d={g.hoodLead} fill="none" stroke="#ffffff" strokeOpacity="0.4" strokeWidth="1.6" />
+            <path d={g.deck} fill={u('top')} data-paint />
+            <path d={g.deck} fill={u('sky')} />
+          </>
+        )}
+        {g.show.backlight && <path d={g.backlight} fill={u('ws')} />}
+        {g.show.roof && (
+          <>
+            <path d={g.roof} fill={u('top')} data-paint />
+            <path d={g.roof} fill={u('sky')} />
+          </>
+        )}
+        {g.show.windscreen && (
+          <>
+            <path d={g.windscreen} fill={u('ws')} />
+            <g clipPath={`url(#${uid}-clipws)`}>
+              <path d={g.wipers} fill="#0b0e12" fillOpacity="0.5" filter={u('hair')} />
+              <path d={g.wsGlint} fill="#ffffff" fillOpacity="0.13" filter={u('tight')} />
             </g>
+            <path d={g.windscreen} fill="none" stroke="#0a0d11" strokeOpacity="0.4" strokeWidth="1.4" />
+          </>
+        )}
+        {g.show.hood && (
+          <>
+            <path d={g.hood} fill={u('top')} data-paint />
+            <path d={g.hood} fill={u('sky')} />
+            <path d={g.hoodLead} fill="none" stroke="#ffffff" strokeOpacity="0.34" strokeWidth="1.4" />
           </>
         )}
 
         {/* Near flank */}
         <path d={g.outline} fill={u('flank')} data-paint />
         <g clipPath={`url(#${uid}-clipflank)`}>
+          <path d={g.outline} fill={u('lower')} />
           <path d={g.horizonBand} fill={u('horizon')} filter={u('soft')} data-paint />
-          <path d={g.sillShade} fill="#05070a" fillOpacity="0.42" filter={u('soft')} />
-          <path d={g.shoulderDark} fill="#05070a" fillOpacity="0.3" filter={u('tight')} />
-          <path d={g.shoulderGlow} fill={u('along')} filter={u('tight')} />
-          <path d={g.shoulderPath} fill="none" stroke={u('along')} strokeWidth="1.4" />
+          <path d={g.glowBand} fill={u('bounce')} filter={u('soft')} data-paint />
+          <path d={g.sillShade} fill="#05070a" fillOpacity="0.6" filter={u('soft')} />
+          <path d={g.shoulderDark} fill="#05070a" fillOpacity="0.42" filter={u('hair')} />
+          <path d={g.shoulderGlow} fill={u('along')} filter={u('hair')} />
+          <path d={g.shoulderPath} fill="none" stroke={u('along')} strokeWidth="1.2" />
           <path d={g.sillBounce} fill="none" stroke={u('bounce')} strokeWidth="4" filter={u('hair')} data-paint />
           {g.archLips.map((d) => (
-            <path key={d} d={d} fill="none" stroke="#05070a" strokeOpacity="0.5" strokeWidth="9" filter={u('soft')} />
+            <path key={d} d={d} fill="none" stroke="#05070a" strokeOpacity="0.62" strokeWidth="11" filter={u('soft')} />
           ))}
           {g.archLips.map((d) => (
             <path key={`l${d}`} d={d} fill="none" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1.2" />
@@ -1000,6 +1133,9 @@ export default function CarRenderC({
             ))}
             <path d={g.hoodCut} strokeOpacity="0.2" />
             <path d={g.deckCut} strokeOpacity="0.2" />
+            {g.bumperCuts.map((d) => (
+              <path key={d} d={d} strokeOpacity="0.26" />
+            ))}
           </g>
           {g.handles.map((d) => (
             <g key={d}>
@@ -1007,13 +1143,15 @@ export default function CarRenderC({
               <path d={d} fill="none" stroke="#ffffff" strokeOpacity="0.3" strokeWidth="0.9" transform="translate(0 -1)" />
             </g>
           ))}
-          <path d={g.tailLamp} fill="#0b0e12" />
-          <path d={g.tailLamp} fill={u('tail')} transform="translate(0 -0.8)" opacity="0.95" />
-          <path d={g.tailLamp} fill="none" stroke="#07090c" strokeOpacity="0.55" strokeWidth="0.9" />
+          <path d={g.tailLamp} fill="#0b0e12" transform="scale(1.012) translate(0 -1.4)" />
+          <path d={g.tailLamp} fill={u('tail')} />
+          <path d={g.tailLamp} fill="#ffffff" fillOpacity="0.28" transform="translate(0 -1.6)" filter={u('hair')} />
+          <path d={g.tailLamp} fill="none" stroke="#07090c" strokeOpacity="0.6" strokeWidth="0.9" />
           {!q3 && (
             <>
-              <path d={g.lampFender} fill="#0b0e12" />
-              <path d={g.lampFender} fill={u('led')} transform="translate(0 -0.8)" />
+              <path d={g.lampProfile} fill="#0b0e12" />
+              <path d={g.lampProfile} fill={u('led')} transform="translate(0 -0.8)" />
+              <path d={g.lampProfile} fill="#ffffff" opacity="0.3" filter={u('hair')} />
             </>
           )}
         </g>
@@ -1026,6 +1164,7 @@ export default function CarRenderC({
           <path d={g.glassF} />
           <path d={g.glassR} />
         </g>
+        <path d={g.roofRail} fill="none" stroke="#ffffff" strokeOpacity="0.4" strokeWidth="1.2" />
 
         {q3 && (
           <>
@@ -1041,12 +1180,14 @@ export default function CarRenderC({
           <>
             <path d={g.face} fill={u('face')} data-paint />
             <g clipPath={`url(#${uid}-clipface)`}>
-              <path d={g.intake} fill="#0a0d11" fillOpacity="0.92" />
-              <path d={g.intake} fill="none" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1.4" transform="translate(0 -1.6)" />
+              <path d={g.intake} fill="#141a20" fillOpacity="0.85" />
+              <path d={g.intake} fill="#05070a" fillOpacity="0.55" transform="translate(0 -2.4)" filter={u('tight')} />
+              <path d={g.intake} fill="none" stroke="#ffffff" strokeOpacity="0.16" strokeWidth="1.2" transform="translate(0 2)" />
               <path d={g.faceLip} fill="none" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="2.6" filter={u('hair')} />
               <path d={g.lampBlade} fill="#0a0d11" transform="translate(0 1.6)" />
               <path d={g.lampBlade} fill={u('led')} />
-              <path d={g.lampBlade} fill="#ffffff" opacity="0.45" filter={u('hair')} />
+              <path d={g.lampBlade} fill="#fff3d8" opacity="0.5" transform="translate(0 0.9)" filter={u('hair')} />
+              <path d={g.lampBlade} fill="#ffffff" opacity="0.4" filter={u('hair')} />
               <path d={g.lampFender} fill={u('led')} />
               <path d={g.lampFender} fill="#ffffff" opacity="0.35" filter={u('hair')} />
             </g>

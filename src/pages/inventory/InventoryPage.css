@@ -254,27 +254,81 @@
 
 /* ── Loading grid ───────────────────────────────────────────────────────────
    The skeleton cards are the real cards with their content withheld: same
-   plate, same aspect, same box. Only two things are said here. The plate is
-   already the right surface, so its placeholder is set back to the plate colour
-   — the frame is missing a car, not missing a rectangle — and the copy lines
-   sit one step darker so the frame reads as deliberately unfinished rather than
-   as a page that failed to paint. */
+   plate, same aspect, same box, same line lengths, so nothing moves by a pixel
+   when the data lands. The plate is already the right surface, so its own
+   placeholder is set back to the plate colour and only carries the sweep; the
+   subject that is missing is drawn on top of it as a car-shaped mass. */
 
 .inv__grid .vcard__plate-skeleton {
+  grid-area: 1 / 1;
   --skeleton-base: var(--surface);
 }
 
+/* The footprint is measured off a live card: the render's mass centre sits ~8px
+   below the plate's, so the placeholder is given the same nudge, and it is held
+   just inside the plate's edges so the silhouette stays a silhouette instead of
+   a slab running out of frame. Proportions are a car's — greenhouse over the middle half, wheels at
+   43% of the body height — so what is missing reads as a car, not as a bar. */
+.inv__grid .vcard__ghost {
+  position: relative;
+  grid-area: 1 / 1;
+  width: 88%;
+  aspect-ratio: 3.15 / 1;
+  transform: translateY(6%);
+}
+
+/* A step darker again than the type lines. `--skeleton-base` is declared on
+   `.skeleton` itself, so it has to be set on the parts, not on the wrapper: on
+   a plate this light the subject must be the darkest thing in the card, exactly
+   as the real car is. This is the tone that keeps the frame from reading blank. */
+.inv__grid .vcard__ghost .skeleton {
+  position: absolute;
+  --skeleton-base: color-mix(in srgb, var(--line) 80%, var(--text-tertiary));
+}
+
+.inv__grid .vcard__ghost-body {
+  left: 0;
+  right: 0;
+  top: 45%;
+  height: 31%;
+  width: auto;
+}
+
+.inv__grid .vcard__ghost-cabin {
+  /* Square-footed and overlapping the body by a hair so the two masses fuse
+     into one silhouette instead of stacking as two lozenges. */
+  left: 27%;
+  width: 46%;
+  top: 5%;
+  height: 41%;
+}
+
+.inv__grid .vcard__ghost-wheel {
+  bottom: 3%;
+  width: 17%;
+  aspect-ratio: 1;
+  height: auto;
+}
+
+.inv__grid .vcard__ghost-wheel--rear  { left: 13%; }
+.inv__grid .vcard__ghost-wheel--front { right: 13%; }
+
+/* The sweep crosses the grid as one wave rather than six simultaneous flashes:
+   a column of delay reads as a single pass over the page. */
+.inv__grid .vcard--skeleton:nth-child(3n + 2) .skeleton::after { animation-delay: 130ms; }
+.inv__grid .vcard--skeleton:nth-child(3n) .skeleton::after { animation-delay: 260ms; }
+
 /* ── Empty state ────────────────────────────────────────────────────────────
-   Whitespace does the work everywhere else on this page, so the dead end is a
-   centred column in it rather than a grey box dropped into it. One sentence,
-   one line of help, the filters that caused it as removable chips, and one
-   solid way out. */
+   Zero rows is a state of the inventory, not a page of its own. The stack is
+   therefore anchored to the results column: same left edge as the count, one
+   header-gap below the rule, measured to 560px so the copy sets in even lines.
+   The sentence sits a step under the 30px count in the hierarchy rather than
+   restating it at headline scale, and the only filled button on the screen is
+   the way out. */
 
 .inv__empty {
-  display: grid;
-  place-items: center;
-  min-height: min(52vh, 460px);
-  padding: var(--s-16) 0 var(--s-20);
+  max-width: 560px;
+  padding: var(--s-12) 0 var(--s-16);
   transition: opacity var(--dur) var(--ease-out);
 }
 
@@ -282,17 +336,11 @@
   opacity: 0.35;
 }
 
-.inv__empty-inner {
-  max-width: 44ch;
-  text-align: center;
-}
-
 .inv__empty-title {
-  font-size: var(--fs-h2);
+  font-size: 1.5rem;
   font-weight: 500;
   letter-spacing: var(--tracking-tight);
-  line-height: var(--lh-snug);
-  text-wrap: balance;
+  line-height: 1.25;
 }
 
 .inv__empty-body {
@@ -300,23 +348,8 @@
   color: var(--text-secondary);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
-  text-wrap: pretty;
-}
-
-.inv__empty-filters {
-  margin-top: var(--s-10);
-  padding-top: var(--s-8);
-  border-top: 1px solid var(--line-soft);
-}
-
-.inv__empty-label {
-  margin-bottom: var(--s-4);
-  color: var(--text-tertiary);
-  font-size: var(--fs-xs);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  /* Two lines of near-equal length rather than a long line and a stub. */
+  text-wrap: balance;
 }
 
 .inv__chips {
@@ -325,8 +358,17 @@
   gap: var(--s-2);
 }
 
+/* The copy names them ("remove a filter below"), so the row needs no eyebrow
+   and no rule above it — the gap is the separation. */
 .inv__chips--empty {
-  justify-content: center;
+  margin-top: var(--s-6);
+}
+
+.inv__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  margin-top: var(--s-6);
 }
 
 .inv__chip {
@@ -363,9 +405,14 @@
   border-radius: var(--r-pill);
 }
 
-.inv__empty-reset {
-  margin-top: var(--s-8);
-  min-width: 220px;
+/* One blue on the screen. The rail's reset is a quiet text link so the single
+   filled primary in the results column is the only thing asking to be clicked. */
+.inv__rail .rail__reset {
+  color: var(--text-secondary);
+}
+
+.inv__rail .rail__reset:hover {
+  color: var(--text);
 }
 
 @media (prefers-reduced-motion: reduce) {

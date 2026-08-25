@@ -1,17 +1,18 @@
 /* ── Skeleton ───────────────────────────────────────────────────────────────
    A placeholder is a piece of the page that has not arrived yet, so it is
-   painted in the page's own surface tones — never a spinner, never a pulse.
+   painted in the page's own greys — never a spinner, never a coloured pulse.
    Two tones are exposed so a caller can match whatever it stands in for: the
-   default `--skeleton-base` is one step darker than the page (a missing line of
-   type), and a caller sitting on an existing plate can set it back to the plate
-   colour so only the subject is missing.
+   default `--skeleton-base` is the tone of a missing line of type, and a caller
+   sitting on an existing plate can set it back to the plate colour so only the
+   subject is missing.
 
-   The sheen sweeps exactly once. The global motion rule is that nothing loops,
-   and a looping shimmer under a slow connection turns a calm frame into a
-   nervous one; the resting tone alone is enough to say "not yet". */
+   The base is deliberately a step darker than the page furniture. A placeholder
+   that measures ~1.1:1 against white disappears the moment the sheen has passed
+   and the frame reads as content that failed to paint; at this tone the grid
+   still reads as a deliberate, unfinished layout when it is standing still. */
 
 .skeleton {
-  --skeleton-base: var(--surface-2);
+  --skeleton-base: color-mix(in srgb, var(--line) 55%, var(--line-soft));
   --skeleton-sheen: var(--bg);
 
   position: relative;
@@ -23,9 +24,14 @@
   overflow: hidden;
 }
 
-/* The sweep is a separate layer translated clear of the box, so whatever frame
+/* The sheen is a separate layer translated clear of the box, so whatever frame
    it is caught on — or frozen on, by a screenshot or a paused animation — the
-   block resolves to one flat, deliberate tone. */
+   block resolves to one flat, deliberate tone.
+
+   It repeats for as long as the wait lasts. A single pass says "not yet" only
+   once: on a slow connection the frame is motionless from second two onward,
+   which is indistinguishable from a page that has stopped. A slow, wide sweep
+   keeps the page breathing without turning into a nervous flicker. */
 .skeleton::after {
   content: '';
   position: absolute;
@@ -37,7 +43,7 @@
     transparent 82%
   );
   transform: translateX(-101%);
-  animation: skeleton-sweep 1100ms var(--ease-out) 1 both;
+  animation: skeleton-sweep 1600ms var(--ease-out) infinite;
 }
 
 @keyframes skeleton-sweep {

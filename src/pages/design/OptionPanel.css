@@ -10,22 +10,42 @@
   flex: 1 1 auto;
 }
 
+/* Nothing to indicate below 1024px: the whole page scrolls there. */
+.op-rail {
+  display: none;
+}
+
 /* ≥1024px the option stack is the column's scroller — the price summary sits
    below it as a static footer, so nothing is ever painted under the summary.
-   Its last 24px fade, so a clipped row reads as "more below" and not as a cut. */
+   Both ends fade — the last 24px so a clipped row reads as "more below" rather
+   than as a cut, and the first 16px so scrolled content dissolves into the site
+   header instead of being sliced by it. */
 @media (min-width: 1024px) {
   .op-panel {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: var(--s-3) var(--panel-pad) var(--s-12);
-    -webkit-mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 24px), transparent);
-    mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      var(--ink) 16px,
+      var(--ink) calc(100% - 24px),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      var(--ink) 16px,
+      var(--ink) calc(100% - 24px),
+      transparent
+    );
   }
 
   /* The rail. Sticky at the scroller's top edge with no height of its own, so
      the thumb it carries is measured against the window, not the stack. */
   .op-rail {
+    display: block;
     position: sticky;
     top: 0;
     z-index: 3;
@@ -41,16 +61,6 @@
     background: var(--line);
     opacity: 0;
     transition: opacity var(--dur) var(--ease-out);
-  }
-}
-
-.op-rail {
-  display: none;
-}
-
-@media (min-width: 1024px) {
-  .op-rail {
-    display: block;
   }
 }
 

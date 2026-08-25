@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactElement } from 'react';
+import { useEffect, useState, type CSSProperties, type HTMLAttributes, type ReactElement } from 'react';
 import { money } from '@/lib/format';
 import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
 import './AnimatedPrice.css';
@@ -11,19 +11,20 @@ export interface AnimatedPriceProps extends Omit<HTMLAttributes<HTMLSpanElement>
   suffix?: string;
 }
 
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+const REEL = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-/** Approximate advance width, in `ch`, of a string set in tabular figures. */
-function reserveCh(text: string): number {
-  let width = 0;
-  for (const char of text) {
-    if (char >= '0' && char <= '9') width += 1;
-    else if (char === ',' || char === '.' || char === ' ') width += 0.32;
-    else width += 0.62;
-  }
-  return Math.ceil(width * 100) / 100;
+/** `/mo` is a glyph, not a word: give speech the word instead. */
+function spoken(suffix: string): string {
+  return suffix === '/mo' ? ' per month' : suffix;
 }
 
+/**
+ * An odometer. Each digit position is a reel of 0–9 clipped to one line and
+ * translated to the digit it should show, so a price change rolls the digits
+ * that actually changed and leaves the rest still. Columns are keyed by place
+ * value counted from the right, so the hundreds column stays the hundreds
+ * column when the number gains or loses a digit.
+ */
 export function AnimatedPrice({
   value,
   className,
@@ -34,54 +35,60 @@ export function AnimatedPrice({
   ...rest
 }: AnimatedPriceProps): ReactElement {
   const reduced = usePrefersReducedMotion();
-  const [display, setDisplay] = useState(value);
-  const displayRef = useRef(value);
-  const fromRef = useRef(value);
-
+  // The first paint must land on the value, not roll up to it from zero.
+  const [armed, setArmed] = useState(false);
   useEffect(() => {
-    const from = fromRef.current;
-    if (reduced || duration <= 0 || from === value) {
-      fromRef.current = value;
-      displayRef.current = value;
-      setDisplay(value);
-      return;
-    }
+    const frame = requestAnimationFrame(() => setArmed(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
-    let frame = 0;
-    const start = performance.now();
+  const text = `${prefix}${money(value)}`;
+  const chars = [...text];
+  const still = reduced || !armed;
 
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const next = from + (value - from) * easeOut(t);
-      displayRef.current = next;
-      setDisplay(next);
-      if (t < 1) {
-        frame = requestAnimationFrame(tick);
-      } else {
-        fromRef.current = value;
-        displayRef.current = value;
-      }
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(frame);
-      // Resume from wherever the tween was interrupted, never from a stale value.
-      fromRef.current = displayRef.current;
-    };
-  }, [value, duration, reduced]);
-
-  const settled = `${prefix}${money(value)}${suffix}`;
-  const text = `${prefix}${money(display)}${suffix}`;
-  // Reserve the wider of the two so a count-down cannot widen the box mid-tween.
-  const reserve = Math.max(reserveCh(settled), reserveCh(text));
-  const merged: CSSProperties = { minWidth: `${reserve}ch`, ...style };
+  const vars: CSSProperties = {
+    '--aprice-dur': `${still ? 0 : duration}ms`,
+    '--aprice-stagger': still ? '0ms' : '26ms',
+    ...style,
+  } as CSSProperties;
 
   return (
-    <span {...rest} className={className ? `aprice ${className}` : 'aprice'} style={merged}>
-      <span aria-hidden="true">{text}</span>
+    <span {...rest} className={className ? `aprice ${className}` : 'aprice'} style={vars}>
+      <span className="aprice__row" aria-hidden="true">
+        {chars.map((char, i) => {
+          const place = chars.length - 1 - i;
+          const digit = char >= '0' && char <= '9' ? Number(char) : -1;
+          if (digit < 0) {
+            return (
+              <span className="aprice__punct" key={`p${place}`}>
+                {char}
+              </span>
+            );
+          }
+          return (
+            <span
+              className="aprice__cell"
+              key={`d${place}`}
+              style={{ '--d': digit, '--p': place } as CSSProperties}
+            >
+              <span className="aprice__ghost">0</span>
+              <span className="aprice__clip">
+                <span className="aprice__reel">
+                  {REEL.map((d) => (
+                    <span key={d}>{d}</span>
+                  ))}
+                </span>
+              </span>
+            </span>
+          );
+        })}
+        {suffix ? <span className="aprice__unit">{suffix}</span> : null}
+      </span>
+
+      {/* The reels are decorative markup; only the settled value is announced. */}
       <span className="aprice__live" aria-live="polite">
-        {settled}
+        {text}
+        {spoken(suffix)}
       </span>
     </span>
   );

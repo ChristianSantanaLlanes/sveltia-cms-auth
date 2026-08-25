@@ -14,7 +14,7 @@
   bottom: 0;
   z-index: 5;
   margin: auto calc(var(--panel-pad) * -1) 0;
-  padding: var(--s-4) var(--panel-pad) var(--s-5);
+  padding: var(--s-3) var(--panel-pad) var(--s-4);
   background: var(--bg);
   border-top: 1px solid var(--line-soft);
   box-shadow: 0 -14px 26px -10px var(--ink-08);
@@ -154,54 +154,63 @@
   outline-offset: 2px;
 }
 
-/* ── Headline ───────────────────────────────────────────────────────────────*/
+/* ── Headline ───────────────────────────────────────────────────────────────
+   The figure owns a line of its own. The mode name and the delivery estimate
+   share the small line above it, so nothing sits beside the number competing
+   for the eye, and the unit is set at half its size in secondary ink so the
+   amount — not the "/mo" — is what the page anchors on.                       */
 
-.ps__headRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: var(--s-4);
-  align-items: end;
-  margin-top: var(--s-3);
+.ps__head {
+  margin-top: var(--s-4);
+}
+
+.ps__headMeta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-1);
 }
 
 .ps__headLabel {
-  grid-column: 1;
-  grid-row: 1;
+  min-width: 0;
+  overflow: hidden;
   font-size: var(--fs-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--text-secondary);
 }
 
-.ps__headRow .ps__headline {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-.ps__headRow .ps__lead {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: end;
-  text-align: right;
-}
-
-.ps__headline {
-  display: block;
+.ps__headMeta .ps__lead {
+  flex: none;
+  white-space: nowrap;
 }
 
 .ps .ps__value {
-  font-size: 2rem;
+  display: block;
+  font-size: 3.5rem;
   font-weight: 500;
-  line-height: 1.12;
+  line-height: 1.05;
   letter-spacing: var(--tracking-tight);
 }
 
+/* The unit stays a ~22px footnote as the figure grows, not a second headline. */
+.ps--pinned .ps__value {
+  --aprice-unit: 0.4em;
+}
+
 .ps--bar .ps__value {
-  font-size: 1.5rem;
+  --aprice-unit: 0.58em;
+
+  margin-top: 2px;
+  font-size: 1.625rem;
 }
 
 .ps__disclaimer {
-  margin-top: var(--s-2);
+  margin-top: var(--s-3);
+  max-width: 52ch;
   font-size: var(--fs-xs);
   line-height: 1.45;
   color: var(--text-secondary);
@@ -237,6 +246,10 @@
 
 .ps__toggle:hover {
   color: var(--accent);
+}
+
+.ps__toggle:active {
+  color: var(--accent-press);
 }
 
 .ps__chev {
@@ -304,8 +317,9 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A credit, marked by its minus sign — not by a second accent colour. */
 .ps__line--credit .ps__lineAmount {
-  color: var(--success);
+  color: var(--text);
 }
 
 .ps__total {
@@ -331,8 +345,12 @@
     padding-bottom: var(--s-4);
   }
 
+  .ps__head {
+    margin-top: var(--s-3);
+  }
+
   .ps .ps__value {
-    font-size: 1.75rem;
+    font-size: 3.25rem;
   }
 }
 
