@@ -17,27 +17,29 @@
 
 /* ≥1024px the option stack is the column's scroller — the price summary sits
    below it as a static footer, so nothing is ever painted under the summary.
-   Both ends fade — the last 24px so a clipped row reads as "more below" rather
+   Both ends fade — the last 16px so a clipped row reads as "more below" rather
    than as a cut, and the first 16px so scrolled content dissolves into the site
-   header instead of being sliced by it. */
+   header instead of being sliced by it. 16px is deliberate: the resting frame is
+   laid out so the fade lands inside the 20px gap between a group and its echo
+   line, never across a swatch row or a line of type. */
 @media (min-width: 1024px) {
   .op-panel {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: var(--s-3) var(--panel-pad) var(--s-12);
+    padding: var(--s-4) var(--panel-pad) var(--s-6);
     -webkit-mask-image: linear-gradient(
       to bottom,
       transparent 0,
-      var(--ink) 16px,
-      var(--ink) calc(100% - 24px),
+      var(--ink) 12px,
+      var(--ink) calc(100% - 16px),
       transparent
     );
     mask-image: linear-gradient(
       to bottom,
       transparent 0,
-      var(--ink) 16px,
-      var(--ink) calc(100% - 24px),
+      var(--ink) 12px,
+      var(--ink) calc(100% - 16px),
       transparent
     );
   }
@@ -254,7 +256,7 @@
 
 /* Wide enough for the label to sit beside its number: the row collapses to two
    lines, so all three trims clear the docked summary. */
-@media (min-width: 1280px) {
+@media (min-width: 1120px) {
   .op-trim__spec {
     flex-direction: row;
     align-items: baseline;
@@ -653,13 +655,17 @@
 }
 
 /* ≥1024px the option column is exactly one viewport tall and the price summary
-   takes ~290px of it, so the stack has roughly 550px of window. Every value in
-   this block is set so that window holds the whole Trim section *and* the Paint
-   heading with its first swatch row — the shopper has to be able to see that the
-   build carries on past the first question. Nothing below is decorative slack. */
+   is held to ~200px of it, so the stack has roughly 645px of window. Every value
+   in this block is set so that window holds the whole Trim section with its echo,
+   the whole Paint section with its swatch row, its echo name, delta and note, and
+   the top of the Wheels heading — a shopper has to be able to see that the build
+   carries on past the first two questions. Nothing below is decorative slack. */
 @media (min-width: 1024px) {
+  /* The studio plate already captions the car with the model name and its trim,
+     so the build header is one line: no leading margin, and only enough air
+     under it to read as a title rather than as a first section. */
   .op-head {
-    padding-bottom: var(--s-3);
+    padding-bottom: var(--s-2);
   }
 
   /* The studio plate already captions the car with the model name and trim, and
@@ -673,12 +679,16 @@
   /* Same 2rem as a section heading: the panel reads as one type scale from the
      vehicle name down, and nothing in it out-ranks the build itself. */
   .op-head__title {
+    margin-top: 0;
     font-size: 2rem;
     line-height: 1.06;
   }
 
+  /* 14px above and below each hairline. Tight, but the hairline is doing the
+     separating and the 20px echo gap inside each section is what carries the
+     rhythm — spending more here costs the Wheels heading its place on screen. */
   .op-sec {
-    padding-block: var(--s-4);
+    padding-block: 14px;
   }
 
   .op-sec:first-of-type {
@@ -722,6 +732,15 @@
   .op-echo__note {
     max-width: none;
     margin-top: var(--s-1);
+  }
+}
+
+/* The narrowest desktop column is ~340px of content. Six paint chips at a 12px
+   gap need 348 of it and wrap to a second row, which costs the paint echo its
+   place on screen — so the gap closes rather than the swatch shrinking.       */
+@media (min-width: 1024px) and (max-width: 1119px) {
+  .op-group--chips {
+    gap: var(--s-2);
   }
 }
 

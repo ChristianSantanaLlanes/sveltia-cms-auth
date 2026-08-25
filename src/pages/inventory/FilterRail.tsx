@@ -35,6 +35,11 @@ export interface FilterRailProps {
   activeCount: number;
 }
 
+/** Tile labels carry the distinguishing words only: the group heading already
+ *  says "paint" and the size is printed on its own line under the wheel. */
+const paintFace = (name: string) => name.replace(/\s+Metallic$/, '');
+const wheelFace = (name: string) => name.replace(/^\d+["\u2033]\s*/, '').replace(/\s+Wheels$/, '');
+
 const DESKTOP = '(min-width: 1024px)';
 
 const isDesktopNow = () =>
@@ -256,6 +261,9 @@ function PaintGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 
               {...handlers(option.id)}
             >
               <span className="swatch__disc" aria-hidden="true" />
+              {/* The two metallic greys are a hex apart; only the name separates
+                  them, so the name is on the tile rather than behind a hover. */}
+              <span className="swatch__name">{paintFace(option.name)}</span>
             </button>
           );
         })}
@@ -280,68 +288,74 @@ function polar(r: number, deg: number): string {
 
 /**
  * The glyphs are drawn to scale: the tyre is a fixed 21r and the rim grows with
- * the wheel size, so an 18" aero and a 19" aero differ by their sidewall the way
- * the real wheels do — the row never shows the same picture twice.
+ * the wheel size, so the sidewall thins as the wheel goes up the way it does on
+ * the real car.
  */
 const rimRadius = (size: number) => 13.4 + (size - 18) * 0.95;
 
 interface RimSpec {
   paths: string[];
   width: number;
-  opacity: number;
   face?: boolean;
 }
 
-function rimSpec(style: WheelOption['style'], rim: number): RimSpec {
+/**
+ * A face per style, and within a style the spoke count steps with the rim — the
+ * fleet ships two aero sets (18" Aero, 19" Gemini) and two Arc sets (20", 22"),
+ * and this is what stops either pair from drawing the same picture twice.
+ * Everything is stroked at full ink; a wheel a shopper cannot read is a wheel a
+ * shopper cannot choose.
+ */
+function rimSpec(style: WheelOption['style'], size: number, rim: number): RimSpec {
   const spread = (n: number, fn: (deg: number) => string) =>
     Array.from({ length: n }, (_, i) => fn((360 / n) * i));
   const hub = 5.4;
   const tip = rim - 1.2;
 
   switch (style) {
-    case 'aero':
+    case 'aero': {
+      const blades = size <= 18 ? 5 : 8;
       return {
         face: true,
-        width: 4.8,
-        opacity: 0.34,
-        paths: spread(5, (d) => `M${polar(hub + 1, d)} L${polar(tip - 0.6, d)}`),
+        width: size <= 18 ? 4.2 : 2.6,
+        paths: spread(blades, (d) => `M${polar(hub + 1, d)} L${polar(tip - 0.6, d)}`),
       };
+    }
     case 'sport':
       return {
-        width: 1.9,
-        opacity: 0.5,
-        paths: spread(5, (d) => `M${polar(hub, d - 7)} L${polar(tip, d - 7)} M${polar(hub, d + 7)} L${polar(tip, d + 7)}`),
+        width: 1.7,
+        paths: spread(5, (d) => `M${polar(hub, d - 8)} L${polar(tip, d - 8)} M${polar(hub, d + 8)} L${polar(tip, d + 8)}`),
       };
     case 'turbine':
       return {
-        width: 2.3,
-        opacity: 0.46,
+        width: 2.2,
         paths: spread(9, (d) => `M${polar(hub, d)} Q${polar((hub + tip) / 2, d + 10)} ${polar(tip, d + 20)}`),
       };
     case 'arachnid':
-    default:
+    default: {
+      const legs = size <= 20 ? 10 : 13;
       return {
-        width: 1.2,
-        opacity: 0.58,
-        paths: spread(10, (d) => `M${polar(hub - 0.4, d)} L${polar(tip, d + 5)}`),
+        width: 1.3,
+        paths: spread(legs, (d) => `M${polar(hub - 0.4, d)} L${polar(tip, d + 5)}`),
       };
+    }
   }
 }
 
 function RimGlyph({ style, size }: { style: WheelOption['style']; size: number }): ReactElement {
   const rim = rimRadius(size);
-  const spec = rimSpec(style, rim);
+  const spec = rimSpec(style, size, rim);
   return (
     <svg className="wheel__art" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
-      <circle cx="24" cy="24" r={21 - 1.7} fill="none" stroke="currentColor" strokeWidth="3.4" strokeOpacity="0.22" />
-      {spec.face ? <circle cx="24" cy="24" r={rim} fill="currentColor" fillOpacity="0.08" /> : null}
-      <circle cx="24" cy="24" r={rim} fill="none" stroke="currentColor" strokeWidth="1.1" strokeOpacity="0.36" />
-      <g stroke="currentColor" strokeWidth={spec.width} strokeOpacity={spec.opacity} strokeLinecap="round" fill="none">
+      <circle cx="24" cy="24" r={21 - 1.7} fill="none" stroke="currentColor" strokeWidth="3.2" strokeOpacity="0.13" />
+      {spec.face ? <circle cx="24" cy="24" r={rim} fill="currentColor" fillOpacity="0.07" /> : null}
+      <circle cx="24" cy="24" r={rim} fill="none" stroke="currentColor" strokeWidth="1.3" strokeOpacity="0.9" />
+      <g stroke="currentColor" strokeWidth={spec.width} strokeLinecap="round" fill="none">
         {spec.paths.map((d) => (
           <path key={d} d={d} />
         ))}
       </g>
-      <circle cx="24" cy="24" r="3" fill="currentColor" fillOpacity="0.5" />
+      <circle cx="24" cy="24" r="2.9" fill="currentColor" />
     </svg>
   );
 }
@@ -376,7 +390,10 @@ function WheelGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 
               <span className="wheel__plate" aria-hidden="true">
                 <RimGlyph style={option.style} size={option.size} />
               </span>
-              <span className="wheel__size">{option.size}&Prime;</span>
+              {/* Name first, size second: the fleet repeats sizes (two 19s, two
+                  20s) but never a name-and-size pair. */}
+              <span className="wheel__name">{wheelFace(option.name)}</span>
+              <span className="wheel__size">{option.size}&Prime; set</span>
             </button>
           );
         })}

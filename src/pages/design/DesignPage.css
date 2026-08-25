@@ -66,10 +66,96 @@
 
   /* The summary is the column's footer, not an overlay on top of it: it is
      taken out of sticky positioning and its edge-bleed margins are dropped,
-     because the column itself no longer carries the horizontal padding.      */
+     because the column itself no longer carries the horizontal padding.
+
+     It is also put on a strict height budget. The option column is 844px tall
+     at 1440x900 and the build it holds is seven sections deep, so every pixel
+     the dock spends is a pixel the stack cannot use to prove the build carries
+     on past the first question. The dock therefore states four things and
+     nothing else — mode, number, the way into the breakdown, and the CTA — in
+     roughly 210px: a 36px segmented control, one 40px row carrying the figure
+     with the delivery estimate on its baseline, the "Price details" toggle, and
+     the 48px Order Now. The APR / incentive terms are three lines of 12px legal
+     that belong to the breakdown, so they render only while it is open.      */
   .design__panel > .ps--pinned {
     position: static;
+    display: flex;
+    flex-direction: column;
     flex: 0 0 auto;
     margin: 0;
+    padding-top: var(--s-4);
+    padding-bottom: 14px;
+    /* A painted edge, so the stack above reads as scrolling under a footer
+       rather than as failing to render. A shadow rather than a border: it lands
+       on top of the dissolve the summary draws over the last option row. */
+    box-shadow: 0 -1px 0 var(--line-soft);
+  }
+
+  /* The dock softens the cut above its own edge, but only softens it: a tall
+     scrim reaches up into the next section's heading and bleaches it, which is
+     exactly the heading that has to prove the build carries on. Twelve pixels,
+     landing inside the option stack's own 16px fade. */
+  .design__panel > .ps--pinned::before {
+    height: 12px;
+  }
+
+  /* 36px: 20px of label between 5px of padding, inside the 3px track. */
+  .design__panel > .ps--pinned .ps__segLabel {
+    padding: 5px 4px;
+    line-height: 20px;
+  }
+
+  /* The mode name is dropped — the segmented control directly above already
+     says Cash / Finance / Lease — so the figure gets the whole row and the
+     delivery window sits out at the end of its baseline. */
+  .design__panel > .ps--pinned .ps__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-4);
+    margin-top: 10px;
+  }
+
+  .design__panel > .ps--pinned .ps__headLabel {
+    display: none;
+  }
+
+  .design__panel > .ps--pinned .ps__headMeta {
+    order: 2;
+    flex: none;
+    margin-bottom: 0;
+  }
+
+  .design__panel > .ps--pinned .ps__value {
+    --aprice-unit: 0.44em;
+
+    order: 1;
+    font-size: 2rem;
+    line-height: 36px;
+  }
+
+  .design__panel > .ps--pinned .ps__disclosure {
+    margin-top: 0;
+  }
+
+  .design__panel > .ps--pinned .ps__toggle {
+    padding: var(--s-1) 0 2px;
+  }
+
+  /* Child combinator on purpose: if the summary ever moves this paragraph
+     inside the expander itself, the rule simply stops applying. */
+  .design__panel > .ps--pinned > .ps__disclaimer {
+    display: none;
+    order: 4;
+    margin-top: var(--s-3);
+  }
+
+  .design__panel > .ps--pinned:has(.ps__panel.is-open) > .ps__disclaimer {
+    display: block;
+  }
+
+  .design__panel > .ps--pinned > .ps__cta {
+    order: 5;
+    margin-top: var(--s-3);
   }
 }
