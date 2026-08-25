@@ -1,4 +1,14 @@
-import { useId, useMemo, useState, type CSSProperties, type ReactElement, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { miles, money, num } from '@/lib/format';
 import {
   CONDITION_OPTIONS,
@@ -185,18 +195,89 @@ function PaintGrid({ filters, toggleFilter }: Pick<FilterRailProps, 'filters' | 
   );
 }
 
+/**
+ * Sliders paint from a local draft and only write the URL when the thumb is
+ * released (with a trailing debounce as a safety net), so dragging stays at
+ * 60fps and never floods the history stack.
+ */
+function useSliderDraft<T>(value: T, commit: (next: T) => void, delay = 320) {
+  const [draft, setDraft] = useState<T>(value);
+  const draftRef = useRef<T>(value);
+  const dirty = useRef(false);
+  const timer = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (dirty.current) return;
+    draftRef.current = value;
+    setDraft(value);
+  }, [value]);
+
+  useEffect(() => () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+  }, []);
+
+  const flush = useCallback(() => {
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+      timer.current = null;
+    }
+    if (!dirty.current) return;
+    dirty.current = false;
+    commit(draftRef.current);
+  }, [commit]);
+
+  const update = useCallback(
+    (next: T) => {
+      draftRef.current = next;
+      dirty.current = true;
+      setDraft(next);
+      if (timer.current !== null) window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => {
+        timer.current = null;
+        if (!dirty.current) return;
+        dirty.current = false;
+        commit(draftRef.current);
+      }, delay);
+    },
+    [commit, delay],
+  );
+
+  return { draft, update, flush };
+}
+
+/** Events that mean "the shopper has finished moving this thumb". */
+const releaseHandlers = (flush: () => void) => ({
+  onPointerUp: flush,
+  onPointerCancel: flush,
+  onKeyUp: flush,
+  onBlur: flush,
+  onTouchEnd: flush,
+});
+
+interface PriceDraft {
+  low: number;
+  high: number;
+}
+
 function PriceSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | 'setFilter'>): ReactElement {
   const { min, max, step } = PRICE_BOUNDS;
   const span = max - min;
-  const lowPct = ((filters.minPrice - min) / span) * 100;
-  const highPct = ((filters.maxPrice - min) / span) * 100;
 
-  const setLow = (value: number) => {
-    setFilter({ minPrice: Math.min(value, filters.maxPrice - step) });
-  };
-  const setHigh = (value: number) => {
-    setFilter({ maxPrice: Math.max(value, filters.minPrice + step) });
-  };
+  const value = useMemo<PriceDraft>(
+    () => ({ low: filters.minPrice, high: filters.maxPrice }),
+    [filters.minPrice, filters.maxPrice],
+  );
+
+  const commit = useCallback(
+    (next: PriceDraft) => setFilter({ minPrice: next.low, maxPrice: next.high }),
+    [setFilter],
+  );
+
+  const { draft, update, flush } = useSliderDraft(value, commit);
+  const release = releaseHandlers(flush);
+
+  const lowPct = ((draft.low - min) / span) * 100;
+  const highPct = ((draft.high - min) / span) * 100;
 
   return (
     <div className="slider">
@@ -205,32 +286,38 @@ function PriceSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
       </div>
 
       <input
+        {...release}
         type="range"
         className="slider__input slider__input--low"
         min={min}
         max={max}
         step={step}
-        value={filters.minPrice}
+        value={draft.low}
         aria-label="Minimum price"
-        aria-valuetext={money(filters.minPrice)}
+        aria-valuetext={money(draft.low)}
         style={{ zIndex: lowPct > 88 ? 4 : 3 }}
-        onChange={(event) => setLow(Number(event.target.value))}
+        onChange={(event) =>
+          update({ ...draft, low: Math.min(Number(event.target.value), draft.high - step) })
+        }
       />
       <input
+        {...release}
         type="range"
         className="slider__input slider__input--high"
         min={min}
         max={max}
         step={step}
-        value={filters.maxPrice}
+        value={draft.high}
         aria-label="Maximum price"
-        aria-valuetext={filters.maxPrice === max ? `${money(max)} or more` : money(filters.maxPrice)}
-        onChange={(event) => setHigh(Number(event.target.value))}
+        aria-valuetext={draft.high === max ? `${money(max)} or more` : money(draft.high)}
+        onChange={(event) =>
+          update({ ...draft, high: Math.max(Number(event.target.value), draft.low + step) })
+        }
       />
 
       <p className="slider__readout">
-        <span>{money(filters.minPrice)}</span>
-        <span>{filters.maxPrice === max ? `${money(max)}+` : money(filters.maxPrice)}</span>
+        <span>{money(draft.low)}</span>
+        <span>{draft.high === max ? `${money(max)}+` : money(draft.high)}</span>
       </p>
     </div>
   );
@@ -238,7 +325,12 @@ function PriceSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
 
 function RangeSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | 'setFilter'>): ReactElement {
   const { min, max, step } = RANGE_BOUNDS;
-  const pct = ((filters.minRange - min) / (max - min)) * 100;
+
+  const commit = useCallback((next: number) => setFilter('minRange', next), [setFilter]);
+  const { draft, update, flush } = useSliderDraft(filters.minRange, commit);
+  const release = releaseHandlers(flush);
+
+  const pct = ((draft - min) / (max - min)) * 100;
 
   return (
     <div className="slider slider--single">
@@ -246,18 +338,19 @@ function RangeSlider({ filters, setFilter }: Pick<FilterRailProps, 'filters' | '
         <span className="slider__fill" style={{ left: `${pct}%`, right: '0%' }} />
       </div>
       <input
+        {...release}
         type="range"
         className="slider__input"
         min={min}
         max={max}
         step={step}
-        value={filters.minRange}
+        value={draft}
         aria-label="Minimum range"
-        aria-valuetext={`${miles(filters.minRange)} or more`}
-        onChange={(event) => setFilter('minRange', Number(event.target.value))}
+        aria-valuetext={`${miles(draft)} or more`}
+        onChange={(event) => update(Number(event.target.value))}
       />
       <p className="slider__readout">
-        <span>{miles(filters.minRange)} or more</span>
+        <span>{miles(draft)} or more</span>
         <span>{miles(max)}</span>
       </p>
     </div>

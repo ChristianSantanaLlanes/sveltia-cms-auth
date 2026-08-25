@@ -1,0 +1,171 @@
+/* ── Studio plate ───────────────────────────────────────────────────────────
+   A lit white sweep falling to --surface, with a soft floor pool anchored to
+   the car's own box so the pool always sits under the wheels.               */
+
+.stage {
+  --stage-pad-x: clamp(20px, 3vw, 56px);
+  --stage-pad-y: clamp(16px, 2.2vw, 36px);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--stage-pad-y) var(--stage-pad-x);
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, var(--bg) 0%, var(--bg) 30%, var(--surface) 100%);
+}
+
+/* ── Caption ────────────────────────────────────────────────────────────────*/
+
+.stage__meta {
+  position: relative;
+  z-index: 2;
+  flex: none;
+}
+
+.stage__model {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.stage__trim {
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+/* ── Vehicle ────────────────────────────────────────────────────────────────*/
+
+.stage__car {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Full-bleed so "78% of the render column" means the column, not the inset. */
+  margin-inline: calc(var(--stage-pad-x) * -1);
+}
+
+.stage__frame {
+  position: relative;
+  width: 78%;
+  aspect-ratio: 1200 / 560;
+  max-height: 100%;
+}
+
+/* Ambient floor pool. Sits behind the car, never over it. */
+.stage__frame::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  left: 4%;
+  right: 4%;
+  bottom: 5%;
+  height: 20%;
+  background: radial-gradient(ellipse at 50% 50%, var(--ink-08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.stage__layer {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease-out);
+  pointer-events: none;
+}
+
+.stage__layer.is-active {
+  opacity: 1;
+}
+
+.stage .stage__svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Angle row ──────────────────────────────────────────────────────────────*/
+
+.stage__angles {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  display: flex;
+  justify-content: center;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+}
+
+.stage__angle {
+  position: relative;
+  display: block;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.stage__angle:hover {
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.stage__angle.is-active {
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.stage__angleInput {
+  appearance: none;
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.stage__angleArt {
+  display: block;
+  width: 92px;
+  border-radius: var(--r-sm);
+}
+
+.stage__angleInput:focus-visible + .stage__angleArt {
+  outline: 2px solid var(--accent);
+  outline-offset: 5px;
+  border-radius: var(--r-sm);
+}
+
+@media (max-width: 1023px) {
+  .stage__frame {
+    width: 88%;
+  }
+
+  .stage__angleArt {
+    width: 76px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage__layer,
+  .stage__angle {
+    transition: none;
+  }
+}

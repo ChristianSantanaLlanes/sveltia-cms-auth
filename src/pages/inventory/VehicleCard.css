@@ -36,8 +36,9 @@
   height: auto;
 }
 
+/* Matches the CarRender viewBox (1200 x 560) so skeleton and real plate agree. */
 .vcard--skeleton .vcard__car {
-  aspect-ratio: 16 / 7;
+  aspect-ratio: 15 / 7;
 }
 
 .vcard__badge {
@@ -62,6 +63,7 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
+  justify-content: space-between;
   padding-top: var(--s-4);
 }
 
@@ -187,7 +189,7 @@
 
 /* ── Call to action ─────────────────────────────────────────────────────────*/
 
-.vcard__cta,
+.vcard .vcard__cta,
 .vcard__cta-skeleton {
   margin-top: var(--s-5);
 }
@@ -198,19 +200,15 @@
 
 /* The button is the card's only tab stop; its overlay makes the whole card
    clickable without adding a second focusable element. */
-.vcard__cta {
+.vcard .vcard__cta {
   position: static;
 }
 
-.vcard__cta::after {
+.vcard .vcard__cta::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: var(--r-md);
-}
-
-.vcard__body {
-  justify-content: space-between;
 }
 
 /* ── Hover / focus ──────────────────────────────────────────────────────────*/

@@ -1,0 +1,42 @@
+/* ── Vehicle render ──────────────────────────────────────────────────────
+   The SVG is laid out once and never re-flows: a paint or wheel change only
+   swaps colours, so nothing on the page can shift. Colour cross-fades are
+   driven from the paint-bearing gradient stops and fills.                   */
+
+.car-render {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  /* Keeps sub-pixel edges clean when the render is scaled down in a card. */
+  shape-rendering: geometricPrecision;
+}
+
+.car-render stop,
+.car-render [data-paint] {
+  transition:
+    stop-color var(--dur-slow) var(--ease-out),
+    stop-opacity var(--dur-slow) var(--ease-out),
+    fill var(--dur-slow) var(--ease-out),
+    stroke var(--dur-slow) var(--ease-out);
+}
+
+.car-render__shoulder {
+  vector-effect: non-scaling-stroke;
+}
+
+/* The contact shadow and floor reflection settle with the paint rather than
+   snapping, but never move. */
+.car-render__shadow,
+.car-render__floor {
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .car-render stop,
+  .car-render [data-paint],
+  .car-render__shadow,
+  .car-render__floor {
+    transition: none;
+  }
+}

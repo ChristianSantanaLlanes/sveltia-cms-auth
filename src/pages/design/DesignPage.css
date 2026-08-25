@@ -1,0 +1,60 @@
+/* ── Configurator shell ─────────────────────────────────────────────────────
+   Mobile: the studio plate pins under the header at 45dvh and the option sheet
+   scrolls over it, with the price bar fixed to the viewport.
+   ≥1024px: a 62 / 38 grid — the render column is sticky and full height, the
+   option column scrolls with the page and docks its summary at the bottom.   */
+
+.design {
+  padding-top: var(--header-h);
+  background: var(--bg);
+}
+
+/* ── Render column ──────────────────────────────────────────────────────────*/
+
+.design__render {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 1;
+  height: 45dvh;
+  min-height: 220px;
+}
+
+/* ── Option column ──────────────────────────────────────────────────────────*/
+
+.design__panel {
+  --panel-pad: var(--gutter);
+
+  position: relative;
+  z-index: 2;
+  margin-top: -16px;
+  border-radius: 16px 16px 0 0;
+  padding: var(--s-6) var(--panel-pad) calc(152px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  box-shadow: 0 -1px 0 var(--line-soft);
+}
+
+@media (min-width: 1024px) {
+  .design {
+    display: grid;
+    grid-template-columns: 62% 38%;
+    align-items: start;
+  }
+
+  .design__render {
+    height: calc(100dvh - var(--header-h));
+    z-index: auto;
+  }
+
+  .design__panel {
+    --panel-pad: clamp(24px, 2.4vw, 40px);
+
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - var(--header-h));
+    margin-top: 0;
+    border-radius: 0;
+    border-left: 1px solid var(--line-soft);
+    padding: var(--s-16) var(--panel-pad) 0;
+    box-shadow: none;
+  }
+}

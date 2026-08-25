@@ -271,6 +271,11 @@
   pointer-events: none;
 }
 
+/* A single slider has no overlapping thumb, so the whole track is clickable. */
+.slider--single .slider__input {
+  pointer-events: auto;
+}
+
 .slider__input::-webkit-slider-runnable-track {
   height: 26px;
   background: transparent;
