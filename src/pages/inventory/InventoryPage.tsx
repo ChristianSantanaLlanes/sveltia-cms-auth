@@ -2,7 +2,6 @@ import { useEffect, useState, type ReactElement } from 'react';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import Sheet from '@/components/ui/Sheet';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { num } from '@/lib/format';
 import { useOrder } from '@/store/OrderContext';
@@ -19,10 +18,14 @@ import {
 } from './useInventoryFilters';
 import './InventoryPage.css';
 
+/** Two full rows at the 3-up breakpoint: enough to fill the fold, never a wall. */
 const SKELETON_COUNT = 6;
 
+const plural = (n: number) => `${num(n)} ${n === 1 ? 'result' : 'results'}`;
+
 export default function InventoryPage(): ReactElement {
-  const { filters, setFilter, toggleFilter, reset, activeCount, results, isLoading } = useInventoryFilters();
+  const { filters, setFilter, toggleFilter, reset, activeCount, results, pendingCount, isLoading } =
+    useInventoryFilters();
   const { zip } = useOrder();
 
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -38,9 +41,16 @@ export default function InventoryPage(): ReactElement {
     if (isDesktop) setSheetOpen(false);
   }, [isDesktop]);
 
+  /* Two different waits, two different treatments. Nothing has ever been drawn
+     on a first load, so the grid is filled with skeleton cards that hold the
+     exact box of the real ones. A re-filter already has cards on screen, so
+     they simply dim and are replaced — swapping them for skeletons would throw
+     the page away and rebuild it for a quarter of a second. */
   const showSkeletons = isLoading && !settled;
   const fading = isLoading && settled;
+
   const chips = activeChips(filters);
+  const isEmpty = !showSkeletons && results.length === 0;
 
   const removeChip = (chip: FilterChip) => {
     if (chip.key === 'price') {
@@ -137,14 +147,13 @@ export default function InventoryPage(): ReactElement {
           <header className="inv__header">
             <div className="inv__headline">
               <p className="inv__eyebrow">Vela Inventory</p>
-              <p className="inv__count" role="status" aria-live="polite">
-                {showSkeletons ? (
-                  <Skeleton w={168} h={34} />
-                ) : (
-                  <span className="inv__count-value" key={results.length}>
-                    {`${num(results.length)} ${results.length === 1 ? 'result' : 'results'}`}
-                  </span>
-                )}
+              {/* The count is computed on the click, not after the fetch, so it
+                  never lags the rail and never leaves a grey bar where a number
+                  belongs. */}
+              <p className="inv__count">
+                <span className="inv__count-value" key={pendingCount}>
+                  {plural(pendingCount)}
+                </span>
               </p>
               <p className="inv__location">
                 <span className="inv__location-wide">
@@ -163,7 +172,11 @@ export default function InventoryPage(): ReactElement {
             ) : null}
           </header>
 
-          {chips.length > 0 && results.length > 0 ? (
+          <p className="sr-only" role="status" aria-live="polite">
+            {isLoading ? 'Loading vehicles' : `${plural(pendingCount)} match your filters`}
+          </p>
+
+          {chips.length > 0 && !isEmpty ? (
             <div className="inv__active">
               {chipList('inv__chips')}
               <button type="button" className="inv__clear" onClick={reset}>
@@ -172,16 +185,25 @@ export default function InventoryPage(): ReactElement {
             </div>
           ) : null}
 
-          {!showSkeletons && results.length === 0 ? (
-            <div className="inv__empty">
-              <p className="inv__empty-title">No vehicles match these filters.</p>
-              <p className="inv__empty-body">
-                Widen your price range or clear a filter to see everything we have in stock.
-              </p>
-              {chips.length > 0 ? chipList('inv__chips inv__chips--empty') : null}
-              <Button variant="secondary" onClick={reset} className="inv__empty-reset">
-                Reset filters
-              </Button>
+          {isEmpty ? (
+            <div className="inv__empty" data-fading={fading || undefined}>
+              <div className="inv__empty-inner">
+                <p className="inv__empty-title">Nothing in stock matches this search.</p>
+                <p className="inv__empty-body">
+                  Every Vela is also built to order. Drop a filter below to see what is ready to deliver
+                  near {zip} today.
+                </p>
+
+                {chips.length > 0 ? (
+                  <div className="inv__empty-filters">
+                    <p className="inv__empty-label">Filters applied</p>
+                    {chipList('inv__chips inv__chips--empty')}
+                    <Button variant="primary" onClick={reset} className="inv__empty-reset">
+                      Clear all filters
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           ) : (
             <div className="inv__grid" data-fading={fading || undefined} aria-busy={isLoading || undefined}>
@@ -198,9 +220,7 @@ export default function InventoryPage(): ReactElement {
           {rail}
           <div className="inv__sheet-actions">
             <Button variant="primary" fullWidth onClick={() => setSheetOpen(false)}>
-              {isLoading
-                ? 'Updating results'
-                : `Show ${num(results.length)} ${results.length === 1 ? 'result' : 'results'}`}
+              {`Show ${plural(pendingCount)}`}
             </Button>
           </div>
         </Sheet>

@@ -377,6 +377,14 @@ export interface UseInventoryFilters {
   reset: () => void;
   activeCount: number;
   results: InventoryVehicle[];
+  /**
+   * How many vehicles the current filters match, known on the same frame as the
+   * click. The header count reads this rather than `results.length` so the
+   * number is never behind the filter rail's own count, and so a loading frame
+   * still states how many cards are on their way — a skeleton grid under a real
+   * count is unmistakably a page mid-load rather than a page that failed.
+   */
+  pendingCount: number;
   isLoading: boolean;
 }
 
@@ -453,7 +461,7 @@ export function useInventoryFilters(): UseInventoryFilters {
 
   const activeCount = useMemo(() => countActive(filters), [filters]);
 
-  return { filters, setFilter, toggleFilter, reset, activeCount, results, isLoading };
+  return { filters, setFilter, toggleFilter, reset, activeCount, results, pendingCount: pending.length, isLoading };
 }
 
 export default useInventoryFilters;

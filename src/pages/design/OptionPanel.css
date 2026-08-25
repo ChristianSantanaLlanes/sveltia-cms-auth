@@ -654,11 +654,11 @@
   }
 
   .op-sec {
-    padding-block: var(--s-5);
+    padding-block: var(--s-4);
   }
 
   .op-sec:first-of-type {
-    padding-top: var(--s-5);
+    padding-top: var(--s-3);
   }
 
   .op-sec__title {
@@ -672,11 +672,11 @@
 
   .op-trim__box {
     gap: var(--s-1);
-    padding: 6px var(--s-4);
+    padding: 5px var(--s-4);
   }
 
   .op-trim__specs {
-    padding-top: 5px;
+    padding-top: 4px;
   }
 
   .op-chip__ring {
@@ -684,12 +684,15 @@
   }
 
   .op-chip__dot {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
   }
 
+  /* The echo sits a clear 20px off its group: it is a summary of the choice,
+     not another row of it — and the gap is what the panel's bottom fade lands
+     in, so the fade never cuts through a line of type. */
   .op-echo {
-    margin-top: var(--s-3);
+    margin-top: var(--s-5);
   }
 
   .op-echo__note {
