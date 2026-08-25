@@ -102,7 +102,6 @@ interface Spec {
   beltY: number;
   roofY: number;
   bulgeF: number;
-  bulgeR: number;
   outlineTop: P2[];
   rearLower: P2[];
   rocker: P2[];
@@ -120,7 +119,7 @@ interface Spec {
   crown: number;
   lamp: { y: [number, number]; inset: number };
   lampSide: P2[];
-  intake: { y: [number, number]; inset: number; r: number };
+  intake: { y: [number, number]; inset: number };
   vent: { y: [number, number]; w: number };
   mirror: { x: number; y: number; w: number; h: number; out: number };
   tailLamp: P2[];
@@ -133,12 +132,11 @@ const SEDAN: Spec = {
   axleF: 0.9,
   axleR: 3.76,
   R: 0.336,
-  archGap: 0.095,
+  archGap: 0.078,
   rockerY: 0.3,
   beltY: 0.95,
   roofY: 1.42,
   bulgeF: 0.14,
-  bulgeR: 0.07,
   outlineTop: [
     [0.212, 0.298],
     [0.126, 0.398],
@@ -230,7 +228,7 @@ const SEDAN: Spec = {
     [0.23, 0.602],
     [0.116, 0.568],
   ],
-  intake: { y: [0.316, 0.446], inset: 0.38, r: 0.05 },
+  intake: { y: [0.316, 0.446], inset: 0.38 },
   vent: { y: [0.34, 0.56], w: 0.14 },
   mirror: { x: 1.72, y: 0.985, w: 0.2, h: 0.085, out: 0.17 },
   tailLamp: [
@@ -250,12 +248,11 @@ const SUV: Spec = {
   axleF: 0.94,
   axleR: 3.78,
   R: 0.366,
-  archGap: 0.1,
+  archGap: 0.084,
   rockerY: 0.38,
   beltY: 1.1,
   roofY: 1.72,
   bulgeF: 0.15,
-  bulgeR: 0.05,
   outlineTop: [
     [0.222, 0.372],
     [0.13, 0.478],
@@ -348,7 +345,7 @@ const SUV: Spec = {
     [0.25, 0.702],
     [0.128, 0.662],
   ],
-  intake: { y: [0.396, 0.546], inset: 0.4, r: 0.06 },
+  intake: { y: [0.396, 0.546], inset: 0.4 },
   vent: { y: [0.42, 0.65], w: 0.15 },
   mirror: { x: 1.78, y: 1.135, w: 0.21, h: 0.09, out: 0.18 },
   tailLamp: [
@@ -759,8 +756,8 @@ function build(spec: Spec, view: View, size: number): Geo {
   };
   const wheels: Wheel3[] = [];
   if (q3) {
-    wheels.push(mk(spec.axleF, W - 0.11, true, 0.86));
-    wheels.push(mk(spec.axleR, W - 0.11, true, 0.9));
+    wheels.push(mk(spec.axleF, W - 0.11, true, 0.9));
+    wheels.push(mk(spec.axleR, W - 0.11, true, 0.92));
   }
   wheels.push(mk(spec.axleR, wheelZ, false, q3 ? 0.1 : 0.06));
   wheels.push(mk(spec.axleF, wheelZ, false, 0));
@@ -1069,9 +1066,8 @@ export default function CarRenderB({
       )}
 
       <g id={`${uid}-car`}>
-        {q3 && (
-          <g opacity="0.62">
-            {g.wheels
+        {q3 &&
+          g.wheels
             .filter((w) => w.far)
             .map((w) => (
               <Wheel
@@ -1087,8 +1083,6 @@ export default function CarRenderB({
                 shade={w.shade}
               />
             ))}
-          </g>
-        )}
 
         {q3 && (
           <>

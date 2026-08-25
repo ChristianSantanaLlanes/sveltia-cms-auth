@@ -212,6 +212,10 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
         </ul>
 
         <div className="vm-hero__actions vm-hero__reveal">
+          {/* One CTA pair, one language, every chapter: a solid pill whose fill is
+              the inverse of the room, and an outlined partner at the room's own
+              text colour. Only the two tone variables underneath them change —
+              never which of the two looks like the thing you click. */}
           <div className="vm-hero__ctas">
             <Button
               to={`/design/${model.id}`}
@@ -225,7 +229,7 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
             <Button
               to="/inventory"
               size="lg"
-              variant={tone === 'dark' ? 'onImageDark' : 'onImageLight'}
+              variant="secondary"
               className="vm-hero__cta vm-hero__cta--secondary"
               aria-label={`Demo Drive — ${model.name}`}
             >

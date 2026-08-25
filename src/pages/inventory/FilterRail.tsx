@@ -140,14 +140,16 @@ interface GroupProps {
   filters: InventoryFilters;
   toggleFilter: (key: MultiKey, id: string) => void;
   testIdPrefix?: string;
+  /** Two abreast for short labels; full width when a label needs the room. */
+  split?: boolean;
 }
 
-function CheckGroup({ dimension, options, filters, toggleFilter, testIdPrefix }: GroupProps): ReactElement {
+function CheckGroup({ dimension, options, filters, toggleFilter, testIdPrefix, split }: GroupProps): ReactElement {
   const counts = useMemo(() => facetCounts(filters, dimension), [filters, dimension]);
   const selected = filters[dimension] as string[];
 
   return (
-    <div className="rail__rows">
+    <div className={split ? 'rail__rows rail__rows--split' : 'rail__rows'}>
       {options.map((option) => (
         <CheckRow
           key={option.id}
@@ -278,26 +280,26 @@ function rimSpec(style: WheelOption['style'], rim: number): RimSpec {
       return {
         face: true,
         width: 4.8,
-        opacity: 0.26,
+        opacity: 0.34,
         paths: spread(5, (d) => `M${polar(hub + 1, d)} L${polar(tip - 0.6, d)}`),
       };
     case 'sport':
       return {
         width: 1.9,
-        opacity: 0.42,
+        opacity: 0.5,
         paths: spread(5, (d) => `M${polar(hub, d - 7)} L${polar(tip, d - 7)} M${polar(hub, d + 7)} L${polar(tip, d + 7)}`),
       };
     case 'turbine':
       return {
         width: 2.3,
-        opacity: 0.38,
+        opacity: 0.46,
         paths: spread(9, (d) => `M${polar(hub, d)} Q${polar((hub + tip) / 2, d + 10)} ${polar(tip, d + 20)}`),
       };
     case 'arachnid':
     default:
       return {
         width: 1.2,
-        opacity: 0.5,
+        opacity: 0.58,
         paths: spread(10, (d) => `M${polar(hub - 0.4, d)} L${polar(tip, d + 5)}`),
       };
   }
@@ -308,15 +310,15 @@ function RimGlyph({ style, size }: { style: WheelOption['style']; size: number }
   const spec = rimSpec(style, rim);
   return (
     <svg className="wheel__art" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
-      <circle cx="24" cy="24" r={21 - 1.7} fill="none" stroke="currentColor" strokeWidth="3.4" strokeOpacity="0.15" />
-      {spec.face ? <circle cx="24" cy="24" r={rim} fill="currentColor" fillOpacity="0.06" /> : null}
-      <circle cx="24" cy="24" r={rim} fill="none" stroke="currentColor" strokeWidth="1.1" strokeOpacity="0.28" />
+      <circle cx="24" cy="24" r={21 - 1.7} fill="none" stroke="currentColor" strokeWidth="3.4" strokeOpacity="0.22" />
+      {spec.face ? <circle cx="24" cy="24" r={rim} fill="currentColor" fillOpacity="0.08" /> : null}
+      <circle cx="24" cy="24" r={rim} fill="none" stroke="currentColor" strokeWidth="1.1" strokeOpacity="0.36" />
       <g stroke="currentColor" strokeWidth={spec.width} strokeOpacity={spec.opacity} strokeLinecap="round" fill="none">
         {spec.paths.map((d) => (
           <path key={d} d={d} />
         ))}
       </g>
-      <circle cx="24" cy="24" r="3" fill="currentColor" fillOpacity="0.4" />
+      <circle cx="24" cy="24" r="3" fill="currentColor" fillOpacity="0.5" />
     </svg>
   );
 }
@@ -538,12 +540,12 @@ export function FilterRail({ filters, setFilter, toggleFilter, reset, activeCoun
     const desktop = isDesktopNow();
     return {
       model: true,
+      trim: true,
       condition: true,
       price: true,
       range: desktop,
       paint: desktop,
       wheel: desktop,
-      trim: desktop,
     };
   });
 
@@ -579,7 +581,11 @@ export function FilterRail({ filters, setFilter, toggleFilter, reset, activeCoun
       </div>
 
       <Section id="model" title="Model" open={open.model} onToggle={toggleSection} badge={badgeFor('model')} panelId={panelId('model')}>
-        <CheckGroup dimension="model" options={MODEL_OPTIONS} filters={filters} toggleFilter={toggleFilter} />
+        <CheckGroup dimension="model" options={MODEL_OPTIONS} filters={filters} toggleFilter={toggleFilter} split />
+      </Section>
+
+      <Section id="trim" title="Trim" open={open.trim} onToggle={toggleSection} badge={badgeFor('trim')} panelId={panelId('trim')}>
+        <CheckGroup dimension="trim" options={TRIM_OPTIONS} filters={filters} toggleFilter={toggleFilter} testIdPrefix="trim-" />
       </Section>
 
       <Section id="condition" title="Condition" open={open.condition} onToggle={toggleSection} badge={badgeFor('condition')} panelId={panelId('condition')}>
@@ -600,10 +606,6 @@ export function FilterRail({ filters, setFilter, toggleFilter, reset, activeCoun
 
       <Section id="wheel" title="Wheels" open={open.wheel} onToggle={toggleSection} badge={badgeFor('wheel')} panelId={panelId('wheel')}>
         <WheelGrid filters={filters} toggleFilter={toggleFilter} />
-      </Section>
-
-      <Section id="trim" title="Trim" open={open.trim} onToggle={toggleSection} badge={badgeFor('trim')} panelId={panelId('trim')}>
-        <CheckGroup dimension="trim" options={TRIM_OPTIONS} filters={filters} toggleFilter={toggleFilter} testIdPrefix="trim-" />
       </Section>
     </div>
   );

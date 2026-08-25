@@ -1,7 +1,6 @@
 import { useId, type CSSProperties, type ReactElement, type ReactNode } from 'react';
 import { RimDefs, Wheel } from '@/components/car/rims';
 import { money, num, signedMoney } from '@/lib/format';
-import { effectiveRange } from '@/lib/pricing';
 import { useOrder } from '@/store/OrderContext';
 import type { AddOnOption, InteriorOption, PaintOption, SeatingOption, Trim, WheelOption } from '@/types';
 import './OptionPanel.css';
@@ -33,9 +32,11 @@ const SEATING_NOTE: Record<number, string> = {
 
 const MOTOR_WORD: Record<number, string> = { 1: 'Single motor', 2: 'Dual motor', 3: 'Tri motor' };
 
+/* Kept to a single line on purpose: the panel is one viewport tall, and every
+   line spent here is a line the next section's heading loses. */
 function trimNote(trim: Trim, wheel: WheelOption): string {
   const range = Math.max(0, trim.range + wheel.rangeDelta);
-  return `${MOTOR_WORD[trim.motors] ?? 'Dual motor'} ${trim.drive}, ${num(trim.peakPower)} hp — ${num(range)} mi of estimated range on the ${wheel.name}.`;
+  return `${MOTOR_WORD[trim.motors] ?? 'Dual motor'} ${trim.drive} · ${num(trim.peakPower)} hp · ${num(range)} mi est. range`;
 }
 
 function wheelNote(wheel: WheelOption, trim: Trim): string {
@@ -146,7 +147,6 @@ export default function OptionPanel(): ReactElement {
   const uid = `op${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const baseTrimPrice = model.trims[0].price;
-  const range = effectiveRange(config);
   const seatingOptions = model.seating.filter(
     (option) => !option.availableOn || option.availableOn.includes(model.id),
   );
@@ -163,29 +163,6 @@ export default function OptionPanel(): ReactElement {
         <p className="op-head__eyebrow">Design your own</p>
         <h1 className="op-head__title">{model.name}</h1>
         <p className="op-head__lead">{model.leadTime}</p>
-        <dl className="op-stats" aria-label="Estimated performance as configured">
-          <div className="op-stat">
-            <dt className="op-stat__label">Range (est.)</dt>
-            <dd className="op-stat__value">
-              {num(range)}
-              <span className="op-stat__unit">mi</span>
-            </dd>
-          </div>
-          <div className="op-stat">
-            <dt className="op-stat__label">0-60 mph</dt>
-            <dd className="op-stat__value">
-              {trim.accel}
-              <span className="op-stat__unit">s</span>
-            </dd>
-          </div>
-          <div className="op-stat">
-            <dt className="op-stat__label">Top speed</dt>
-            <dd className="op-stat__value">
-              {num(trim.topSpeed)}
-              <span className="op-stat__unit">mph</span>
-            </dd>
-          </div>
-        </dl>
       </header>
 
       {/* ── Trim ────────────────────────────────────────────────────────── */}

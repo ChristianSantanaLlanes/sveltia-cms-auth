@@ -13,7 +13,7 @@
 /* ── Header: title, reset, live tally ───────────────────────────────────────*/
 
 .rail__top {
-  padding-bottom: var(--s-4);
+  padding-bottom: var(--s-2);
 }
 
 .rail__top-row {
@@ -64,7 +64,7 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
-  margin-top: var(--s-3);
+  margin-top: var(--s-2);
   color: var(--text-secondary);
   font-size: var(--fs-xs);
   line-height: 1.2;
@@ -94,6 +94,12 @@
   border-top: 1px solid var(--line-soft);
 }
 
+/* The stack closes on a rule, so the rail terminates deliberately instead of
+   trailing off into whitespace. */
+.rail__section:last-of-type {
+  border-bottom: 1px solid var(--line-soft);
+}
+
 .rail__heading {
   font-size: inherit;
   font-weight: 400;
@@ -105,7 +111,7 @@
   align-items: center;
   gap: var(--s-2);
   width: 100%;
-  padding: 13px 0 11px;
+  padding: 9px 0 8px;
   color: var(--text);
   text-align: left;
 }
@@ -114,7 +120,7 @@
   font-size: var(--fs-xs);
   font-weight: 500;
   letter-spacing: 0.1em;
-  line-height: 16px;
+  line-height: 15px;
   text-transform: uppercase;
   color: var(--text-secondary);
   transition: color var(--dur-fast) var(--ease-out);
@@ -169,7 +175,11 @@
 }
 
 .rail__panel {
-  padding-bottom: var(--s-4);
+  padding-bottom: var(--s-3);
+}
+
+.rail__section:last-of-type .rail__panel {
+  padding-bottom: var(--s-2);
 }
 
 .rail__rows {
@@ -178,14 +188,22 @@
   margin-top: -2px;
 }
 
+/* Short labels (the four models) run two abreast so the identity block stays
+   the height of one paragraph instead of one screen. */
+.rail__rows--split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--s-5);
+}
+
 /* ── Checkbox row ───────────────────────────────────────────────────────────*/
 
 .row {
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--s-3);
-  padding: 5px 0;
+  gap: 10px;
+  padding: 3px 0;
   cursor: pointer;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
@@ -194,14 +212,15 @@
   opacity: 0.4;
 }
 
+/* The real control covers the whole row: the row is one hit target, and the
+   input itself — not a decorative span — is what a pointer lands on. */
 .row__input {
   position: absolute;
-  left: 0;
-  top: 50%;
-  width: 18px;
-  height: 18px;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
   margin: 0;
-  transform: translateY(-50%);
   opacity: 0;
   cursor: pointer;
 }
@@ -278,17 +297,19 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
+/* Six across, on the same column rhythm as the paint row above it: the two
+   grids read as one appearance module rather than two unrelated widgets. */
 .swatches__grid--wheel {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s-3) var(--s-2);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--s-2);
 }
 
 .swatches__caption {
   display: flex;
   align-items: baseline;
   gap: 7px;
-  min-height: 17px;
-  margin-top: var(--s-3);
+  min-height: 16px;
+  margin-top: var(--s-2);
   font-size: var(--fs-xs);
   line-height: 1.4;
 }
@@ -363,7 +384,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   padding: 0;
   border-radius: var(--r-md);
   transition: opacity var(--dur-fast) var(--ease-out);
@@ -377,8 +398,8 @@
   display: grid;
   place-items: center;
   width: 100%;
-  aspect-ratio: 5 / 4;
-  border-radius: var(--r-md);
+  aspect-ratio: 1;
+  border-radius: var(--r-sm);
   background: var(--surface);
   color: var(--ink);
   box-shadow: inset 0 0 0 1px transparent;
@@ -388,7 +409,7 @@
 }
 
 .wheel__art {
-  width: 68%;
+  width: 82%;
   height: auto;
 }
 
@@ -403,7 +424,8 @@
 
 .wheel__size {
   color: var(--text-tertiary);
-  font-size: var(--fs-xs);
+  font-size: 10px;
+  letter-spacing: 0.01em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   transition: color var(--dur-fast) var(--ease-out);
@@ -417,7 +439,7 @@
 .wheel:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
 }
 
 /* ── Sliders ────────────────────────────────────────────────────────────────*/
@@ -431,7 +453,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s-3);
-  margin-bottom: var(--s-3);
+  margin-bottom: var(--s-2);
 }
 
 .slider__value {
@@ -451,12 +473,12 @@
 
 .slider__control {
   position: relative;
-  height: 22px;
+  height: 20px;
 }
 
 .slider__track {
   position: absolute;
-  top: 10px;
+  top: 9px;
   left: 1px;
   right: 1px;
   height: 2px;
@@ -480,7 +502,7 @@
   left: 0;
   z-index: 3;
   width: 100%;
-  height: 22px;
+  height: 20px;
   margin: 0;
   padding: 0;
   background: transparent;
@@ -493,13 +515,13 @@
 }
 
 .slider__input::-webkit-slider-runnable-track {
-  height: 22px;
+  height: 20px;
   background: transparent;
   border: none;
 }
 
 .slider__input::-moz-range-track {
-  height: 22px;
+  height: 20px;
   background: transparent;
   border: none;
 }
@@ -509,7 +531,7 @@
   appearance: none;
   width: 15px;
   height: 15px;
-  margin-top: 3.5px;
+  margin-top: 2.5px;
   border: 1px solid var(--line);
   border-radius: 50%;
   background: var(--bg);
@@ -579,5 +601,10 @@
   .swatch::after,
   .wheel__plate {
     transition: none;
+  }
+
+  .rail__tally-num,
+  .rail__reset {
+    animation: none;
   }
 }

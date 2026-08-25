@@ -88,26 +88,22 @@
 
   .inv__rail {
     display: block;
-    position: sticky;
-    /* Top offset matches the results header's padding so "FILTERS" sits on the
-       same line as the "Vela Inventory" eyebrow across the gutter. */
-    top: calc(var(--header-h) + var(--s-8));
-    /* The margin holds the alignment on short pages, where nothing scrolls and
-       a sticky offset would not apply. */
+    /* The rail is a column of the page, not a scroll container: nothing here is
+       ever clipped, so no filter group can read as a half-drawn row. */
     margin-top: var(--s-8);
     align-self: start;
-    max-height: calc(100dvh - var(--header-h) - var(--s-8) - var(--s-4));
-    padding-right: var(--s-3);
-    padding-bottom: var(--s-6);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
-    scrollbar-width: thin;
-    /* The rail scrolls on its own; soften its last 24px so a section cut by the
-       viewport reads as "more below" rather than as a crop. The fade is exactly
-       the height of the trailing padding, so nothing dims at the end of scroll.
-       (Mask gradients use alpha only — currentColor here is just "opaque".) */
-    mask-image: linear-gradient(to bottom, currentColor calc(100% - 24px), transparent 100%);
+  }
+}
+
+/* The stack is engineered to clear a 900px viewport with the header offset, so
+   it pins there. Anywhere shorter the rail scrolls with the page instead —
+   nothing is ever clipped, and no group is left half-drawn behind a fade. */
+@media (min-width: 1024px) and (min-height: 900px) {
+  .inv__rail {
+    position: sticky;
+    /* Matches the results header's top padding so "FILTERS" sits on the same
+       line as the "Vela Inventory" eyebrow across the gutter. */
+    top: calc(var(--header-h) + var(--s-8));
   }
 }
 
@@ -237,6 +233,10 @@
 @media (prefers-reduced-motion: reduce) {
   .inv__grid {
     transition: none;
+  }
+
+  .inv__count-value {
+    animation: none;
   }
 }
 

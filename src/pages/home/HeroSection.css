@@ -108,6 +108,17 @@
   --vm-floor-3: color-mix(in srgb, var(--ink) 24%, transparent);
   --vm-pool: color-mix(in srgb, var(--bg) 56%, transparent);
   --vm-hairline: color-mix(in srgb, var(--ink) 22%, transparent);
+  /* CTA pair: solid fill is the inverse of the room, outline is the room. */
+  --vm-cta-fill: var(--ink);
+  --vm-cta-fill-hover: color-mix(in srgb, var(--ink) 88%, var(--bg));
+  --vm-cta-fill-press: color-mix(in srgb, var(--ink) 78%, var(--bg));
+  --vm-cta-ink: var(--on-dark);
+  /* Dark-on-light hairlines read heavier than light-on-dark at equal alpha, so
+     the two tones are matched by eye rather than by number. */
+  --vm-cta-line: color-mix(in srgb, var(--ink) 45%, transparent);
+  --vm-cta-line-hover: color-mix(in srgb, var(--ink) 75%, transparent);
+  --vm-cta-wash: color-mix(in srgb, var(--ink) 8%, transparent);
+  --vm-cta-wash-press: color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .vm-hero[data-tone='dark'] {
@@ -124,6 +135,14 @@
   --vm-floor-3: var(--ink);
   --vm-pool: color-mix(in srgb, var(--on-dark) 13%, transparent);
   --vm-hairline: color-mix(in srgb, var(--on-dark) 34%, transparent);
+  --vm-cta-fill: var(--on-dark);
+  --vm-cta-fill-hover: color-mix(in srgb, var(--on-dark) 88%, var(--ink));
+  --vm-cta-fill-press: color-mix(in srgb, var(--on-dark) 78%, var(--ink));
+  --vm-cta-ink: var(--ink);
+  --vm-cta-line: color-mix(in srgb, var(--on-dark) 40%, transparent);
+  --vm-cta-line-hover: color-mix(in srgb, var(--on-dark) 82%, transparent);
+  --vm-cta-wash: color-mix(in srgb, var(--on-dark) 12%, transparent);
+  --vm-cta-wash-press: color-mix(in srgb, var(--on-dark) 20%, transparent);
 }
 
 /* ── Chapters ───────────────────────────────────────────────────────────────
@@ -426,14 +445,61 @@
   gap: var(--s-4);
 }
 
+/* One CTA system for the whole page.
+ *
+ * The chapters change tone every notch, so a translucent chip changes what it
+ * looks like every notch too: on the black box the light chip composites to a
+ * mid-grey that reads as disabled, while its transparent partner carries a
+ * pure white label and steals the hierarchy. The pair is therefore built from
+ * two tone variables instead — a fully opaque pill in the inverse of the room,
+ * and an outlined pill in the room's own ink — so the thing a buyer is meant to
+ * click is the same object in all four rooms and only its colour changes.
+ * -------------------------------------------------------------------------*/
+
 .vm-hero__cta {
   min-width: 260px;
+  /* Nothing here is translucent any more; the blur the on-image variants carry
+     has nothing left to do and can only draw a seam at the pill's edge. */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-/* The translucent chip is near-invisible against a clean studio backdrop, so
-   the quieter of the two carries a hairline to hold its shape. */
+.vm-hero .vm-hero__cta--primary {
+  background-color: var(--vm-cta-fill);
+  border-color: transparent;
+  color: var(--vm-cta-ink);
+}
+
 .vm-hero .vm-hero__cta--secondary {
-  border-color: var(--vm-hairline);
+  background-color: transparent;
+  border-color: var(--vm-cta-line);
+  color: var(--vm-fg);
+}
+
+@media (hover: hover) {
+  .vm-hero .vm-hero__cta--primary:hover {
+    background-color: var(--vm-cta-fill-hover);
+  }
+
+  .vm-hero .vm-hero__cta--secondary:hover {
+    background-color: var(--vm-cta-wash);
+    border-color: var(--vm-cta-line-hover);
+  }
+}
+
+.vm-hero .vm-hero__cta--primary:active {
+  background-color: var(--vm-cta-fill-press);
+}
+
+.vm-hero .vm-hero__cta--secondary:active {
+  background-color: var(--vm-cta-wash-press);
+  border-color: var(--vm-cta-line-hover);
+}
+
+/* The focus ring belongs to the room, not to the variant: the button's own
+   rule would put an ink outline on the black box, where it disappears. */
+.vm-hero .vm-hero__cta:focus-visible {
+  outline-color: var(--vm-fg);
 }
 
 .vm-hero__fine {

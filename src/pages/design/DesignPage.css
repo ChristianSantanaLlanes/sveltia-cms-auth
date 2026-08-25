@@ -1,8 +1,10 @@
 /* ── Configurator shell ─────────────────────────────────────────────────────
    Mobile: the studio plate pins under the header at 45dvh and the option sheet
    scrolls over it, with the price bar fixed to the viewport.
-   ≥1024px: a 62 / 38 grid — the render column is sticky and full height, the
-   option column scrolls with the page and docks its summary at the bottom.   */
+   ≥1024px: a 62 / 38 app shell exactly one viewport tall — the render column
+   fills its half, and the option column is a two-part flex column: the option
+   stack is the only scroller and the price summary is a real static footer
+   beneath it, so no option row can ever be painted under the summary.        */
 
 .design {
   padding-top: var(--header-h);
@@ -37,12 +39,15 @@
   .design {
     display: grid;
     grid-template-columns: 62% 38%;
-    align-items: start;
+    align-items: stretch;
+    height: 100dvh;
+    overflow: clip;
   }
 
   .design__render {
-    height: calc(100dvh - var(--header-h));
-    z-index: auto;
+    position: static;
+    height: 100%;
+    min-height: 0;
   }
 
   .design__panel {
@@ -50,11 +55,21 @@
 
     display: flex;
     flex-direction: column;
-    min-height: calc(100dvh - var(--header-h));
+    height: 100%;
+    min-height: 0;
     margin-top: 0;
     border-radius: 0;
     border-left: 1px solid var(--line-soft);
-    padding: var(--s-10) var(--panel-pad) 0;
+    padding: 0;
     box-shadow: none;
+  }
+
+  /* The summary is the column's footer, not an overlay on top of it: it is
+     taken out of sticky positioning and its edge-bleed margins are dropped,
+     because the column itself no longer carries the horizontal padding.      */
+  .design__panel > .ps--pinned {
+    position: static;
+    flex: 0 0 auto;
+    margin: 0;
   }
 }
