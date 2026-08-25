@@ -252,25 +252,71 @@
   }
 }
 
-/* ── Empty state ────────────────────────────────────────────────────────────*/
+/* ── Loading grid ───────────────────────────────────────────────────────────
+   The skeleton cards are the real cards with their content withheld: same
+   plate, same aspect, same box. Only two things are said here. The plate is
+   already the right surface, so its placeholder is set back to the plate colour
+   — the frame is missing a car, not missing a rectangle — and the copy lines
+   sit one step darker so the frame reads as deliberately unfinished rather than
+   as a page that failed to paint. */
+
+.inv__grid .vcard__plate-skeleton {
+  --skeleton-base: var(--surface);
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────────
+   Whitespace does the work everywhere else on this page, so the dead end is a
+   centred column in it rather than a grey box dropped into it. One sentence,
+   one line of help, the filters that caused it as removable chips, and one
+   solid way out. */
 
 .inv__empty {
-  max-width: 42ch;
-  padding: var(--s-10) 0 var(--s-16);
+  display: grid;
+  place-items: center;
+  min-height: min(52vh, 460px);
+  padding: var(--s-16) 0 var(--s-20);
+  transition: opacity var(--dur) var(--ease-out);
+}
+
+.inv__empty[data-fading] {
+  opacity: 0.35;
+}
+
+.inv__empty-inner {
+  max-width: 44ch;
+  text-align: center;
 }
 
 .inv__empty-title {
-  font-size: var(--fs-h3);
+  font-size: var(--fs-h2);
   font-weight: 500;
   letter-spacing: var(--tracking-tight);
-  line-height: 1.25;
+  line-height: var(--lh-snug);
+  text-wrap: balance;
 }
 
 .inv__empty-body {
-  margin-top: var(--s-2);
+  margin-top: var(--s-3);
   color: var(--text-secondary);
-  font-size: var(--fs-sm);
-  line-height: 1.5;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
+}
+
+.inv__empty-filters {
+  margin-top: var(--s-10);
+  padding-top: var(--s-8);
+  border-top: 1px solid var(--line-soft);
+}
+
+.inv__empty-label {
+  margin-bottom: var(--s-4);
+  color: var(--text-tertiary);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .inv__chips {
@@ -280,7 +326,7 @@
 }
 
 .inv__chips--empty {
-  margin-top: var(--s-6);
+  justify-content: center;
 }
 
 .inv__chip {
@@ -301,6 +347,7 @@
 
 .inv__chip svg {
   color: var(--text-secondary);
+  transition: color var(--dur-fast) var(--ease-out);
 }
 
 .inv__chip:hover {
@@ -317,7 +364,16 @@
 }
 
 .inv__empty-reset {
-  margin-top: var(--s-6);
+  margin-top: var(--s-8);
+  min-width: 220px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv__empty,
+  .inv__chip,
+  .inv__chip svg {
+    transition: none;
+  }
 }
 
 /* ── Filter sheet ───────────────────────────────────────────────────────────*/

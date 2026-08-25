@@ -183,7 +183,7 @@ const SEDAN: Spec = {
     [3.2, 0.985],
     [2.71, 0.972],
   ],
-  glassK: 0.86,
+  glassK: 0.9,
   shoulder: [
     [0.5, 0.792],
     [1.14, 0.802],
@@ -292,7 +292,7 @@ const SUV: Spec = {
     [3.5, 1.16],
     [2.74, 1.13],
   ],
-  glassK: 0.87,
+  glassK: 0.9,
   shoulder: [
     [0.56, 0.938],
     [1.2, 0.95],
@@ -505,11 +505,12 @@ function build(spec: Spec, view: View, size: number, s: number, ox: number, oy: 
   const glassR = curve(spec.glassR.map((pt) => P.f(pt, spec.glassK)), true);
 
   /* The greenhouse mass behind the glass: pillars and window frames. */
+  const beltK = spec.glassK + 0.05;
   const canopy = strip(chain(idx.cowl, idx.blBase, -1), [
-    P.f([spec.glassR[3][0] + 0.04, spec.beltY], 0.98),
-    P.f([3.0, spec.beltY - 0.005], 1),
-    P.f([2.2, spec.beltY - 0.005], 1),
-    P.f([spec.upper[idx.cowl][0], spec.beltY - 0.01], 1),
+    P.f([spec.glassR[3][0] + 0.03, spec.beltY + 0.02], beltK),
+    P.f([3.0, spec.beltY - 0.005], beltK),
+    P.f([2.2, spec.beltY - 0.005], beltK),
+    P.f([spec.upper[idx.cowl][0] + 0.04, spec.beltY - 0.01], beltK),
   ]);
 
   /* Shading ribbons — every one of them follows the panel, never a straight
