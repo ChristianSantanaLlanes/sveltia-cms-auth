@@ -6,6 +6,7 @@ import DesignPage from '@/pages/design/DesignPage';
 import CheckoutPage from '@/pages/checkout/CheckoutPage';
 import ConfirmationPage from '@/pages/checkout/ConfirmationPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import CarLab from '@/pages/lab/CarLab';
 
 export const router = createBrowserRouter([
   {
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
       { path: '/design/:modelId', element: <DesignPage /> },
       { path: '/checkout', element: <CheckoutPage /> },
       { path: '/order/:orderId', element: <ConfirmationPage /> },
+      { path: '/lab/cars', element: <CarLab /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

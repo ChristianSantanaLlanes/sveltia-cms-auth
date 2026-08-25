@@ -1,0 +1,6 @@
+.lab { padding: calc(var(--header-h) + 24px) 24px 64px; background: #fff; }
+.lab__row { margin-bottom: 40px; }
+.lab__label { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; margin-bottom: 12px; }
+.lab__cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.lab__cell { margin: 0; background: linear-gradient(180deg, #fff 0%, var(--surface) 100%); border: 1px solid var(--line-soft); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.lab__cell figcaption { font-size: 11px; letter-spacing: 0.12em; color: var(--text-tertiary); text-align: center; }

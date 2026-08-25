@@ -88,6 +88,8 @@ export const TARGETS = {
     },
   },
   'order-confirmation': { url: '/order/demo', viewport: DESKTOP },
+  'lab-cars': { url: '/lab/cars', viewport: { width: 1600, height: 1000 }, fullPage: true },
+  'lab-row-1': { url: '/lab/cars', viewport: { width: 1600, height: 700 } },
 };
 
 function portOpen(port) {

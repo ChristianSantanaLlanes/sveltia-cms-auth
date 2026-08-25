@@ -1,8 +1,8 @@
 {
-  "updated": "2026-08-25 05:45 UTC",
-  "phase": "Piece loops",
-  "headline": "Round one: the critic is picking the benchmark",
-  "note": "Nine pieces are looping. The first verdict is in and it is brutal \u2014 the vehicle render is what gives the whole funnel away.",
+  "updated": "2026-08-25 11:29 UTC",
+  "phase": "Car bake-off + piece loops",
+  "headline": "Rebuilding the car, looping the rest",
+  "note": "Three independent car renders are being drawn and judged blind, because the vehicle was the biggest gap in three separate critiques. In parallel, five pieces are in builder/critic loops.",
   "constraint": "tesla.com cannot be reached from this build sandbox: Tesla's edge (Akamai) blocks the datacenter IP for direct requests and for every public screenshot service tried, web.archive.org is blocked by this environment's egress policy, and Chromium here has no outbound HTTPS at all. Live side-by-side capture of the real funnel is therefore impossible from inside this session. Critics score against docs/reference-spec.md \u2014 the Tesla funnel written down as measurable properties \u2014 plus their own knowledge of that funnel, and every round must still name the single largest remaining gap.",
   "pieces": [
     {
@@ -157,6 +157,38 @@
     {
       "t": "05:43",
       "msg": "Listing grid round 1: critic picks BENCHMARK (high) \u2014 the card render reads as a vector sticker, not a photographed car"
+    },
+    {
+      "t": "2026-08-25 03:41",
+      "msg": "Repository wiped; foundation scaffolded (tokens, types, catalogue, pricing, harness)."
+    },
+    {
+      "t": "2026-08-25 04:10",
+      "msg": "Seven parallel builders wrote the chrome, UI kit, car render and four pages."
+    },
+    {
+      "t": "2026-08-25 05:10",
+      "msg": "Foundation build complete \u2014 7 builders, 0 TypeScript errors, production bundle builds"
+    },
+    {
+      "t": "2026-08-25 05:12",
+      "msg": "Piece loops started across four areas"
+    },
+    {
+      "t": "2026-08-25 05:43",
+      "msg": "Listing grid round 1: critic picks BENCHMARK (high) \u2014 the card render reads as a vector sticker, not a photographed car"
+    },
+    {
+      "t": "2026-08-25 06:30",
+      "msg": "First loop run cut short by the session limit after 7 of 36 agents."
+    },
+    {
+      "t": "2026-08-25 11:30",
+      "msg": "Typecheck and production build clean; work committed and pushed."
+    },
+    {
+      "t": "2026-08-25 11:40",
+      "msg": "Car render sent to a three-way blind bake-off; five non-car pieces resumed looping."
     }
   ]
 }
