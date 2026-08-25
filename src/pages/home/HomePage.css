@@ -1,0 +1,28 @@
+/* ── Home ───────────────────────────────────────────────────────────────────
+ *
+ * Snapping is on the document root, added by HomePage on mount and removed on
+ * unmount, so one notch of scroll moves exactly one section while the footer
+ * (rendered by RootLayout, after this page) is still reachable at the end.
+ * -------------------------------------------------------------------------*/
+
+html.vm-home-snapping {
+  scroll-snap-type: y mandatory;
+}
+
+/* Sections stop being a sensible unit of scroll once they no longer fit; below
+   the hero's own min-height, scrolling goes back to being free. */
+@media (max-height: 640px) {
+  html.vm-home-snapping {
+    scroll-snap-type: none;
+  }
+}
+
+.vm-home {
+  display: block;
+  width: 100%;
+}
+
+.vm-home__tail {
+  height: 1px;
+  scroll-snap-align: start;
+}

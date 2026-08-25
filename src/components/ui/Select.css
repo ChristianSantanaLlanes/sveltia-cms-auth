@@ -1,0 +1,80 @@
+/* ── Select (native, restyled) ─────────────────────────────────────────── */
+.select {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.select__label {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-secondary);
+}
+
+/* base.css defines .sr-only; keep the label readable when it is not hidden. */
+.select__box {
+  position: relative;
+  display: block;
+}
+
+.select__control {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--s-8) 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background-color: var(--bg);
+  font-size: var(--fs-sm);
+  line-height: 1.2;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.select__control:hover { border-color: var(--text-tertiary); }
+
+.select__control:focus-visible {
+  border-color: var(--accent);
+  border-radius: var(--r-sm);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.select__control:disabled {
+  background-color: var(--surface);
+  border-color: var(--line-soft);
+  color: var(--text-tertiary);
+  cursor: default;
+}
+
+/* CSS-only chevron: no asset, no hard-coded colour. */
+.select__chevron {
+  position: absolute;
+  top: 50%;
+  right: var(--s-4);
+  width: 7px;
+  height: 7px;
+  margin-top: -5px;
+  border-right: 1.5px solid var(--text-secondary);
+  border-bottom: 1.5px solid var(--text-secondary);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.select__control:disabled + .select__chevron { border-color: var(--text-tertiary); }
+
+.select__msg {
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.select__msg--error { color: var(--danger); }
+
+.select--error .select__control { border-color: var(--danger); }

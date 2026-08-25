@@ -1,0 +1,158 @@
+{
+  "updated": "2026-08-25 05:10 UTC",
+  "phase": "Piece loops",
+  "headline": "Builder vs critic, piece by piece",
+  "note": "The surface compiles. Nine pieces are now looping: each round a fresh builder fixes the one gap the previous critic named, then a fresh critic re-judges the capture against the benchmark spec.",
+  "constraint": "tesla.com cannot be reached from this build sandbox: Tesla's edge (Akamai) blocks the datacenter IP for direct requests and for every public screenshot service tried, web.archive.org is blocked by this environment's egress policy, and Chromium here has no outbound HTTPS at all. Live side-by-side capture of the real funnel is therefore impossible from inside this session. Critics score against docs/reference-spec.md \u2014 the Tesla funnel written down as measurable properties \u2014 plus their own knowledge of that funnel, and every round must still name the single largest remaining gap.",
+  "pieces": [
+    {
+      "id": "hero",
+      "name": "Hero",
+      "detail": "Full-viewport model section, headline, CTAs",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "home-desktop"
+      ]
+    },
+    {
+      "id": "type",
+      "name": "Typography",
+      "detail": "Scale, weight, tracking, rhythm",
+      "status": "queued",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "home-desktop-full"
+      ]
+    },
+    {
+      "id": "scroll",
+      "name": "Scroll",
+      "detail": "Snap, section transitions, header flip",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "home-scroll-2",
+        "home-scroll-3"
+      ]
+    },
+    {
+      "id": "grid",
+      "name": "Listing grid",
+      "detail": "Inventory cards and layout",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "inventory-desktop"
+      ]
+    },
+    {
+      "id": "filters",
+      "name": "Filters",
+      "detail": "Facets, URL sync, reset",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "inventory-desktop-full"
+      ]
+    },
+    {
+      "id": "render",
+      "name": "Car render",
+      "detail": "SVG vehicle, paint and wheel swaps",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "design-desktop",
+        "design-paint"
+      ]
+    },
+    {
+      "id": "options",
+      "name": "Options panel",
+      "detail": "Trim, paint, wheels, interior, add-ons",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "design-desktop-full"
+      ]
+    },
+    {
+      "id": "price",
+      "name": "Live price",
+      "detail": "Payment modes, breakdown, roll animation",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "design-wheels"
+      ]
+    },
+    {
+      "id": "loading",
+      "name": "Loading states",
+      "detail": "Skeletons, empty, error",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "inventory-loading",
+        "inventory-empty"
+      ]
+    },
+    {
+      "id": "checkout",
+      "name": "Checkout form",
+      "detail": "Fields, validation, order placement",
+      "status": "reviewing",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "checkout-desktop-full",
+        "checkout-errors"
+      ]
+    },
+    {
+      "id": "mobile",
+      "name": "Mobile",
+      "detail": "390px across the whole funnel",
+      "status": "queued",
+      "rounds": 0,
+      "verdict": "",
+      "gap": "",
+      "shots": [
+        "home-mobile",
+        "inventory-mobile",
+        "design-mobile",
+        "checkout-mobile"
+      ]
+    }
+  ],
+  "log": [
+    {
+      "t": "05:10",
+      "msg": "Foundation build complete \u2014 7 builders, 0 TypeScript errors, production bundle builds"
+    },
+    {
+      "t": "05:12",
+      "msg": "Piece loops started: hero, scroll, grid, filters, render, options, price, loading, checkout"
+    }
+  ]
+}

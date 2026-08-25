@@ -1,0 +1,499 @@
+/* ── Option panel ───────────────────────────────────────────────────────────
+   Every control is a native <input type="radio|checkbox"> behind a <label>, so
+   arrow-key roving, grouping and the accessible name come from the platform.
+   The input stays focusable and its focus ring is drawn on the visible part.  */
+
+.opanel {
+  flex: 1 1 auto;
+}
+
+.osec {
+  padding: var(--s-10) 0;
+  scroll-margin-top: calc(var(--header-h) + var(--s-6));
+}
+
+.osec:first-child {
+  padding-top: 0;
+}
+
+.osec + .osec {
+  border-top: 1px solid var(--line-soft);
+}
+
+.osec__title {
+  margin-bottom: var(--s-5);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: var(--tracking-tight);
+}
+
+.osec__echo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-5);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.osec__echoDelta {
+  flex: none;
+  color: var(--text-secondary);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.osec__note {
+  margin-top: var(--s-1);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* The real control: invisible, but stretched over its label so a pointer or a
+   programmatic click lands on the input itself rather than on decoration. */
+.ohidden {
+  appearance: none;
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ── Trim rows ──────────────────────────────────────────────────────────────*/
+
+.ogroup--rows {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.trim,
+.orow {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.trim__box {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.trim:hover .trim__box {
+  box-shadow: inset 0 0 0 1px var(--ink-60);
+}
+
+.trim.is-on .trim__box {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.trim__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.trim__name {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.trim__price {
+  flex: none;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.trim__specs {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--s-3);
+  row-gap: 2px;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.trim__spec + .trim__spec::before {
+  content: '·';
+  margin-right: var(--s-3);
+  color: var(--text-tertiary);
+}
+
+.trim__num {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── Simple rows (seating) ──────────────────────────────────────────────────*/
+
+.orow__box {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.orow:hover .orow__box {
+  box-shadow: inset 0 0 0 1px var(--ink-60);
+}
+
+.orow.is-on .orow__box {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.orow__name {
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+.orow__price {
+  flex: none;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Swatch groups ──────────────────────────────────────────────────────────*/
+
+.ogroup--swatches,
+.ogroup--wheels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-5);
+}
+
+.swatch {
+  position: relative;
+  display: block;
+  line-height: 0;
+  cursor: pointer;
+}
+
+/* Paint: a lit sphere, not a flat disc — the sheen and shade come from the
+   catalogue so the swatch matches the body render exactly. */
+.swatch__dot {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 33% 27%,
+    var(--sw-sheen) 0%,
+    var(--sw-hex) 46%,
+    var(--sw-shade) 100%
+  );
+  box-shadow: inset 0 0 0 1px var(--ink-08);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.swatch:hover .swatch__dot {
+  box-shadow:
+    inset 0 0 0 1px var(--ink-08),
+    0 0 0 3px var(--bg),
+    0 0 0 4px var(--line);
+}
+
+.swatch.is-on .swatch__dot {
+  box-shadow:
+    inset 0 0 0 1px var(--ink-08),
+    0 0 0 3px var(--bg),
+    0 0 0 5px var(--ink);
+}
+
+.swatch__wheel {
+  display: block;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.wheel__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.swatch:hover .swatch__wheel {
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--line);
+}
+
+.swatch.is-on .swatch__wheel {
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink);
+}
+
+.swatch__interior {
+  display: block;
+  width: 92px;
+  height: 58px;
+  border-radius: var(--r-md);
+  background: linear-gradient(112deg, var(--sw-a) 0 46%, var(--sw-b) 46% 100%);
+  box-shadow: inset 0 0 0 1px var(--ink-08);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.swatch:hover .swatch__interior {
+  box-shadow:
+    inset 0 0 0 1px var(--ink-08),
+    0 0 0 3px var(--bg),
+    0 0 0 4px var(--line);
+}
+
+.swatch.is-on .swatch__interior {
+  box-shadow:
+    inset 0 0 0 1px var(--ink-08),
+    0 0 0 3px var(--bg),
+    0 0 0 5px var(--ink);
+}
+
+/* ── Add-on cards ───────────────────────────────────────────────────────────*/
+
+.ogroup--cards {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.addon {
+  position: relative;
+  padding: var(--s-4) var(--s-5) var(--s-5);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.addon:hover {
+  box-shadow: inset 0 0 0 1px var(--ink-60);
+}
+
+.addon.is-on {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.addon__input {
+  appearance: none;
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.addon__label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  cursor: pointer;
+}
+
+/* Carries the card-wide focus ring. The stretched input underneath takes the
+   clicks, so this must never intercept them. */
+.addon__label::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-md);
+  pointer-events: none;
+}
+
+.addon__control {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.addon__input[type='checkbox'] + .addon__label .addon__control {
+  border-radius: 5px;
+}
+
+.addon__input:checked + .addon__label .addon__control {
+  background: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.addon__input[type='radio']:checked + .addon__label .addon__control::after {
+  content: '';
+  position: absolute;
+  inset: 5.5px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.addon__input[type='checkbox']:checked + .addon__label .addon__control::after {
+  content: '';
+  position: absolute;
+  left: 6.5px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--bg);
+  border-width: 0 1.8px 1.8px 0;
+  transform: rotate(43deg);
+}
+
+.addon__name {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.addon__price {
+  flex: none;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.addon__desc {
+  margin-top: var(--s-2);
+  padding-left: calc(20px + var(--s-3));
+}
+
+.addon__summary {
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.addon__bullets {
+  display: grid;
+  gap: 4px;
+  margin-top: var(--s-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.addon__bullets li {
+  position: relative;
+  padding-left: var(--s-4);
+}
+
+.addon__bullets li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.6em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+}
+
+/* ── Focus ──────────────────────────────────────────────────────────────────*/
+
+.ohidden:focus-visible + .trim__box,
+.ohidden:focus-visible + .orow__box {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.ohidden:focus-visible + .swatch__dot,
+.ohidden:focus-visible + .swatch__wheel {
+  outline: 2px solid var(--accent);
+  outline-offset: 7px;
+  border-radius: 50%;
+}
+
+.ohidden:focus-visible + .swatch__interior {
+  outline: 2px solid var(--accent);
+  outline-offset: 7px;
+}
+
+.addon__input:focus-visible + .addon__label::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Keeps a control clear of the docked summary when focus scrolls it into view. */
+@media (min-width: 1024px) {
+  .trim,
+  .orow,
+  .swatch,
+  .addon {
+    scroll-margin-top: calc(var(--header-h) + var(--s-4));
+    scroll-margin-bottom: 320px;
+  }
+}
+
+/* ── Narrow ─────────────────────────────────────────────────────────────────*/
+
+@media (max-width: 767px) {
+  .osec__title {
+    font-size: 1.75rem;
+  }
+
+  .osec {
+    padding: var(--s-8) 0;
+  }
+
+  .ogroup--swatches,
+  .ogroup--wheels {
+    gap: var(--s-4);
+  }
+
+  .swatch__wheel {
+    width: 84px;
+    height: 84px;
+  }
+}
+
+/* Below ~1320px the option column is too narrow for one separated spec line, so
+   the three specs become aligned columns rather than a list that orphans a '·'. */
+@media (max-width: 1319px) {
+  .trim__specs {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    column-gap: var(--s-4);
+    font-size: var(--fs-xs);
+  }
+
+  .trim__spec + .trim__spec::before {
+    content: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trim__box,
+  .orow__box,
+  .addon,
+  .addon__control,
+  .swatch__dot,
+  .swatch__wheel,
+  .swatch__interior {
+    transition: none;
+  }
+}

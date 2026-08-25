@@ -1,0 +1,346 @@
+/* ── Price summary ──────────────────────────────────────────────────────────
+   One component, two docks: pinned to the foot of the option column on desktop,
+   fixed to the viewport as a compact bar that expands on tap below 1024px.
+   The Order Now button is inside both, so it is never out of reach.          */
+
+.ps {
+  color: var(--text);
+}
+
+/* ── Desktop dock ───────────────────────────────────────────────────────────*/
+
+.ps--pinned {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: auto calc(var(--panel-pad) * -1) 0;
+  padding: var(--s-4) var(--panel-pad) var(--s-5);
+  background: var(--bg);
+  border-top: 1px solid var(--line-soft);
+  box-shadow: 0 -14px 26px -10px var(--ink-08);
+}
+
+/* ── Mobile bar ─────────────────────────────────────────────────────────────*/
+
+.ps--bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -14px 26px -10px var(--ink-08);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.ps__expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur) var(--ease-out);
+}
+
+.ps__expand.is-open {
+  grid-template-rows: 1fr;
+}
+
+.ps__expandClip {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.ps__expandInner {
+  max-height: 56dvh;
+  overflow-y: auto;
+  padding: var(--s-5) var(--gutter) var(--s-4);
+}
+
+.ps__barMain {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--gutter) var(--s-4);
+}
+
+.ps--bar.is-open .ps__barMain {
+  border-top: 1px solid var(--line-soft);
+}
+
+.ps__handle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  width: 100%;
+  padding: var(--s-1) 0;
+  text-align: left;
+  border-radius: var(--r-sm);
+}
+
+.ps__handleLabel {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* ── Segmented payment toggle ───────────────────────────────────────────────*/
+
+.ps__seg {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+
+.ps__segThumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  box-shadow: var(--shadow-1);
+  transform: translateX(calc(var(--seg-i, 0) * 100%));
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.ps__segOpt {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.ps__segInput {
+  appearance: none;
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ps__segLabel {
+  display: block;
+  padding: 7px 4px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--text-secondary);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.ps__segOpt:hover .ps__segLabel {
+  color: var(--text);
+}
+
+.ps__segOpt.is-on .ps__segLabel {
+  color: var(--text);
+}
+
+.ps__segInput:focus-visible + .ps__segLabel {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Headline ───────────────────────────────────────────────────────────────*/
+
+.ps__headRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--s-4);
+  align-items: end;
+  margin-top: var(--s-3);
+}
+
+.ps__headLabel {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.ps__headRow .ps__headline {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.ps__headRow .ps__lead {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: end;
+  text-align: right;
+}
+
+.ps__headline {
+  display: block;
+}
+
+.ps .ps__value {
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: var(--tracking-tight);
+}
+
+.ps--bar .ps__value {
+  font-size: 1.5rem;
+}
+
+.ps__disclaimer {
+  margin-top: var(--s-2);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.ps__lead {
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.ps--bar .ps__lead {
+  margin-top: var(--s-3);
+}
+
+/* ── Breakdown disclosure ───────────────────────────────────────────────────*/
+
+.ps__disclosure {
+  margin-top: var(--s-1);
+}
+
+.ps__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) 0;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.ps__toggle:hover {
+  color: var(--accent);
+}
+
+.ps__chev {
+  display: block;
+  width: 7px;
+  height: 7px;
+  margin-bottom: 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.ps__chev.is-open {
+  transform: rotate(225deg);
+}
+
+.ps__chev--lg {
+  width: 9px;
+  height: 9px;
+  margin-bottom: 0;
+  color: var(--text-secondary);
+  transform: rotate(225deg);
+}
+
+.ps__chev--lg.is-open {
+  transform: rotate(45deg);
+}
+
+.ps__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur) var(--ease-out);
+}
+
+.ps__panel.is-open {
+  grid-template-rows: 1fr;
+}
+
+.ps__panelClip {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.ps__lines {
+  display: grid;
+  gap: var(--s-2);
+  padding-top: var(--s-2);
+  font-size: var(--fs-sm);
+}
+
+.ps__line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  color: var(--text-secondary);
+}
+
+.ps__lineLabel {
+  min-width: 0;
+}
+
+.ps__lineAmount {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.ps__line--credit .ps__lineAmount {
+  color: var(--success);
+}
+
+.ps__total {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.ps__cta {
+  margin-top: var(--s-4);
+}
+
+/* Narrow desktops give the dock less room, so it gives some back. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .ps--pinned {
+    padding-top: var(--s-3);
+    padding-bottom: var(--s-4);
+  }
+
+  .ps .ps__value {
+    font-size: 1.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps__segThumb,
+  .ps__panel,
+  .ps__expand,
+  .ps__chev {
+    transition: none;
+  }
+}

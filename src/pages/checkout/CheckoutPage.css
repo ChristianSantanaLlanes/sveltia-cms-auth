@@ -1,0 +1,578 @@
+/* ── Checkout ────────────────────────────────────────────────────────────
+   A 720px form column with a 360px sticky summary rail from 1024px up. Below
+   that the summary collapses into the strip above the form and the form runs
+   full width.                                                                */
+
+.checkout {
+  padding: calc(var(--header-h) + var(--s-10)) var(--gutter) var(--s-24);
+}
+
+.checkout__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ── Page head ───────────────────────────────────────────────────────────── */
+
+.checkout__head {
+  max-width: 720px;
+  margin-bottom: var(--s-10);
+}
+
+.checkout__eyebrow {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--s-3);
+}
+
+.checkout__title {
+  font-size: var(--fs-h1);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+}
+
+.checkout__sub {
+  margin-top: var(--s-3);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 58ch;
+  text-wrap: pretty;
+}
+
+/* ── Grid ────────────────────────────────────────────────────────────────── */
+
+.checkout__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-8);
+}
+
+.checkout__form {
+  min-width: 0;
+  max-width: 720px;
+}
+
+.checkout__rail { min-width: 0; }
+
+/* ── Section ─────────────────────────────────────────────────────────────── */
+
+.co-sec { min-width: 0; }
+
+.co-sec + .co-sec {
+  margin-top: var(--s-10);
+  padding-top: var(--s-10);
+  border-top: 1px solid var(--line-soft);
+}
+
+.co-secTitle {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-tight);
+  margin-bottom: var(--s-5);
+}
+
+.co-secHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+}
+
+.co-secHead .co-secTitle { margin-bottom: 0; }
+
+.co-secTitle + .co-secNote {
+  margin-top: calc(var(--s-4) * -1);
+  margin-bottom: var(--s-5);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 56ch;
+}
+
+.co-num { font-variant-numeric: tabular-nums; }
+
+.co-fine {
+  margin-top: var(--s-4);
+  font-size: var(--fs-xs);
+  line-height: 1.55;
+  color: var(--text-tertiary);
+}
+
+.co-fine--center {
+  margin-top: var(--s-4);
+  text-align: center;
+}
+
+.co-link {
+  display: inline-block;
+  margin-top: var(--s-4);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  box-shadow: inset 0 -1px 0 transparent;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.co-link:hover { box-shadow: inset 0 -1px 0 currentColor; }
+
+/* ── 1. Your Vehicle ─────────────────────────────────────────────────────── */
+
+.co-vehicle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-5);
+}
+
+.co-vehicle__plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background:
+    radial-gradient(120% 100% at 50% 45%, var(--bg) 0%, var(--surface) 70%, var(--surface-2) 100%);
+}
+
+.co-vehicle__car { width: 100%; }
+
+.co-vehicle__info { min-width: 0; }
+
+.co-vehicle__model {
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+}
+
+.co-vehicle__trim {
+  margin-top: 2px;
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+}
+
+.co-vehicle__lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.co-vehicle__line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.co-vehicle__line .co-num { color: var(--text); flex: none; }
+
+.co-vehicle__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+/* ── 2. Payment method ───────────────────────────────────────────────────── */
+
+.co-seg {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background-color: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+
+.co-seg__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: var(--r-pill);
+  background-color: var(--bg);
+  box-shadow: var(--shadow-1);
+  transform: translateX(calc(var(--seg-i, 0) * 100%));
+  transition: transform var(--dur) var(--ease-out);
+}
+
+.co-seg__opt {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.co-seg__input {
+  appearance: none;
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.co-seg__label {
+  display: block;
+  padding: 10px var(--s-2);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--text-secondary);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.co-seg__opt:hover .co-seg__label,
+.co-seg__opt.is-on .co-seg__label { color: var(--text); }
+
+.co-seg__input:focus-visible + .co-seg__label {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.co-mode {
+  display: grid;
+  gap: var(--s-5);
+  margin-top: var(--s-5);
+  padding: var(--s-5);
+  border-radius: var(--r-md);
+  background-color: var(--surface);
+}
+
+.co-mode__figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.co-mode__value {
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.co-mode__caption {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.co-mode__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.co-mode__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
+.co-mode__row dt { color: var(--text-secondary); }
+.co-mode__row dd { text-align: right; }
+
+/* ── Form grids ──────────────────────────────────────────────────────────── */
+
+.co-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.co-grid > * { grid-column: 1 / -1; }
+
+.co-span2 { grid-column: 1 / -1; }
+
+.co-city { grid-column: 1 / -1; }
+.co-state { grid-column: span 3; }
+.co-zip { grid-column: span 3; }
+
+/* ── State select: matched to the 56px floating-label fields ─────────────── */
+
+.co-state {
+  position: relative;
+  gap: 0;
+}
+
+.co-state .select__label {
+  position: absolute;
+  z-index: 1;
+  top: 9px;
+  left: 17px;
+  font-size: var(--fs-xs);
+  line-height: 1.2;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.co-state .select__control {
+  height: 56px;
+  padding: 22px var(--s-10) 6px 15px;
+  font-size: var(--fs-body);
+  border-radius: var(--r-sm);
+}
+
+.co-state .select__control:focus-visible { outline-offset: 2px; }
+
+.co-state .select__msg { margin-top: var(--s-2); }
+
+/* ── 5. Accepted cards ───────────────────────────────────────────────────── */
+
+.co-cards {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.co-card {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background-color: var(--bg);
+  overflow: hidden;
+  opacity: 0.65;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.co-cards.has-brand .co-card { opacity: 0.25; }
+.co-cards.has-brand .co-card.is-on {
+  opacity: 1;
+  border-color: var(--text);
+}
+
+/* Marks are drawn, not imaged, and stay monochrome so the page keeps to the
+   one-accent palette. */
+.co-card::before,
+.co-card::after {
+  content: '';
+  position: absolute;
+  background-color: var(--text-secondary);
+}
+
+.co-card--visa::before,
+.co-card--visa::after {
+  top: 5px;
+  height: 10px;
+  width: 5px;
+  transform: skewX(-14deg);
+}
+.co-card--visa::before { left: 10px; }
+.co-card--visa::after { left: 19px; opacity: 0.45; }
+
+.co-card--mastercard::before,
+.co-card--mastercard::after {
+  top: 5px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+.co-card--mastercard::before { left: 6px; }
+.co-card--mastercard::after { left: 16px; opacity: 0.45; }
+
+.co-card--amex::before {
+  inset: 4px;
+  border-radius: 2px;
+}
+.co-card--amex::after {
+  top: 10px;
+  left: 9px;
+  width: 14px;
+  height: 2px;
+  background-color: var(--bg);
+}
+
+.co-card--discover::before {
+  top: 5px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  opacity: 0.45;
+}
+.co-card--discover::after {
+  top: 10px;
+  left: 6px;
+  width: 13px;
+  height: 2px;
+}
+
+/* ── 6. Order agreement ──────────────────────────────────────────────────── */
+
+.co-sec--agree .co-secTitle { margin-bottom: var(--s-4); }
+
+.co-check {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: var(--s-3);
+  align-items: start;
+}
+
+.co-check__input {
+  appearance: none;
+  display: grid;
+  place-content: center;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background-color: var(--bg);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.co-check__input:hover { border-color: var(--text-tertiary); }
+
+.co-check__input::after {
+  content: '';
+  width: 10px;
+  height: 5px;
+  margin-top: -3px;
+  border-left: 2px solid var(--on-dark);
+  border-bottom: 2px solid var(--on-dark);
+  transform: rotate(-45deg) scale(0.5);
+  opacity: 0;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.co-check__input:checked {
+  background-color: var(--ink);
+  border-color: var(--ink);
+}
+
+.co-check__input:checked::after {
+  opacity: 1;
+  transform: rotate(-45deg) scale(1);
+}
+
+.co-check.is-error .co-check__input { border-color: var(--danger); }
+
+.co-check__label {
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.co-check__error {
+  margin-top: var(--s-2);
+  padding-left: calc(20px + var(--s-3));
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  color: var(--danger);
+}
+
+.co-live {
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  margin-top: var(--s-5);
+}
+
+.co-live:empty { display: none; }
+.co-live[data-tone='error'] { color: var(--danger); }
+.co-live[data-tone='ok'] { color: var(--text-secondary); }
+
+/* The live region collapses when empty, so the button owns its own spacing
+   rather than inheriting it from a sibling that may not be rendered. */
+.co-sec--agree .btn { margin-top: var(--s-6); }
+
+/* ── Breakpoints ─────────────────────────────────────────────────────────── */
+
+@media (min-width: 480px) {
+  .co-city { grid-column: span 2; }
+  .co-state { grid-column: span 2; }
+  .co-zip { grid-column: span 2; }
+}
+
+@media (min-width: 560px) {
+  .co-vehicle {
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    gap: var(--s-6);
+    align-items: start;
+  }
+
+  .co-grid--2 > *,
+  .co-grid--pay > * { grid-column: span 3; }
+  .co-grid--2 > .co-span2,
+  .co-grid--pay > .co-span2 { grid-column: 1 / -1; }
+}
+
+@media (min-width: 640px) {
+  .co-mode {
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    gap: var(--s-8);
+    align-items: start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .checkout { padding-top: calc(var(--header-h) + var(--s-16)); }
+
+  .checkout__head { margin-bottom: var(--s-12); }
+
+  .checkout__grid {
+    grid-template-columns: minmax(0, 720px) 360px;
+    gap: var(--s-16);
+    align-items: start;
+  }
+
+  /* The rail comes first in the DOM so it is the mobile summary strip; on the
+     desktop grid it is placed into the right column instead. */
+  .checkout__rail {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .checkout__form {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .co-seg__thumb,
+  .co-check__input,
+  .co-check__input::after,
+  .co-card,
+  .co-link { transition: none; }
+}

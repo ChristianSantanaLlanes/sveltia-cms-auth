@@ -1,195 +1,284 @@
-// Renders tools/progress.json into a publishable status page.
-import fs from 'node:fs';
+#!/usr/bin/env node
+/**
+ * Renders progress/index.html from progress/state.json, inlining the latest
+ * captures from .shots as JPEG data URIs so the page stands alone.
+ *
+ *   node tools/progress.mjs
+ */
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
+import sharp from 'sharp';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const data = JSON.parse(fs.readFileSync(path.join(here, 'progress.json'), 'utf8'));
-const OUT = process.argv[2] || '/tmp/claude-0/-home-user-sveltia-cms-auth/1330c57c-df42-5ebc-aecf-14a4f255d383/scratchpad/progress.html';
-
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const ms = (v) => (v == null ? '—' : v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.round(v)} ms`);
-const mb = (v) => (v == null ? '—' : `${(v / 1048576).toFixed(2)} MB`);
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const SHOTS = path.join(ROOT, '.shots');
+const STATE = path.join(ROOT, 'progress', 'state.json');
+const OUT = path.join(ROOT, 'progress', 'index.html');
 
 const STATUS = {
-  pending: { label: 'en cola', cls: 'pending' },
-  building: { label: 'construyendo', cls: 'building' },
-  judging: { label: 'en juicio', cls: 'judging' },
-  lost: { label: 'perdida', cls: 'lost' },
-  won: { label: 'ganada a ciegas', cls: 'won' },
+  queued:    { label: 'Queued',     tone: 'idle' },
+  building:  { label: 'Building',   tone: 'work' },
+  reviewing: { label: 'In review',  tone: 'work' },
+  revising:  { label: 'Revising',   tone: 'warn' },
+  lost:      { label: 'Critic picked Tesla', tone: 'warn' },
+  won:       { label: 'Ours wins',  tone: 'good' },
 };
 
-const ours = data.metrics.ours;
-const apple = data.metrics.apple;
-const delta = (o, a, lowerBetter = false) => {
-  if (o == null || a == null) return '';
-  const better = lowerBetter ? o < a : o > a;
-  const factor = lowerBetter ? (a / o) : (o / a);
-  return `<span class="delta ${better ? 'up' : 'down'}">${better ? '▲' : '▼'} ${factor >= 2 ? `${factor.toFixed(1)}×` : `${Math.abs(Math.round((factor - 1) * 100))}%`}</span>`;
-};
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const pieceRows = data.pieces.map((p) => {
-  const st = STATUS[p.status] || STATUS.pending;
-  const rounds = (p.rounds || []).map((r, i) => `
-      <li class="round ${r.winner === 'ours' ? 'is-win' : 'is-loss'}">
-        <span class="round__n">R${i + 1}</span>
-        <span class="round__verdict">${r.winner === 'ours' ? 'elige la nuestra' : 'elige la de Apple'}</span>
-        <p class="round__gap">${esc(r.gap || '')}</p>
-      </li>`).join('');
+async function thumb(name, width) {
+  const file = path.join(SHOTS, `${name}.png`);
+  if (!existsSync(file)) return null;
+  const buf = await sharp(file).resize({ width, withoutEnlargement: true }).jpeg({ quality: 68, mozjpeg: true }).toBuffer();
+  return `data:image/jpeg;base64,${buf.toString('base64')}`;
+}
+
+function git(cmd, fallback = '') {
+  try { return execSync(cmd, { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); }
+  catch { return fallback; }
+}
+
+const state = JSON.parse(readFileSync(STATE, 'utf8'));
+
+// Merge per-piece verdicts dropped by the critics into .progress/<id>.json
+const PROG = path.join(ROOT, '.progress');
+if (existsSync(PROG)) {
+  for (const file of readdirSync(PROG).filter((f) => f.endsWith('.json'))) {
+    let patch;
+    try { patch = JSON.parse(readFileSync(path.join(PROG, file), 'utf8')); } catch { continue; }
+    const piece = state.pieces.find((p) => p.id === patch.id);
+    if (!piece) continue;
+    Object.assign(piece, {
+      status: patch.status ?? piece.status,
+      rounds: patch.rounds ?? piece.rounds,
+      verdict: patch.verdict ?? piece.verdict,
+      gap: patch.gap ?? piece.gap,
+    });
+    if (patch.log) {
+      state.log = state.log || [];
+      for (const entry of patch.log) {
+        if (!state.log.some((l) => l.t === entry.t && l.msg === entry.msg)) state.log.push(entry);
+      }
+    }
+  }
+  state.log = (state.log || []).sort((a, b) => String(a.t).localeCompare(String(b.t)));
+}
+const stamp = state.updated || new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+const branch = git('git rev-parse --abbrev-ref HEAD', 'unknown');
+const commit = git('git rev-parse --short HEAD', '—');
+const commitCount = git('git rev-list --count HEAD', '0');
+
+const won = state.pieces.filter((p) => p.status === 'won').length;
+const total = state.pieces.length;
+const pct = Math.round((won / total) * 100);
+
+const shotNames = [...new Set(state.pieces.flatMap((p) => p.shots || []))];
+const gallery = [];
+for (const name of shotNames) {
+  const src = await thumb(name, name.includes('mobile') ? 300 : 760);
+  if (src) gallery.push({ name, src, mobile: name.includes('mobile') });
+}
+
+const rows = state.pieces.map((p) => {
+  const st = STATUS[p.status] || STATUS.queued;
+  const dots = Array.from({ length: Math.max(p.rounds, 0) }, () => '<i></i>').join('');
   return `
-  <article class="piece piece--${st.cls}">
-    <header class="piece__head">
-      <h3 class="piece__name">${esc(p.name)}</h3>
-      <span class="pill pill--${st.cls}">${st.label}</span>
-      <span class="piece__count">${(p.rounds || []).length} ronda${(p.rounds || []).length === 1 ? '' : 's'}</span>
-    </header>
-    ${p.note ? `<p class="piece__note">${esc(p.note)}</p>` : ''}
-    ${rounds ? `<ol class="rounds">${rounds}</ol>` : ''}
-  </article>`;
+      <tr>
+        <th scope="row">
+          <span class="piece">${esc(p.name)}</span>
+          <span class="detail">${esc(p.detail)}</span>
+        </th>
+        <td><span class="chip ${st.tone}">${esc(st.label)}</span></td>
+        <td class="rounds"><span class="dots">${dots || '<i class="empty"></i>'}</span><span class="count">${p.rounds}</span></td>
+        <td class="gap">${p.gap ? esc(p.gap) : '<span class="muted">—</span>'}</td>
+      </tr>`;
 }).join('');
 
-const html = `<title>Bitácora KUROGANE</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+const logRows = (state.log || []).slice(-14).reverse().map((l) => `
+      <li><time>${esc(l.t)}</time><span>${esc(l.msg)}</span></li>`).join('');
+
+const html = `<title>Vela Build Sheet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
-  --paper: #f2efe9;
-  --paper-2: #e8e4dc;
-  --card: #fbfaf7;
-  --ink: #17161a;
-  --ink-2: #4a4750;
-  --ink-3: #7d7986;
-  --rule: rgba(23, 22, 26, .14);
-  --ai: #26456e;
-  --ai-soft: rgba(38, 69, 110, .1);
-  --tetsu: #7a5c3e;
-  --win: #2f6b4f;
-  --loss: #9a3324;
-  --shadow: 0 1px 2px rgba(20,18,26,.06), 0 12px 30px rgba(20,18,26,.07);
-  --display: "Shippori Mincho B1", "Hiragino Mincho ProN", Georgia, serif;
-  --body: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ground: #ffffff;
+  --plate: #f5f6f7;
+  --plate-2: #eceef0;
+  --line: #d9dcdf;
+  --line-soft: #e7e9eb;
+  --text: #15171b;
+  --text-2: #5d636d;
+  --text-3: #8b919a;
+  --accent: #2f55d4;
+  --good: #14764f;
+  --warn: #97650f;
+  --idle: #7d838c;
+  --shadow: 0 1px 2px rgba(16, 18, 22, .06), 0 10px 28px rgba(16, 18, 22, .06);
 }
 :root:not([data-theme="light"]) { }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #121114;
-    --paper-2: #191819;
-    --card: #1c1b1e;
-    --ink: #eeebe4;
-    --ink-2: #b3afa8;
-    --ink-3: #85818b;
-    --rule: rgba(238, 235, 228, .16);
-    --ai: #8fb3e0;
-    --ai-soft: rgba(143, 179, 224, .12);
-    --tetsu: #c39a6b;
-    --win: #6fbf95;
-    --loss: #e08b78;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.35);
+    --ground: #0d0e11;
+    --plate: #15171b;
+    --plate-2: #1b1e23;
+    --line: #292d34;
+    --line-soft: #21252b;
+    --text: #f1f2f4;
+    --text-2: #9aa1ab;
+    --text-3: #6d747e;
+    --accent: #6d8dff;
+    --good: #4fbb8a;
+    --warn: #d6a343;
+    --idle: #757c86;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 16px 40px rgba(0, 0, 0, .35);
   }
 }
 :root[data-theme="dark"] {
-  --paper: #121114; --paper-2: #191819; --card: #1c1b1e;
-  --ink: #eeebe4; --ink-2: #b3afa8; --ink-3: #85818b;
-  --rule: rgba(238, 235, 228, .16);
-  --ai: #8fb3e0; --ai-soft: rgba(143, 179, 224, .12); --tetsu: #c39a6b;
-  --win: #6fbf95; --loss: #e08b78;
-  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.35);
+  --ground: #0d0e11;
+  --plate: #15171b;
+  --plate-2: #1b1e23;
+  --line: #292d34;
+  --line-soft: #21252b;
+  --text: #f1f2f4;
+  --text-2: #9aa1ab;
+  --text-3: #6d747e;
+  --accent: #6d8dff;
+  --good: #4fbb8a;
+  --warn: #d6a343;
+  --idle: #757c86;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 16px 40px rgba(0, 0, 0, .35);
 }
+
 * { box-sizing: border-box; }
 body {
-  margin: 0; background: var(--paper); color: var(--ink);
-  font-family: var(--body); font-size: 16px; line-height: 1.6;
+  margin: 0;
+  background: var(--ground);
+  color: var(--text);
+  font-family: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
-.wrap { width: min(100% - 2.5rem, 980px); margin-inline: auto; padding-block: clamp(2.5rem, 6vw, 4.5rem); display: flex; flex-direction: column; gap: clamp(2rem, 4vw, 3rem); }
-.head { display: flex; flex-direction: column; gap: .9rem; }
-.stamp { font-family: var(--mono); font-size: .74rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3); display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; }
-.stamp b { color: var(--tetsu); font-weight: 500; }
-h1 { font-family: var(--display); font-weight: 700; font-size: clamp(1.9rem, 4.6vw, 3rem); line-height: 1.15; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
-.sub { color: var(--ink-2); max-width: 62ch; margin: 0; }
-.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
-.metric { background: var(--card); padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .35rem; }
-.metric__k { font-family: var(--mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
-.metric__v { font-family: var(--display); font-size: 1.85rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
-.metric__ref { font-size: .8rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.delta { font-family: var(--mono); font-size: .78rem; }
-.delta.up { color: var(--win); }
-.delta.down { color: var(--loss); }
-h2 { font-family: var(--display); font-size: 1.25rem; font-weight: 700; margin: 0 0 .9rem; letter-spacing: .01em; }
-.pieces { display: flex; flex-direction: column; gap: .75rem; }
-.piece { background: var(--card); border: 1px solid var(--rule); border-radius: 12px; padding: 1rem 1.1rem; box-shadow: var(--shadow); }
-.piece__head { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
-.piece__name { font-family: var(--display); font-size: 1.05rem; font-weight: 700; margin: 0; flex: 1 1 auto; }
-.piece__count { font-family: var(--mono); font-size: .74rem; color: var(--ink-3); }
-.piece__note { margin: .55rem 0 0; color: var(--ink-2); font-size: .92rem; }
-.pill { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; padding: .25rem .6rem; border-radius: 999px; border: 1px solid currentColor; }
-.pill--pending { color: var(--ink-3); }
-.pill--building { color: var(--tetsu); }
-.pill--judging { color: var(--ai); background: var(--ai-soft); border-color: transparent; }
-.pill--lost { color: var(--loss); }
-.pill--won { color: var(--win); }
-.rounds { list-style: none; margin: .85rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
-.round { display: grid; grid-template-columns: auto 1fr; gap: .2rem .7rem; padding-left: .8rem; border-left: 2px solid var(--rule); }
-.round.is-win { border-left-color: var(--win); }
-.round.is-loss { border-left-color: var(--loss); }
-.round__n { font-family: var(--mono); font-size: .74rem; color: var(--ink-3); }
-.round__verdict { font-size: .84rem; font-weight: 500; }
-.round.is-win .round__verdict { color: var(--win); }
-.round.is-loss .round__verdict { color: var(--loss); }
-.round__gap { grid-column: 2; margin: 0; font-size: .86rem; color: var(--ink-2); }
-.log { border-top: 1px solid var(--rule); padding-top: 1rem; display: flex; flex-direction: column; gap: .6rem; }
-.log__row { display: grid; grid-template-columns: 4.2rem 1fr; gap: .8rem; align-items: baseline; }
-.log__t { font-family: var(--mono); font-size: .76rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
-.log__x { margin: 0; font-size: .92rem; color: var(--ink-2); }
-.imgbank { display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: var(--mono); font-size: .8rem; color: var(--ink-2); }
-.imgbank b { font-family: var(--display); font-size: 1.4rem; color: var(--ink); display: block; }
-footer { color: var(--ink-3); font-size: .8rem; font-family: var(--mono); border-top: 1px solid var(--rule); padding-top: 1rem; }
-@media (prefers-reduced-motion: no-preference) { .piece { transition: border-color 240ms ease; } }
+.wrap { max-width: 1080px; margin: 0 auto; padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 40px) 96px; }
+.mono { font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+header.masthead { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; flex-direction: column; gap: 6px; }
+.eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--text-3); }
+h1 { margin: 0; font-size: clamp(28px, 4.4vw, 40px); font-weight: 700; letter-spacing: -.025em; line-height: 1.05; text-wrap: balance; }
+.sub { color: var(--text-2); max-width: 58ch; margin: 8px 0 0; }
+.meta { display: grid; gap: 4px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-3); }
+.meta b { color: var(--text-2); font-weight: 500; }
+
+.tally { display: flex; align-items: baseline; gap: 12px; margin: 28px 0 10px; }
+.tally .n { font-size: 44px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+.tally .of { color: var(--text-2); font-size: 15px; }
+.bar { height: 6px; background: var(--plate-2); border-radius: 99px; overflow: hidden; }
+.bar > span { display: block; height: 100%; width: ${pct}%; background: var(--accent); border-radius: 99px; transition: width .4s cubic-bezier(.16,1,.3,1); }
+
+.notice { margin: 32px 0 0; padding: 18px 20px; background: var(--plate); border: 1px solid var(--line-soft); border-left: 3px solid var(--warn); border-radius: 4px; }
+.notice h2 { margin: 0 0 6px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--warn); }
+.notice p { margin: 0; color: var(--text-2); font-size: 14px; }
+
+section { margin-top: 44px; }
+h2.section { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--text-3); margin: 0 0 14px; }
+
+.table-scroll { overflow-x: auto; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--plate); }
+table { width: 100%; border-collapse: collapse; min-width: 640px; }
+th, td { text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: top; font-weight: 400; }
+tr:last-child th, tr:last-child td { border-bottom: 0; }
+th[scope="row"] { width: 30%; }
+.piece { display: block; font-weight: 600; letter-spacing: -.01em; }
+.detail { display: block; color: var(--text-3); font-size: 13px; }
+.chip { display: inline-block; padding: 3px 10px; border-radius: 99px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .06em; border: 1px solid currentColor; white-space: nowrap; }
+.chip.good { color: var(--good); }
+.chip.warn { color: var(--warn); }
+.chip.work { color: var(--accent); }
+.chip.idle { color: var(--idle); }
+.rounds { white-space: nowrap; }
+.dots { display: inline-flex; gap: 3px; vertical-align: middle; margin-right: 8px; }
+.dots i { width: 6px; height: 6px; border-radius: 99px; background: var(--accent); display: block; }
+.dots i.empty { background: var(--line); }
+.count { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-3); }
+.gap { color: var(--text-2); font-size: 14px; }
+.muted { color: var(--text-3); }
+
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.shot { border: 1px solid var(--line-soft); border-radius: 6px; overflow: hidden; background: var(--plate); box-shadow: var(--shadow); }
+.shot img { display: block; width: 100%; height: auto; }
+.shot.mobile img { max-width: 240px; margin: 0 auto; }
+.shot figcaption { padding: 8px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .06em; color: var(--text-3); border-top: 1px solid var(--line-soft); }
+.empty-shots { color: var(--text-3); font-size: 14px; }
+
+ul.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--plate); }
+ul.log li { display: grid; grid-template-columns: 132px 1fr; gap: 16px; padding: 11px 16px; border-bottom: 1px solid var(--line-soft); font-size: 14px; }
+ul.log li:last-child { border-bottom: 0; }
+ul.log time { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-3); }
+@media (max-width: 620px) {
+  ul.log li { grid-template-columns: 1fr; gap: 2px; }
+  header.masthead { flex-direction: column; align-items: flex-start; }
+  .meta { text-align: left; }
+}
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--text-3); font-size: 13px; }
 </style>
+
 <div class="wrap">
-  <header class="head">
-    <p class="stamp"><b>${esc(data.phase)}</b> <span>actualizado ${esc(data.updated)}</span></p>
-    <h1>${esc(data.headline)}</h1>
-    <p class="sub">Cada pieza se construye y se juzga por separado. El crítico ve la nuestra y la de Apple sin etiquetas, elige una y nombra la brecha que queda. Se repite hasta que elige la nuestra.</p>
+  <header class="masthead">
+    <div class="brand">
+      <span class="eyebrow">Vela Motors · build sheet</span>
+      <h1>${esc(state.headline || 'Build in progress')}</h1>
+      <p class="sub">${esc(state.note || '')}</p>
+    </div>
+    <div class="meta">
+      <span><b>${esc(stamp)}</b></span>
+      <span>branch <b>${esc(branch)}</b></span>
+      <span>commit <b>${esc(commit)}</b> · ${esc(commitCount)} total</span>
+      <span>phase <b>${esc(state.phase || '—')}</b></span>
+    </div>
   </header>
 
+  <div class="tally">
+    <span class="n">${won}</span><span class="of">of ${total} pieces the critic has picked over the benchmark</span>
+  </div>
+  <div class="bar"><span></span></div>
+
+  <div class="notice">
+    <h2>Benchmark access</h2>
+    <p>${esc(state.constraint || '')}</p>
+  </div>
+
   <section>
-    <h2>Lighthouse móvil</h2>
-    <div class="metrics">
-      <div class="metric"><span class="metric__k">Performance</span><span class="metric__v">${ours ? ours.perf : '—'} ${delta(ours?.perf, apple.perf)}</span><span class="metric__ref">Apple ${apple.perf}</span></div>
-      <div class="metric"><span class="metric__k">LCP</span><span class="metric__v">${ours ? ms(ours.lcp) : '—'} ${delta(ours?.lcp, apple.lcp, true)}</span><span class="metric__ref">Apple ${ms(apple.lcp)}</span></div>
-      <div class="metric"><span class="metric__k">Bloqueo total</span><span class="metric__v">${ours ? ms(ours.tbt) : '—'} ${delta(ours?.tbt, apple.tbt, true)}</span><span class="metric__ref">Apple ${ms(apple.tbt)}</span></div>
-      <div class="metric"><span class="metric__k">Peso</span><span class="metric__v">${ours ? mb(ours.bytes) : '—'} ${delta(ours?.bytes, apple.bytes, true)}</span><span class="metric__ref">Apple ${mb(apple.bytes)}</span></div>
+    <h2 class="section">Pieces</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th scope="col">Piece</th><th scope="col">Status</th><th scope="col">Rounds</th><th scope="col">Largest remaining gap</th></tr>
+        </thead>
+        <tbody>${rows}
+        </tbody>
+      </table>
     </div>
   </section>
 
   <section>
-    <h2>Piezas</h2>
-    <div class="pieces">${pieceRows || '<p class="sub">Aún sin piezas en juicio.</p>'}</div>
+    <h2 class="section">Latest captures</h2>
+    ${gallery.length ? `<div class="shots">${gallery.map((g) => `
+      <figure class="shot${g.mobile ? ' mobile' : ''}"><img src="${g.src}" alt="${esc(g.name)} capture"><figcaption>${esc(g.name)}</figcaption></figure>`).join('')}
+    </div>` : '<p class="empty-shots">No captures yet — the first screenshots land once the surface compiles.</p>'}
   </section>
 
-  <section>
-    <h2>Banco de imágenes</h2>
-    <div class="imgbank">
-      <span><b>${data.images.raw}</b> descargadas</span>
-      <span><b>${data.images.curated}</b> seleccionadas</span>
-      <span><b>${data.images.optimized}</b> optimizadas AVIF/WebP</span>
-    </div>
-  </section>
+  ${logRows ? `<section>
+    <h2 class="section">Activity</h2>
+    <ul class="log">${logRows}
+    </ul>
+  </section>` : ''}
 
-  <section>
-    <h2>Bitácora</h2>
-    <div class="log">
-      ${data.log.map((l) => `<div class="log__row"><span class="log__t">${esc(l.t)}</span><p class="log__x">${esc(l.text)}</p></div>`).join('')}
-    </div>
-  </section>
+  <footer>Regenerated by <span class="mono">tools/progress.mjs</span> after every round. Captures are Playwright screenshots of the running app at 1440×900 and 390×844.</footer>
+</div>
+`;
 
-  <footer>KUROGANE · rama claude/katana-store-landing-qsodw2 · medidas con Lighthouse simulado, móvil, 4× CPU</footer>
-</div>`;
-
-fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, html);
-console.log(`progress page -> ${OUT} (${(html.length / 1024).toFixed(1)}kB)`);
+writeFileSync(OUT, html);
+console.log(`progress/index.html — ${won}/${total} won, ${gallery.length} capture(s), ${(html.length / 1024).toFixed(0)} KB`);
