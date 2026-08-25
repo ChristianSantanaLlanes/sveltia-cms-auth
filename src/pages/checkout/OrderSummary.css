@@ -1,23 +1,24 @@
 /* ── Order summary ───────────────────────────────────────────────────────
    One component, three placements: the sticky desktop rail, the collapsible
    strip that sits above the form on narrow viewports, and a static block on
-   the confirmation page.                                                    */
+   the confirmation page. The rail is deliberately not a card — it is a
+   ruled ledger column, so the page reads as one document rather than a
+   form next to a widget.                                                   */
 
 .osum {
   min-width: 0;
   background-color: var(--bg);
 }
 
-.osum--rail,
+.osum--rail {
+  position: sticky;
+  top: calc(var(--header-h) + var(--s-8));
+}
+
 .osum--static {
   padding: var(--s-6);
   border: 1px solid var(--line-soft);
   border-radius: var(--r-md);
-}
-
-.osum--rail {
-  position: sticky;
-  top: calc(var(--header-h) + var(--s-6));
 }
 
 .osum--strip {
@@ -27,9 +28,23 @@
 }
 
 .osum__heading {
-  font-size: var(--fs-h3);
+  font-size: var(--fs-xs);
   font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.osum--rail .osum__heading {
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--ink);
+}
+
+.osum--static .osum__heading {
+  font-size: var(--fs-h3);
   letter-spacing: var(--tracking-tight);
+  text-transform: none;
+  color: var(--text);
   margin-bottom: var(--s-5);
 }
 
@@ -112,7 +127,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
-  padding-bottom: var(--s-5);
+  padding: var(--s-4) 0 var(--s-5);
 }
 
 .osum__plate {
@@ -129,7 +144,7 @@
 .osum__ident { display: flex; flex-direction: column; gap: 2px; }
 
 .osum__model {
-  font-size: var(--fs-body);
+  font-size: var(--fs-lg);
   font-weight: 500;
   letter-spacing: var(--tracking-tight);
 }
@@ -137,6 +152,13 @@
 .osum__trim {
   font-size: var(--fs-sm);
   color: var(--text-secondary);
+}
+
+.osum__spec {
+  margin-top: var(--s-1);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--text-tertiary);
 }
 
 /* ── Itemised lines ──────────────────────────────────────────────────────── */
@@ -157,7 +179,7 @@
   justify-content: space-between;
   gap: var(--s-4);
   font-size: var(--fs-sm);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .osum__lineLabel { color: var(--text-secondary); }
@@ -171,7 +193,9 @@
 .osum__line--sub .osum__lineLabel,
 .osum__line--sub .osum__lineAmount { color: var(--text); }
 
-.osum__line--credit .osum__lineAmount { color: var(--success); }
+/* The minus sign carries the credit; the palette stays at one accent. */
+.osum__line--credit .osum__lineLabel,
+.osum__line--credit .osum__lineAmount { color: var(--text-secondary); }
 
 /* ── Total ───────────────────────────────────────────────────────────────── */
 
@@ -180,19 +204,23 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s-4);
-  margin-top: var(--s-4);
-  padding-top: var(--s-4);
-  border-top: 1px solid var(--line);
+  margin-top: var(--s-5);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--ink);
 }
 
 .osum__totalLabel {
-  font-size: var(--fs-body);
+  font-size: var(--fs-xs);
   font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 .osum__totalValue {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 500;
+  line-height: 1;
   letter-spacing: var(--tracking-tight);
   font-variant-numeric: tabular-nums;
 }
@@ -200,10 +228,9 @@
 /* ── Payment line ────────────────────────────────────────────────────────── */
 
 .osum__pay {
-  margin-top: var(--s-4);
-  padding: var(--s-3) var(--s-4);
-  border-radius: var(--r-sm);
-  background-color: var(--surface);
+  margin-top: var(--s-5);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line-soft);
 }
 
 .osum__payRow {
@@ -218,16 +245,31 @@
 .osum__payValue { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .osum__payDetail {
-  margin-top: 2px;
+  margin-top: 3px;
   font-size: var(--fs-xs);
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--text-secondary);
 }
 
+.osum__due {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.osum__dueValue { font-variant-numeric: tabular-nums; }
+
 .osum__lead {
-  margin-top: var(--s-3);
+  margin-top: var(--s-4);
   font-size: var(--fs-xs);
-  color: var(--text-secondary);
+  line-height: 1.5;
+  color: var(--text-tertiary);
 }
 
 @media (prefers-reduced-motion: reduce) {

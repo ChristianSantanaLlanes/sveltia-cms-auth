@@ -63,9 +63,11 @@ export function VehicleCard({ vehicle }: VehicleCardProps): ReactElement {
       <div className="vcard__plate">
         {badge ? (
           <p className="vcard__badges">
-            <span className="vcard__badge">{badge}</span>
-            <span className="vcard__badge vcard__badge--odo">
-              {num(vehicle.odometer)} mi<span className="sr-only"> on the odometer</span>
+            <span className="vcard__badge">
+              <span className="vcard__badge-tag">{badge}</span>
+              <span className="vcard__badge-odo">
+                {num(vehicle.odometer)} mi<span className="sr-only"> on the odometer</span>
+              </span>
             </span>
           </p>
         ) : null}
@@ -74,7 +76,8 @@ export function VehicleCard({ vehicle }: VehicleCardProps): ReactElement {
             body={model.body}
             paint={paint}
             wheel={wheel}
-            view="side"
+            view="front-3q"
+            ground={false}
             label={`${title} in ${paint.name} with ${wheel.name}`}
           />
         </div>
@@ -146,9 +149,7 @@ export function VehicleCardSkeleton(): ReactElement {
   return (
     <article className="vcard vcard--skeleton" aria-hidden="true">
       <div className="vcard__plate">
-        <div className="vcard__car">
-          <Skeleton w="100%" h="100%" radius="var(--r-md)" />
-        </div>
+        <Skeleton className="vcard__plate-skeleton" radius="var(--r-md)" />
       </div>
 
       <div className="vcard__body">
@@ -164,7 +165,7 @@ export function VehicleCardSkeleton(): ReactElement {
 
           <div className="vcard__price">
             <p className="vcard__amount">
-              <Skeleton w={128} h={31} />
+              <Skeleton w={132} h={32} />
             </p>
             <p className="vcard__monthly">
               <Skeleton w={168} h={19} />
@@ -174,15 +175,15 @@ export function VehicleCardSkeleton(): ReactElement {
           <div className="vcard__specs">
             <div className="vcard__spec">
               <Skeleton w={46} h={13} />
-              <Skeleton w={58} h={18} />
+              <Skeleton w={62} h={20} />
             </div>
             <div className="vcard__spec">
               <Skeleton w={58} h={13} />
-              <Skeleton w={44} h={18} />
+              <Skeleton w={48} h={20} />
             </div>
             <div className="vcard__spec">
               <Skeleton w={40} h={13} />
-              <Skeleton w={48} h={18} />
+              <Skeleton w={52} h={20} />
             </div>
           </div>
         </div>

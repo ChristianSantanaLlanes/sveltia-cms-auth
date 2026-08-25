@@ -43,10 +43,12 @@ function castLook(model: CarModel): { paint: PaintOption; wheel: WheelOption } {
 /**
  * One full-viewport marketing section: headline, the vehicle, the CTA block.
  *
- * The backdrop is a CSS cyc wall — key light behind the car, a horizon line and
- * a pool of floor light anchored to the exact y where the tyres touch down, so
- * the render sits in a studio instead of floating on a gradient. Tones
- * alternate light/dark down the page; `data-tone` drives the whole palette.
+ * The backdrop is a CSS cyc wall lit like a real studio: a key behind the car,
+ * a strip light skimming the roofline, a floor plane that rises seamlessly out
+ * of the wall at the exact y where the tyres touch down, a pool of bounced
+ * light on it, and one vignette laid over all of it so the frame reads as a
+ * single exposure rather than stacked gradients. Tones alternate light/dark
+ * down the page; `data-tone` drives the whole palette.
  */
 export default function HeroSection({ model, index, isFirst }: HeroSectionProps): ReactElement {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -127,6 +129,10 @@ export default function HeroSection({ model, index, isFirst }: HeroSectionProps)
           />
         </div>
       </div>
+
+      {/* One exposure falloff over wall, floor and the outer edges of the car,
+          so the frame reads as a single photograph. */}
+      <div className="vm-hero__vignette" aria-hidden="true" />
 
       <div className="vm-hero__foot">
         <ul className="vm-hero__specs vm-hero__reveal">

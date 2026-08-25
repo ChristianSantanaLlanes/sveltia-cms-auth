@@ -74,6 +74,10 @@ export default function OrderSummary({
   const { model, trim, paint, wheel } = resolveConfig(config);
   const pay = paymentLine(price, paymentMode);
 
+  /* The checkout page already shows the car life-size in "Your Vehicle"; the
+     summary would only be repeating it. Standalone placements still need it. */
+  const showCar = variant === 'static';
+
   const classes = ['osum', `osum--${variant}`, expanded ? 'is-open' : null, className]
     .filter(Boolean)
     .join(' ');
@@ -102,20 +106,25 @@ export default function OrderSummary({
       <div className="osum__panel" id={panelId} ref={panelRef}>
         <div className="osum__clip">
           <div className="osum__vehicle">
-            <div className="osum__plate">
-              <CarRender
-                body={model.body}
-                paint={paint}
-                wheel={wheel}
-                view="side"
-                ground
-                className="osum__car"
-                label={`${model.name} ${trim.name} in ${paint.name}`}
-              />
-            </div>
+            {showCar ? (
+              <div className="osum__plate">
+                <CarRender
+                  body={model.body}
+                  paint={paint}
+                  wheel={wheel}
+                  view="side"
+                  ground
+                  className="osum__car"
+                  label={`${model.name} ${trim.name} in ${paint.name}`}
+                />
+              </div>
+            ) : null}
             <div className="osum__ident">
               <p className="osum__model">{model.name}</p>
               <p className="osum__trim">{trim.name}</p>
+              <p className="osum__spec">
+                {paint.name} · {wheel.name}
+              </p>
             </div>
           </div>
 
@@ -161,6 +170,11 @@ export default function OrderSummary({
             </p>
             <p className="osum__payDetail">{pay.detail}</p>
           </div>
+
+          <p className="osum__due">
+            <span className="osum__dueLabel">Due today</span>
+            <span className="osum__dueValue">{money(price.dueToday)}</span>
+          </p>
 
           <p className="osum__lead">{model.leadTime}</p>
         </div>

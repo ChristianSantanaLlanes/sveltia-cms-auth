@@ -1,8 +1,8 @@
 {
-  "updated": "2026-08-25 05:10 UTC",
+  "updated": "2026-08-25 05:45 UTC",
   "phase": "Piece loops",
-  "headline": "Builder vs critic, piece by piece",
-  "note": "The surface compiles. Nine pieces are now looping: each round a fresh builder fixes the one gap the previous critic named, then a fresh critic re-judges the capture against the benchmark spec.",
+  "headline": "Round one: the critic is picking the benchmark",
+  "note": "Nine pieces are looping. The first verdict is in and it is brutal \u2014 the vehicle render is what gives the whole funnel away.",
   "constraint": "tesla.com cannot be reached from this build sandbox: Tesla's edge (Akamai) blocks the datacenter IP for direct requests and for every public screenshot service tried, web.archive.org is blocked by this environment's egress policy, and Chromium here has no outbound HTTPS at all. Live side-by-side capture of the real funnel is therefore impossible from inside this session. Critics score against docs/reference-spec.md \u2014 the Tesla funnel written down as measurable properties \u2014 plus their own knowledge of that funnel, and every round must still name the single largest remaining gap.",
   "pieces": [
     {
@@ -152,7 +152,11 @@
     },
     {
       "t": "05:12",
-      "msg": "Piece loops started: hero, scroll, grid, filters, render, options, price, loading, checkout"
+      "msg": "Piece loops started across four areas"
+    },
+    {
+      "t": "05:43",
+      "msg": "Listing grid round 1: critic picks BENCHMARK (high) \u2014 the card render reads as a vector sticker, not a photographed car"
     }
   ]
 }

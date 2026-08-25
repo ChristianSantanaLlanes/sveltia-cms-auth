@@ -3,12 +3,19 @@
  * One section per model, exactly one viewport tall, snapped by HomePage.
  * Three rows: headline / vehicle / CTA block.
  *
- * The backdrop is a CSS-only photographic studio in three layers:
- *   1. a seamless cyc wall, lit by a soft key behind the car and falling off
- *      into an opaque corner vignette (`.vm-hero__backdrop`, full section);
- *   2. a seamless floor rising out of that wall at the exact y where the tyres
- *      touch down (`.vm-hero__floor`);
- *   3. a pool of bounced light on that floor, under the car (`.vm-hero__pool`).
+ * The backdrop is a CSS-only photographic studio, built the way the real thing
+ * is lit rather than as a decorative gradient:
+ *
+ *   1. `.vm-hero__backdrop` — the seamless cyc wall, a soft key light behind
+ *      the car, and a wide strip light skimming the roofline (the highlight a
+ *      car photographer hangs above the subject so the shell reads as metal).
+ *   2. `.vm-hero__floor` — the floor plane, rising out of the wall with no seam
+ *      at the exact y where the tyres touch down, darkening as it comes toward
+ *      the camera.
+ *   3. `.vm-hero__pool` — bounced light on that floor, under the car.
+ *   4. `.vm-hero__vignette` — one falloff laid over wall, floor and the outer
+ *      edges of the render together, so the frame reads as a single exposure
+ *      instead of two stacked gradients.
  *
  * Layers 2 and 3 live inside `.vm-hero__plate`, which shrink-wraps the render,
  * so the horizon tracks the car at every viewport size instead of being pinned
@@ -24,8 +31,8 @@
   width: 100%;
   height: 100dvh;
   min-height: 620px;
-  padding-top: calc(var(--header-h) + clamp(20px, 4.4vh, 44px));
-  padding-bottom: clamp(24px, 4.4vh, 44px);
+  padding-top: calc(var(--header-h) + clamp(18px, 3.8vh, 40px));
+  padding-bottom: clamp(24px, 4.2vh, 42px);
   overflow: hidden;
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -35,10 +42,10 @@
 /* The chevron lives in the band under the CTA block, so the section that owns
    one gives that band its own height rather than crowding the small print. */
 .vm-hero[data-chevron='true'] {
-  padding-bottom: clamp(56px, 7.6vh, 76px);
+  padding-bottom: clamp(58px, 8vh, 80px);
 }
 
-/* ── Backdrop ───────────────────────────────────────────────────────────── */
+/* ── Wall + lights ──────────────────────────────────────────────────────── */
 
 .vm-hero__backdrop {
   position: absolute;
@@ -47,19 +54,37 @@
   pointer-events: none;
   background-color: var(--vm-wall);
   background-image:
-    /* corner vignette — opaque, so it reads as light falling off a cyc wall */
-    radial-gradient(74% 82% at 50% 44%, transparent 26%, var(--vm-vignette) 100%),
+    /* strip light: the long soft box hung just above and behind the roofline */
+    radial-gradient(52% 13% at 50% 30%, var(--vm-strip) 0%, transparent 100%),
     /* key light, sitting behind and just above the car */
-    radial-gradient(var(--vm-key-shape), var(--vm-key) 0%, transparent 66%);
+    radial-gradient(var(--vm-key-shape), var(--vm-key) 0%, transparent 68%);
 }
 
-/* The three content rows sit above the studio layers. The floor is a
-   positioned element, so in-flow text would otherwise paint underneath it. */
+/* One exposure falloff over wall, floor and the outer edges of the render.
+   Sits above the stage and below the text rows. */
+.vm-hero__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: radial-gradient(
+    72% 84% at 50% 41%,
+    transparent 34%,
+    var(--vm-vignette-mid) 78%,
+    var(--vm-vignette) 100%
+  );
+}
+
+/* Text rows sit above every studio layer. */
 .vm-hero__head,
-.vm-hero__stage,
 .vm-hero__foot {
   position: relative;
-  z-index: 1;
+  z-index: 2;
+}
+
+.vm-hero__stage {
+  position: relative;
+  z-index: 0;
 }
 
 /* ── Tones ──────────────────────────────────────────────────────────────── */
@@ -67,37 +92,43 @@
 .vm-hero[data-tone='light'] {
   --vm-fg: var(--text);
   --vm-fg-2: var(--text-secondary);
-  --vm-wall: var(--surface);
+  --vm-wall: color-mix(in srgb, var(--ink) 6%, var(--bg));
   --vm-key: var(--bg);
-  --vm-vignette: color-mix(in srgb, var(--ink) 15%, var(--surface));
-  --vm-floor-near: color-mix(in srgb, var(--ink) 13%, var(--surface));
-  --vm-floor-mid: color-mix(in srgb, var(--ink) 8%, var(--surface));
-  --vm-floor-far: color-mix(in srgb, var(--ink) 12%, var(--surface));
-  --vm-floor-deep: color-mix(in srgb, var(--ink) 19%, var(--surface));
-  --vm-pool: var(--bg);
-  --vm-hairline: color-mix(in srgb, var(--ink) 20%, transparent);
+  --vm-strip: color-mix(in srgb, var(--bg) 88%, transparent);
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 11%, transparent);
+  --vm-vignette: color-mix(in srgb, var(--ink) 27%, transparent);
+  --vm-floor-ao: color-mix(in srgb, var(--ink) 17%, transparent);
+  --vm-floor-near: color-mix(in srgb, var(--ink) 8%, var(--surface));
+  --vm-floor-mid: color-mix(in srgb, var(--ink) 6%, var(--surface));
+  --vm-floor-far: color-mix(in srgb, var(--ink) 13%, var(--surface));
+  --vm-floor-deep: color-mix(in srgb, var(--ink) 22%, var(--surface));
+  --vm-pool: color-mix(in srgb, var(--bg) 52%, transparent);
+  --vm-hairline: color-mix(in srgb, var(--ink) 22%, transparent);
 }
 
 .vm-hero[data-tone='dark'] {
   --vm-fg: var(--on-dark);
   --vm-fg-2: var(--on-dark-secondary);
-  --vm-wall: color-mix(in srgb, var(--on-dark) 5%, var(--ink));
-  --vm-key: color-mix(in srgb, var(--on-dark) 22%, var(--ink));
+  --vm-wall: color-mix(in srgb, var(--on-dark) 4%, var(--ink));
+  --vm-key: color-mix(in srgb, var(--on-dark) 26%, var(--ink));
+  --vm-strip: color-mix(in srgb, var(--on-dark) 26%, transparent);
+  --vm-vignette-mid: color-mix(in srgb, var(--ink) 55%, transparent);
   --vm-vignette: var(--ink);
-  --vm-floor-near: color-mix(in srgb, var(--on-dark) 13%, var(--ink));
+  --vm-floor-ao: color-mix(in srgb, var(--ink) 82%, transparent);
+  --vm-floor-near: color-mix(in srgb, var(--on-dark) 10%, var(--ink));
   --vm-floor-mid: color-mix(in srgb, var(--on-dark) 6%, var(--ink));
-  --vm-floor-far: color-mix(in srgb, var(--on-dark) 3%, var(--ink));
+  --vm-floor-far: color-mix(in srgb, var(--on-dark) 2%, var(--ink));
   --vm-floor-deep: var(--ink);
-  --vm-pool: color-mix(in srgb, var(--on-dark) 22%, transparent);
-  --vm-hairline: color-mix(in srgb, var(--on-dark) 34%, transparent);
+  --vm-pool: color-mix(in srgb, var(--on-dark) 14%, transparent);
+  --vm-hairline: color-mix(in srgb, var(--on-dark) 36%, transparent);
 }
 
 /* The key light moves a little section to section, so two sections of the same
    tone are never lit from the identical spot. */
-.vm-hero { --vm-key-shape: 96% 62% at 50% 44%; }
-.vm-hero[data-hero-index='1'] { --vm-key-shape: 86% 70% at 50% 40%; }
-.vm-hero[data-hero-index='2'] { --vm-key-shape: 104% 58% at 50% 47%; }
-.vm-hero[data-hero-index='3'] { --vm-key-shape: 82% 66% at 50% 42%; }
+.vm-hero { --vm-key-shape: 92% 60% at 50% 43%; }
+.vm-hero[data-hero-index='1'] { --vm-key-shape: 84% 68% at 50% 39%; }
+.vm-hero[data-hero-index='2'] { --vm-key-shape: 100% 56% at 50% 46%; }
+.vm-hero[data-hero-index='3'] { --vm-key-shape: 80% 64% at 50% 41%; }
 
 /* ── Entrance ───────────────────────────────────────────────────────────── */
 
@@ -114,9 +145,15 @@
   transform: none;
 }
 
-.vm-hero__car { transition-delay: 60ms; }
-.vm-hero__specs { transition-delay: 140ms; }
-.vm-hero__actions { transition-delay: 200ms; }
+/* The car settles rather than slides: a hair of scale is what a camera pushing
+   in reads like, and it keeps the tyres on the floor line the whole time. */
+.vm-hero__car {
+  transform: scale(1.012);
+  transition-delay: 60ms;
+}
+
+.vm-hero__specs { transition-delay: 150ms; }
+.vm-hero__actions { transition-delay: 210ms; }
 
 @media (prefers-reduced-motion: reduce) {
   .vm-hero__reveal {
@@ -169,7 +206,7 @@
    being letterboxed inside its own frame, which would break that anchoring. */
 .vm-hero__plate {
   position: relative;
-  width: min(100%, 128vh);
+  width: min(100%, 132vh);
   aspect-ratio: 1200 / 420;
   /* The painted car sits ~2.7% right of the centre of its own viewBox; the
      nudge puts its optical centre under the centred headline. */
@@ -184,51 +221,66 @@
   height: 100%;
 }
 
-/* Wall meets floor at 79.5% of the plate — the y where the tyres contact. A
-   real cyclorama has no seam there, so the floor blends up into the wall over
-   a soft rise rather than starting on an edge. It bleeds the full viewport
-   width and runs off the bottom of the section, passing behind the CTAs. */
+/* Wall meets floor at 80.95% of the plate — FLOOR / VIEW_H in the render, the
+   y where the tyres contact. A real cyclorama has no seam there, so the floor
+   blends up into the wall over a soft rise rather than starting on an edge. It
+   bleeds the full viewport width and runs off the bottom of the section,
+   passing behind the CTAs. The radial layer carries the wall's falloff across
+   the floor so the two planes share one exposure. */
 .vm-hero__floor {
   position: absolute;
-  top: 79.5%;
+  top: 80.95%;
   left: 50%;
   z-index: 0;
-  width: 140vw;
+  width: 150vw;
   height: 100vh;
   pointer-events: none;
   transform: translateX(-50%);
+  /* No stop of its own at the horizon: the plane starts as the wall and only
+     separates from it on the way down, which is what a seamless cyc does. The
+     horizontal falloff is the vignette's job, so nothing here can draw an edge
+     across the frame. */
   background-image: linear-gradient(
     to bottom,
-    var(--vm-floor-near) 0px,
-    var(--vm-floor-mid) 170px,
-    var(--vm-floor-far) 400px,
-    var(--vm-floor-deep) 100%
+    transparent 0,
+    var(--vm-floor-near) 3.5vh,
+    var(--vm-floor-mid) 11vh,
+    var(--vm-floor-far) 26vh,
+    var(--vm-floor-deep) 44vh
   );
 }
 
-/* The rise: 150px of floor tone easing up out of the wall. */
+/* Where the floor meets the wall behind the car, light is occluded — a soft,
+   wide smudge with no edge anywhere on it. This is what stops the car reading
+   as a cut-out pasted onto a gradient. */
 .vm-hero__floor::before {
   content: '';
   position: absolute;
   bottom: 100%;
-  left: 0;
-  width: 100%;
-  height: 150px;
-  background-image: linear-gradient(to bottom, transparent 0%, var(--vm-floor-near) 100%);
+  left: 50%;
+  width: 68%;
+  height: 108px;
+  transform: translateX(-50%);
+  background-image: radial-gradient(50% 100% at 50% 100%, var(--vm-floor-ao) 0%, transparent 72%);
 }
 
-/* Bounced light on the floor, centred under the car. Sits above the floor and
-   below the render so the car's own contact shadow still bites into it. */
+/* Bounced light on the floor, centred under the car: a long, flat pool the way
+   a low strip reads on polished concrete, not a halo behind the subject. Sits
+   above the floor and below the render so the car's own contact shadow still
+   bites into it. */
 .vm-hero__pool {
   position: absolute;
-  top: 79.5%;
+  top: 80.95%;
   left: 50%;
   z-index: 0;
-  width: 130%;
-  height: 56%;
+  width: 112%;
+  height: 32%;
   pointer-events: none;
-  transform: translate(-50%, -40%);
-  background-image: radial-gradient(50% 50% at 50% 50%, var(--vm-pool) 0%, transparent 70%);
+  /* Mostly below the horizon: bounced light belongs on the floor in front of
+     the car, not on the wall behind it, where it would fight the occlusion
+     band and lift the car off the ground. */
+  transform: translate(-50%, -16%);
+  background-image: radial-gradient(50% 50% at 50% 50%, var(--vm-pool) 0%, transparent 74%);
 }
 
 /* ── CTA block ──────────────────────────────────────────────────────────── */
@@ -237,7 +289,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(20px, 3.4vh, 34px);
+  gap: clamp(20px, 3.2vh, 32px);
   width: 100%;
   padding-inline: var(--gutter);
 }
@@ -245,7 +297,7 @@
 .vm-hero__specs {
   display: flex;
   justify-content: center;
-  gap: clamp(30px, 5.6vw, 80px);
+  gap: clamp(28px, 5.2vw, 72px);
   margin: 0;
 }
 
@@ -253,7 +305,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--s-1);
+  gap: 5px;
   text-align: center;
 }
 
@@ -277,7 +329,7 @@
 .vm-hero__specLabel {
   font-size: var(--fs-xs);
   line-height: 1.3;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--vm-fg-2);
   white-space: nowrap;
 }
@@ -319,9 +371,9 @@
 
 .vm-hero__chevron {
   position: absolute;
-  bottom: clamp(12px, 2.2vh, 22px);
+  bottom: clamp(10px, 2vh, 20px);
   left: 50%;
-  z-index: 2;
+  z-index: 3;
   display: grid;
   place-items: center;
   width: 44px;
@@ -371,9 +423,9 @@
 
 @media (min-width: 768px) {
   .vm-hero__plate {
-    /* ~64% of a 1440 frame ends up as painted car once the render's own
+    /* ~65% of a 1440 frame ends up as painted car once the render's own
        margins are taken off — the subject, not a motif. */
-    width: min(82%, 1180px, 128vh);
+    width: min(88%, 1260px, 132vh);
   }
 }
 
@@ -385,7 +437,11 @@
   }
 
   .vm-hero__plate {
-    width: min(104%, 96vh);
+    /* Wider than the section: at 390px a plate held to the gutter leaves the
+       car reading as a thumbnail. This fills the frame edge to edge, and the
+       optical-centre nudge shrinks with it. */
+    width: min(130%, 78vh);
+    transform: translateX(-1.6%);
   }
 
   .vm-hero__specs {
@@ -412,7 +468,9 @@
 
 @media (forced-colors: active) {
   .vm-hero__reveal { opacity: 1; transform: none; }
+  .vm-hero__car { transform: none; }
   .vm-hero__backdrop,
+  .vm-hero__vignette,
   .vm-hero__floor,
   .vm-hero__pool { display: none; }
 }

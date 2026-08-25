@@ -21,12 +21,12 @@ export function Field({
 }: FieldProps): ReactElement {
   const autoId = useId();
   const inputId = id ?? `field-${autoId}`;
-  const errorId = `${inputId}-error`;
-  const hintId = `${inputId}-hint`;
+  const msgId = `${inputId}-msg`;
 
-  const described = [describedBy, error ? errorId : null, !error && hint ? hintId : null]
-    .filter(Boolean)
-    .join(' ');
+  /* One message slot, always in the layout. An error replacing a hint — or
+     appearing on submit — must never shift the fields below it. */
+  const message = error ?? hint ?? '';
+  const described = [describedBy, message ? msgId : null].filter(Boolean).join(' ');
 
   return (
     <div className={['field', error ? 'field--error' : null, className].filter(Boolean).join(' ')}>
@@ -47,15 +47,9 @@ export function Field({
         {suffix ? <span className="field__suffix">{suffix}</span> : null}
       </div>
 
-      {error ? (
-        <p className="field__msg field__msg--error" id={errorId} role="alert">
-          {error}
-        </p>
-      ) : hint ? (
-        <p className="field__msg" id={hintId}>
-          {hint}
-        </p>
-      ) : null}
+      <p className={`field__msg${error ? ' field__msg--error' : ''}`} id={msgId}>
+        {message}
+      </p>
     </div>
   );
 }

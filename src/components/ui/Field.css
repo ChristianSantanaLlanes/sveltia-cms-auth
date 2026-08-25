@@ -1,36 +1,45 @@
-/* ── Field (floating label input) ──────────────────────────────────────── */
+/* ── Field (floating label input) ────────────────────────────────────────
+   56px tall, 4px radius, hairline that turns blue on focus. The border is
+   drawn as an inset shadow so thickening it on focus costs no layout, and
+   the message slot below is always reserved so an error never moves the
+   form under it.                                                           */
+
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--s-2);
   min-width: 0;
 }
 
 .field__box {
   position: relative;
   height: 56px;
-  border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background-color: var(--bg);
-  transition:
-    border-color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.field__box:hover { border-color: var(--text-tertiary); }
+.field__box:hover { box-shadow: inset 0 0 0 1px var(--text-tertiary); }
 
-.field__box:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+.field__box:focus-within,
+.field__box:focus-within:hover { box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* Keyboard focus keeps the halo; a mouse click gets the crisp border alone. */
+.field__box:has(.field__input:focus-visible),
+.field__box:has(.field__input:focus-visible):hover {
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .field__input {
   width: 100%;
   height: 100%;
-  padding: 21px var(--s-4) 7px;
+  padding: 22px var(--s-4) 6px;
   border: 0;
   border-radius: var(--r-sm);
   background-color: transparent;
+  font: inherit;
   font-size: var(--fs-body);
   line-height: 1.4;
   color: var(--text);
@@ -38,7 +47,7 @@
 }
 .field__input:focus-visible { outline: none; }
 
-.field__box--suffix .field__input { padding-right: 64px; }
+.field__box--suffix .field__input { padding-right: 72px; }
 
 /* Placeholder text would collide with the resting label. */
 .field__input::placeholder {
@@ -51,7 +60,7 @@
 .field__label {
   position: absolute;
   top: 50%;
-  left: calc(var(--s-4) + 1px);
+  left: var(--s-4);
   transform: translateY(-50%);
   transform-origin: left center;
   font-size: var(--fs-body);
@@ -82,32 +91,71 @@
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 }
+
+/* ── Message slot ──────────────────────────────────────────────────────── */
 
 .field__msg {
+  min-height: 16px;
+  margin-top: var(--s-2);
+  padding-left: 1px;
   font-size: var(--fs-xs);
-  line-height: 1.4;
-  color: var(--text-secondary);
+  line-height: 16px;
+  color: var(--text-tertiary);
+  text-wrap: pretty;
 }
 
-.field__msg--error { color: var(--danger); }
+.field__msg--error {
+  color: var(--danger);
+  animation: field-msg-in var(--dur) var(--ease-out) both;
+}
+
+/* A quiet marker instead of a red box: the field keeps a hairline, the
+   message carries the signal. */
+.field__msg--error::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin: 0 7px 3px 0;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+@keyframes field-msg-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* ── Error state ───────────────────────────────────────────────────────── */
-.field--error .field__box { border-color: var(--danger); }
-.field--error .field__box:focus-within {
-  border-color: var(--danger);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
+/* Muted, not a red wash: a warmer hairline, no fill, no glow. */
+.field--error .field__box {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 55%, var(--line));
 }
-.field--error .field__input:focus + .field__label { color: var(--danger); }
+.field--error .field__box:hover {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 80%, var(--line));
+}
+/* Focus stays blue even on an invalid field: once the shopper is in the box
+   they are fixing it, and a red cage around the caret is not help. */
 
 .field__input:disabled { color: var(--text-tertiary); }
 .field__box:has(.field__input:disabled) {
   background-color: var(--surface);
-  border-color: var(--line-soft);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field__box,
+  .field__label,
+  .field__input::placeholder { transition: none; }
+  .field__msg--error { animation: none; }
 }
 
 @media (forced-colors: active) {
+  .field__box { border: 1px solid ButtonBorder; }
   .field__box:focus-within { outline: 2px solid Highlight; }
 }

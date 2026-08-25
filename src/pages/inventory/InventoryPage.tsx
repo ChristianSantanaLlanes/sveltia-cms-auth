@@ -20,7 +20,6 @@ import {
 import './InventoryPage.css';
 
 const SKELETON_COUNT = 6;
-const SEARCH_RADIUS = 200;
 
 export default function InventoryPage(): ReactElement {
   const { filters, setFilter, toggleFilter, reset, activeCount, results, isLoading } = useInventoryFilters();
@@ -137,23 +136,29 @@ export default function InventoryPage(): ReactElement {
         <section className="inv__results" aria-label="Vehicles">
           <header className="inv__header">
             <div className="inv__headline">
+              <p className="inv__eyebrow">Vela Inventory</p>
               <p className="inv__count" role="status" aria-live="polite">
                 {showSkeletons ? (
-                  <Skeleton w={150} h={32} />
+                  <Skeleton w={168} h={34} />
                 ) : (
                   `${num(results.length)} ${results.length === 1 ? 'result' : 'results'}`
                 )}
               </p>
               <p className="inv__location">
                 <span className="inv__location-wide">
-                  New and pre-owned Vela vehicles within {num(SEARCH_RADIUS)} miles of {zip}
+                  New, demo and pre-owned Vela vehicles, delivered to {zip}
                 </span>
-                <span className="inv__location-narrow">
-                  Within {num(SEARCH_RADIUS)} miles of {zip}
-                </span>
+                <span className="inv__location-narrow">Delivered to {zip}</span>
               </p>
             </div>
-            {isDesktop ? <div className="inv__header-sort">{sortSelect}</div> : null}
+            {isDesktop ? (
+              <div className="inv__header-sort">
+                <span className="inv__sort-label" aria-hidden="true">
+                  Sort by
+                </span>
+                {sortSelect}
+              </div>
+            ) : null}
           </header>
 
           {chips.length > 0 && results.length > 0 ? (

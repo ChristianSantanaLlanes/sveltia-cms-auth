@@ -13,8 +13,14 @@ import Button from '@/components/ui/Button';
 import Field from '@/components/ui/Field';
 import Select from '@/components/ui/Select';
 import useMediaQuery, { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
-import { money, monthly, num } from '@/lib/format';
-import { APR, DOWN_PAYMENT_RATE, LEASE_TERM, TERM_MONTHS } from '@/lib/pricing';
+import { miles, money, monthly, num } from '@/lib/format';
+import {
+  APR,
+  DOWN_PAYMENT_RATE,
+  LEASE_TERM,
+  TERM_MONTHS,
+  effectiveRange,
+} from '@/lib/pricing';
 import {
   ORDER_FIELD_ORDER,
   cardBrand,
@@ -46,12 +52,28 @@ const MODES: { id: PaymentMode; label: string }[] = [
   { id: 'lease', label: 'Lease' },
 ];
 
-const CARD_MARKS: { id: CardBrand; label: string }[] = [
-  { id: 'visa', label: 'Visa' },
-  { id: 'mastercard', label: 'Mastercard' },
-  { id: 'amex', label: 'American Express' },
-  { id: 'discover', label: 'Discover' },
+/** Wordmarks, not fake logos — the palette stays at one accent. */
+const CARD_MARKS: { id: CardBrand; short: string; label: string }[] = [
+  { id: 'visa', short: 'Visa', label: 'Visa' },
+  { id: 'mastercard', short: 'Mastercard', label: 'Mastercard' },
+  { id: 'amex', short: 'Amex', label: 'American Express' },
+  { id: 'discover', short: 'Discover', label: 'Discover' },
 ];
+
+function LockIcon(): ReactElement {
+  return (
+    <svg className="co-lock" viewBox="0 0 12 14" aria-hidden="true" focusable="false">
+      <path
+        d="M3.25 6V4.25a2.75 2.75 0 0 1 5.5 0V6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <rect x="1.6" y="6" width="8.8" height="7" rx="1.4" fill="currentColor" />
+    </svg>
+  );
+}
 
 const US_STATES: { value: string; label: string }[] = [
   { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' },
@@ -90,7 +112,7 @@ export default function CheckoutPage(): ReactElement {
   const reducedMotion = usePrefersReducedMotion();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { config, price, resolved, paymentMode, setPaymentMode, zip, setZip } = useOrder();
-  const { model, trim, paint, wheel } = resolved;
+  const { model, trim, paint, wheel, interior, seating, addOns } = resolved;
 
   const [values, setValues] = useState<OrderFormValues>(() => ({ ...emptyOrderForm(), zip }));
   const [errors, setErrors] = useState<OrderFormErrors>({});
@@ -261,6 +283,23 @@ export default function CheckoutPage(): ReactElement {
 
   const brand = cardBrand(values.cardNumber);
 
+  const vehicleSpecs: { label: string; value: string }[] = [
+    { label: 'Range (est.)', value: miles(effectiveRange(config)) },
+    { label: '0–60 mph', value: `${trim.accel.toFixed(1)} s` },
+    { label: 'Top speed', value: `${trim.topSpeed} mph` },
+  ];
+
+  const vehicleConfigLines: { label: string; value: string }[] = [
+    { label: 'Paint', value: paint.name },
+    { label: 'Wheels', value: wheel.name },
+    { label: 'Interior', value: interior.name },
+    { label: 'Seating', value: seating.name },
+    {
+      label: 'Packages',
+      value: addOns.length ? addOns.map((addOn) => addOn.name).join(', ') : 'None selected',
+    },
+  ];
+
   return (
     <div className="checkout">
       <div className="checkout__inner">
@@ -281,6 +320,33 @@ export default function CheckoutPage(): ReactElement {
               paymentMode={paymentMode}
               variant={isDesktop ? 'rail' : 'strip'}
             />
+
+            <section className="co-next" aria-labelledby="co-next-title">
+              <h2 className="co-next__title" id="co-next-title">
+                What happens next
+              </h2>
+              <ol className="co-next__list">
+                <li className="co-next__step">
+                  <span className="co-next__num">1</span>
+                  <span className="co-next__text">
+                    You receive an order number and a copy of your agreement by email.
+                  </span>
+                </li>
+                <li className="co-next__step">
+                  <span className="co-next__num">2</span>
+                  <span className="co-next__text">
+                    A Vela Advisor confirms registration, taxes and final pricing within two
+                    business days.
+                  </span>
+                </li>
+                <li className="co-next__step">
+                  <span className="co-next__num">3</span>
+                  <span className="co-next__text">
+                    We schedule handover at your chosen location. {model.leadTime}.
+                  </span>
+                </li>
+              </ol>
+            </section>
           </div>
 
           <form className="checkout__form" onSubmit={handleSubmit} noValidate>
@@ -303,28 +369,40 @@ export default function CheckoutPage(): ReactElement {
                   />
                 </div>
 
-                <div className="co-vehicle__info">
-                  <p className="co-vehicle__model">{model.name}</p>
-                  <p className="co-vehicle__trim">{trim.name}</p>
-
-                  <ul className="co-vehicle__lines">
-                    {price.lines.map((line) => (
-                      <li className="co-vehicle__line" key={line.id}>
-                        <span>{line.label}</span>
-                        <span className="co-num">{money(line.amount)}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <p className="co-vehicle__total">
-                    <span>Total</span>
-                    <span className="co-num">{money(price.purchasePrice)}</span>
+                <div className="co-vehicle__bar">
+                  <div className="co-vehicle__ident">
+                    <p className="co-vehicle__model">{model.name}</p>
+                    <p className="co-vehicle__trim">{trim.name}</p>
+                  </div>
+                  <p className="co-vehicle__price">
+                    <span className="co-vehicle__priceValue co-num">
+                      {money(price.purchasePrice)}
+                    </span>
+                    <span className="co-vehicle__priceCap">Purchase price</span>
                   </p>
-
-                  <Link className="co-link" to={`/design/${model.id}`}>
-                    Edit your design
-                  </Link>
                 </div>
+
+                <ul className="co-specs">
+                  {vehicleSpecs.map((spec) => (
+                    <li className="co-specs__item" key={spec.label}>
+                      <span className="co-specs__value co-num">{spec.value}</span>
+                      <span className="co-specs__label">{spec.label}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <dl className="co-config">
+                  {vehicleConfigLines.map((line) => (
+                    <div className="co-config__row" key={line.label}>
+                      <dt className="co-config__label">{line.label}</dt>
+                      <dd className="co-config__value">{line.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+
+                <Link className="co-link" to={`/design/${model.id}`}>
+                  Edit your design
+                </Link>
               </div>
             </section>
 
@@ -516,15 +594,16 @@ export default function CheckoutPage(): ReactElement {
             <section className="co-sec" aria-labelledby="co-sec-payment">
               <div className="co-secHead">
                 <h2 className="co-secTitle" id="co-sec-payment">
-                  Payment
+                  Card Details
                 </h2>
-                <ul className={`co-cards${brand ? ' has-brand' : ''}`} aria-label="Cards accepted">
+                <ul className={`co-marks${brand ? ' has-brand' : ''}`} aria-label="Cards accepted">
                   {CARD_MARKS.map((mark) => (
                     <li
-                      className={`co-card co-card--${mark.id}${brand === mark.id ? ' is-on' : ''}`}
+                      className={`co-marks__item${brand === mark.id ? ' is-on' : ''}`}
                       key={mark.id}
+                      title={mark.label}
                     >
-                      <span className="sr-only">{mark.label}</span>
+                      {mark.short}
                     </li>
                   ))}
                 </ul>
@@ -581,6 +660,11 @@ export default function CheckoutPage(): ReactElement {
                   onBlur={handleBlur('cardName')}
                 />
               </div>
+
+              <p className="co-secure">
+                <LockIcon />
+                Card details are encrypted in transit and are never stored on this device.
+              </p>
             </section>
 
             {/* ── 6. Order agreement ────────────────────────────────────── */}
