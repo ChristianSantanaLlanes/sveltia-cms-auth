@@ -87,7 +87,7 @@ export function Sheet({ open, onClose, title, children, side }: SheetProps): Rea
       const panel = panelRef.current;
       if (!panel) return;
       const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null || el === document.activeElement,
+        (el) => el.getClientRects().length > 0 || el === document.activeElement,
       );
       if (items.length === 0) {
         event.preventDefault();

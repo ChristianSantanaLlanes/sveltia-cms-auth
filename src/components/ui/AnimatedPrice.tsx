@@ -73,7 +73,9 @@ export function AnimatedPrice({
 
   const settled = `${prefix}${money(value)}${suffix}`;
   const text = `${prefix}${money(display)}${suffix}`;
-  const merged: CSSProperties = { minWidth: `${reserveCh(settled)}ch`, ...style };
+  // Reserve the wider of the two so a count-down cannot widen the box mid-tween.
+  const reserve = Math.max(reserveCh(settled), reserveCh(text));
+  const merged: CSSProperties = { minWidth: `${reserve}ch`, ...style };
 
   return (
     <span {...rest} className={className ? `aprice ${className}` : 'aprice'} style={merged}>
